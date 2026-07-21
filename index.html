@@ -593,8 +593,7 @@
                 // SWAPPED to tinyFaceDetector for extreme mobile speed
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); // Removed expression net to speed up loading
                 aiModelsLoaded = true;
                 const banner = document.getElementById('aiLoadBanner'); if(banner) banner.classList.add('hidden');
             } catch (e) {
@@ -623,19 +622,19 @@
                 const video = document.getElementById('webcam');
                 if (video.paused || video.ended) return;
 
-                // LIGHTWEIGHT CHECK: Only detect face and smile, DO NOT calculate the heavy descriptor yet
-                const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks().withFaceExpressions();
+                // LIGHTWEIGHT CHECK: Only detect face, DO NOT require a smile
+                const detection = await faceapi.detectSingleFace(video, tinyOptions);
                 const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
-                    if (detection.expressions.happy > 0.5) {
-                        autoScanActive = false; 
-                        executePunchCapture(video); // Trigger capture
-                    } else {
-                        instruct.innerHTML = "SMILE<br>To Verify";
-                        document.getElementById('faceFrame').classList.remove('success');
-                    }
-                } else { instruct.innerHTML = "Auto-Scanning<br>Look Straight"; }
+                    autoScanActive = false; 
+                    instruct.innerHTML = "Hold Still...";
+                    document.getElementById('faceFrame').classList.add('success');
+                    executePunchCapture(video); // Trigger capture
+                } else { 
+                    instruct.innerHTML = "Auto-Scanning<br>Look Straight"; 
+                    document.getElementById('faceFrame').classList.remove('success');
+                }
             }, 600); // Poll slightly faster now that it's lighter
         }
 
@@ -644,21 +643,22 @@
             document.getElementById('faceFrame').classList.add('success');
             document.getElementById('livenessInstruction').innerHTML = "Analyzing...";
 
+            // HEAVY CALCULATION: Run exactly ONCE on the HIGH-RES video (just like registration)
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224 });
+            const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks().withFaceDescriptor();
+
+            // Create a slightly larger visual thumbnail for the UI
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 180;
+            canvas.width = 320; canvas.height = 240;
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, 240, 180);
-            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.3);
+            ctx.drawImage(video, 0, 0, 320, 240);
+            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.4);
             
             document.getElementById('capturedPreview').src = capturedPhotoData;
 
-            // HEAVY CALCULATION: Now calculate the 128-point biometric map exactly ONCE on the frozen frame
-            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224 });
-            const detection = await faceapi.detectSingleFace(document.getElementById('capturedPreview'), tinyOptions).withFaceLandmarks().withFaceDescriptor();
-
             if (!detection) {
-                // If it fails to find a clear face in the frozen image
+                // If it fails to find a clear face
                 document.getElementById('capturedPreview').classList.remove('hidden');
                 video.classList.add('hidden');
                 document.getElementById('retakeBtn').classList.remove('hidden');
@@ -676,7 +676,7 @@
 
             detectedWorker = null;
             if (labeledDescriptors.length > 0) {
-                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55); // 0.55 similarity threshold
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.60); // 0.60 threshold is much better for mobile cameras
                 const match = faceMatcher.findBestMatch(liveDescriptor);
                 if (match.label !== 'unknown') {
                     detectedWorker = db.workers.find(w => w.id === match.label);
@@ -743,11 +743,11 @@
 
             const preview = document.getElementById('regPhotoPreview');
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 180;
+            canvas.width = 320; canvas.height = 240;
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, 240, 180);
-            regPhotoData = canvas.toDataURL('image/jpeg', 0.3);
+            ctx.drawImage(video, 0, 0, 320, 240);
+            regPhotoData = canvas.toDataURL('image/jpeg', 0.4);
 
             preview.src = regPhotoData;
             preview.classList.remove('hidden');
@@ -807,8 +807,29 @@
             const btnIn = document.getElementById('punchInBtn');
             const btnOut = document.getElementById('punchOutBtn');
             
-            if (btnIn) btnIn.disabled = !isValid;
-            if (btnOut) btnOut.disabled = !isValid;
+            let disableIn = !isValid;
+            let disableOut = !isValid;
+            let currentStatusText = "Please select your punch type below.";
+
+            // Prevent Double Punching (Check if already Punched In/Out today)
+            if (isValid && detectedWorker) {
+                const todayDate = new Date().toLocaleDateString('en-IN');
+                // db.attendance is sorted newest first, so .find() gets their last punch today
+                const lastPunch = db.attendance.find(a => a.workerId === detectedWorker.id && a.timestamp.includes(todayDate));
+                
+                if (lastPunch) {
+                    if (lastPunch.type === 'IN') {
+                        disableIn = true; // Already punched in, block the IN button
+                        currentStatusText = "<span class='text-emerald-400'>Status: <b>PUNCHED IN</b></span>. Ready to punch out?";
+                    } else if (lastPunch.type === 'OUT') {
+                        disableOut = true; // Already punched out, block the OUT button
+                        currentStatusText = "<span class='text-rose-400'>Status: <b>PUNCHED OUT</b></span>. Ready to punch in?";
+                    }
+                }
+            }
+
+            if (btnIn) btnIn.disabled = disableIn;
+            if (btnOut) btnOut.disabled = disableOut;
 
             const instText = document.getElementById('welcomeInstructionText');
             if (instText) {
@@ -817,7 +838,7 @@
                 } else if (!document.getElementById('punchSiteSelect').value) {
                     instText.innerHTML = "<span class='text-rose-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Select Active Work Site</span>";
                 } else {
-                    instText.innerHTML = "Please select your punch type below.";
+                    instText.innerHTML = currentStatusText;
                 }
             }
         }
@@ -825,11 +846,12 @@
         // --- HTTP POST TO GOOGLE SHEETS ---
         function postToGoogleSheet(action, payload) {
             try {
+                // FIXED: Send as pure text/plain JSON so Google Sheets does not throw the "Unexpected token d" error
                 fetch(HARDCODED_GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'data=' + encodeURIComponent(JSON.stringify({ action: action, payload: payload }))
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: action, payload: payload })
                 });
             } catch(e) { console.error("Sheet send error", e); }
         }
@@ -838,8 +860,20 @@
         async function submitPunch(type) {
             const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
             const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
-            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged!`, "success");
-            postToGoogleSheet('punchAttendance', record); resetCamera(); renderLogs();
+            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, "success");
+            
+            // Disable buttons immediately to prevent rapid double-clicks
+            document.getElementById('punchInBtn').disabled = true;
+            document.getElementById('punchOutBtn').disabled = true;
+
+            postToGoogleSheet('punchAttendance', record); 
+            renderLogs();
+
+            // Wait 1.5 seconds for the user to see the success message, then close camera and return home
+            setTimeout(() => {
+                resetCamera();
+                showLandingPage();
+            }, 1500);
         }
 
         async function handleAdminOverridePunch(e) {
