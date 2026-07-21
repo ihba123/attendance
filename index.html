@@ -748,8 +748,29 @@
 
         function syncConfigToCloud() {
             // Send clean config without heavy photo strings to avoid size bloat
-            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage }));
-            postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users });
+            const cleanWorkers = db.workers.map(w => ({ 
+                id: w.id || '', 
+                name: w.name || '', 
+                phone: w.phone || '', 
+                wage: w.wage || 0 
+            }));
+
+            const cleanSites = db.sites.map(s => ({
+                id: s.id || '',
+                name: s.name || '',
+                lat: s.lat || 0,
+                lng: s.lng || 0,
+                radius: s.radius || 150
+            }));
+
+            const cleanUsers = db.users.map(u => ({
+                username: u.username || '',
+                password: u.password || '1234',
+                role: u.role || 'worker',
+                name: u.name || ''
+            }));
+
+            postToGoogleSheet('syncConfig', { sites: cleanSites, workers: cleanWorkers, users: cleanUsers });
         }
 
         // Render Functions
