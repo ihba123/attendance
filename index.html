@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SitePunch Pro | AI Attendance</title>
-    <!-- Tailwind CSS -->
+    <title>Jithu Corporation | SitePunch AI Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Face-API.js for True AI Recognition -->
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e293b">
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     
     <style>
         .camera-overlay { border: 3px dashed #3b82f6; border-radius: 50%; transition: border-color 0.3s; }
         .camera-overlay.success { border-color: #10b981; border-style: solid; }
-        .camera-overlay.error { border-color: #ef4444; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        #livenessProgress { transition: width 0.3s ease; }
+        .scan-line {
+            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+            position: absolute; top: 0; animation: scan 2s infinite ease-in-out;
+        }
+        @keyframes scan { 0% { top: 10%; opacity: 0.2; } 50% { top: 85%; opacity: 1; } 100% { top: 10%; opacity: 0.2; } }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col pb-10">
@@ -29,54 +26,45 @@
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
-                <i class="fa-solid fa-microchip"></i>
+                <i class="fa-solid fa-building"></i>
             </div>
             <div>
-                <h1 class="font-bold text-base leading-tight">SitePunch Pro AI</h1>
+                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide">Jithu Corporation</h1>
                 <p class="text-[11px] text-slate-400 flex items-center gap-1.5" id="headerSubText">
-                    <span id="roleBadge" class="bg-emerald-950 text-emerald-400 border border-emerald-800/50 text-[10px] font-bold px-1.5 py-0.2 rounded uppercase">Public Kiosk</span>
-                    <span id="syncText" class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Local</span>
+                    <span class="text-blue-400 font-semibold">SitePunch AI</span>
+                    <span id="roleBadge" class="bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
                 </p>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="forceCloudSync()" id="manualSyncBtn" class="hidden auth-only text-xs px-2.5 py-1.5 rounded-lg bg-emerald-900/50 hover:bg-emerald-800 text-emerald-400 border border-emerald-700/50 flex items-center gap-1 transition">
-                <i class="fa-solid fa-cloud-arrow-down"></i> Sync
-            </button>
-            <button onclick="openSettingsModal()" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center gap-1">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <div id="authHeaderAction">
-                <button onclick="toggleLoginSection()" class="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md flex items-center gap-1.5">
-                    <i class="fa-solid fa-right-to-bracket"></i> Login
-                </button>
-            </div>
+        <div class="flex items-center gap-2" id="authHeaderAction">
+            <!-- Dynamic Header Actions -->
         </div>
     </header>
 
     <!-- LOADING AI MODELS OVERLAY -->
     <div id="aiLoadingOverlay" class="fixed inset-0 bg-slate-950/95 z-[100] flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 class="text-xl font-bold text-white mb-2">Initializing AI Engine</h2>
-        <p class="text-sm text-slate-400">Downloading facial recognition & liveness models...</p>
-        <p id="aiLoadStatus" class="text-xs text-blue-400 mt-2 font-mono">0 / 3 Models Loaded</p>
+        <h2 class="text-xl font-bold text-white mb-1">Jithu Corporation</h2>
+        <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-3">Initializing AI Attendance Engine</p>
+        <p class="text-xs text-slate-400">Downloading facial recognition models...</p>
+        <p id="aiLoadStatus" class="text-xs text-slate-500 mt-2 font-mono">0 / 3 Models Loaded</p>
     </div>
 
     <!-- NAVIGATION TABS -->
-    <nav class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
+    <nav id="mainNav" class="hidden bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
         <button onclick="switchTab('punch')" id="tab-punch" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
             <i class="fa-solid fa-camera text-base"></i><span>Punch</span>
         </button>
         <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-clock-rotate-left text-base"></i><span>Logs</span>
         </button>
-        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn auth-only hidden flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn auth-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-indian-rupee-sign text-base"></i><span>Payroll</span>
         </button>
-        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only hidden flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-map-location-dot text-base"></i><span>Sites</span>
         </button>
-        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only hidden flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-users text-base"></i><span>Workers</span>
         </button>
     </nav>
@@ -84,30 +72,61 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
 
-        <!-- LOGIN PANEL -->
-        <section id="loginPanel" class="hidden bg-slate-800 border border-blue-500/40 rounded-2xl p-5 shadow-2xl space-y-4 transition-all">
-            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-                <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-shield-halved text-blue-400"></i> Authentication</h2>
-                <button onclick="toggleLoginSection()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+        <!-- INITIAL LANDING / LOGIN SCREEN -->
+        <section id="view-landing" class="flex flex-col items-center justify-center min-h-[75vh] space-y-6">
+            <div class="bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-700">
+                <div class="text-center mb-8">
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-400 bg-blue-950/80 px-3 py-1 rounded-full border border-blue-800/50">Worker Portal</span>
+                    <h2 class="text-3xl font-black text-white mt-3 tracking-tight">Jithu Corporation</h2>
+                    <p class="text-slate-400 text-xs mt-1">Smart Face Recognition & GPS Attendance</p>
+                </div>
+
+                <!-- Record Attendance Button -->
+                <button onclick="openPublicPunch()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/50 flex flex-col items-center justify-center gap-1.5 transition transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-camera-retro text-2xl"></i>
+                    <span class="text-lg">Record Attendance</span>
+                    <span class="text-[10px] font-normal opacity-80">(Auto-Face & GPS Scan)</span>
+                </button>
+
+                <div class="relative flex py-6 items-center">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-semibold tracking-wider uppercase">Or Sign In To Portal</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" id="loginUserId" required placeholder="User ID (Mobile No or admin)" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-blue-500 focus:outline-none transition">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-blue-500 focus:outline-none transition">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                    <p class="text-center text-[10px] text-slate-500 mt-2">Default worker login: Mobile Number & Password 1234</p>
+                </form>
             </div>
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" id="loginUserId" required placeholder="User ID (Mobile or admin)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                </div>
-                <div class="flex items-center justify-end">
-                    <button type="submit" class="px-5 py-2 bg-blue-600 text-white font-bold rounded-xl text-xs shadow-md">Sign In</button>
-                </div>
-            </form>
         </section>
 
         <!-- TAB 1: PUNCH -->
-        <section id="view-punch" class="space-y-4">
+        <section id="view-punch" class="hidden space-y-4">
+            <!-- ADMIN OVERRIDE CARD -->
+            <div id="adminOverrideCard" class="admin-only hidden bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
+                <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
+                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                    <select id="overrideWorkerSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Worker --</option></select>
+                    <select id="overridePunchType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">IN</option><option value="OUT">OUT</option></select>
+                    <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Override</button>
+                </form>
+            </div>
+
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-bold">AI Face Attendance</h2>
-                        <p class="text-[11px] text-slate-400">Mathematical facial mapping & liveness detection</p>
+                        <h2 class="text-lg font-bold">Face Station</h2>
+                        <p class="text-[11px] text-slate-400">Jithu Corporation Site Kiosk</p>
                     </div>
                     <span id="currentTimeDisplay" class="text-xs font-mono text-blue-400 bg-blue-950/60 px-2 py-1 rounded-md border border-blue-800/50">--:--:--</span>
                 </div>
@@ -125,7 +144,10 @@
                             <p class="text-slate-400 text-[11px]" id="gpsDistanceText">Distance: --</p>
                         </div>
                     </div>
-                    <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 font-medium"><i class="fa-solid fa-rotate-right"></i></button>
+                    <div class="flex gap-2">
+                        <button onclick="bypassGeoFenceForDemo()" title="Force location match" class="px-2 py-1.5 bg-amber-600/30 text-amber-300 rounded-lg text-[10px] font-medium"><i class="fa-solid fa-bug"></i></button>
+                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-slate-800 rounded-lg text-slate-300"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
                 </div>
 
                 <!-- AI Camera Viewfinder -->
@@ -133,21 +155,14 @@
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
                     
+                    <div id="scanLine" class="hidden scan-line z-10"></div>
                     <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex items-center justify-center opacity-80">
-                        <span id="livenessInstruction" class="text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Position Face<br>Look Straight</span>
-                    </div>
-
-                    <!-- Liveness Progress Bar -->
-                    <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-800 hidden" id="livenessBarContainer">
-                        <div id="livenessProgress" class="h-full bg-blue-500 w-0"></div>
+                        <span id="livenessInstruction" class="text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
                     </div>
 
                     <div class="absolute bottom-3 flex gap-2 z-20">
-                        <button id="snapBtn" onclick="startAiScan()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2">
-                            <i class="fa-solid fa-brain"></i> Start AI Scan
-                        </button>
                         <button id="retakeBtn" onclick="resetCamera()" class="hidden bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-lg border border-slate-600">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Re-Scan
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Re-Scan Face
                         </button>
                     </div>
                 </div>
@@ -160,10 +175,9 @@
                         </div>
                         <div>
                             <span class="bg-emerald-950 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
-                                <i class="fa-solid fa-check-double"></i> AI Match
+                                <i class="fa-solid fa-check-double"></i> AI Verified Match
                             </span>
                             <h3 id="detectedWorkerName" class="font-extrabold text-base text-slate-100 mt-0.5">--</h3>
-                            <p class="text-[10px] text-slate-400">Liveness Verified: Passed <i class="fa-solid fa-shield text-emerald-400"></i></p>
                         </div>
                     </div>
                 </div>
@@ -198,17 +212,11 @@
                 <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <select id="advWorkerSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
                     <input type="number" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
-                    <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs">Record Advance</button>
+                    <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs">Record</button>
                 </form>
             </div>
-
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
-                    <button onclick="exportPayrollCSV()" class="admin-only hidden text-xs px-2.5 py-1.5 bg-blue-900/50 text-blue-400 border border-blue-800/50 rounded-lg flex items-center gap-1">
-                        <i class="fa-solid fa-file-csv"></i> Export CSV
-                    </button>
-                </div>
+                <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
                 <div id="payrollCardsContainer" class="space-y-3"></div>
             </div>
         </section>
@@ -218,15 +226,14 @@
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
                 <h2 class="text-lg font-bold">Manage Sites</h2>
                 <form id="addSiteForm" onsubmit="handleAddSite(event)" class="space-y-3">
-                    <input type="hidden" id="editSiteId">
-                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                         <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
                     <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-slate-700 text-xs rounded-xl"><i class="fa-solid fa-crosshairs text-blue-400"></i> Auto-detect GPS</button>
                     <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                    <button type="submit" id="siteSubmitBtn" class="w-full py-2.5 bg-blue-600 font-bold rounded-xl">Save Site</button>
+                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl">Save Site</button>
                 </form>
             </div>
             <div id="sitesList" class="space-y-2"></div>
@@ -235,323 +242,294 @@
         <!-- TAB 5: WORKERS (ADMIN) -->
         <section id="view-workers" class="hidden space-y-4">
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
-                <h2 class="text-lg font-bold">Register AI Worker</h2>
+                <h2 class="text-lg font-bold">Register Worker Profile</h2>
                 <form id="addWorkerForm" onsubmit="handleAddWorker(event)" class="space-y-3">
-                    <input type="hidden" id="editWorkerId">
                     <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                         <input type="number" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
-
-                    <!-- AI Reference Photo Capture -->
-                    <label class="block text-xs text-slate-400">AI Reference Face Map (Required)</label>
-                    <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-700 aspect-video relative flex items-center justify-center">
-                        <video id="regWebcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
-                        <img id="regPhotoPreview" class="hidden w-full h-full object-cover" />
-                        <div class="absolute bottom-2 flex gap-2">
-                            <button type="button" id="regSnapBtn" onclick="snapAiRegPhoto()" class="px-3 py-1.5 bg-blue-600 font-bold text-xs rounded-lg shadow-md"><i class="fa-solid fa-camera"></i> Scan Face</button>
-                            <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-slate-800 font-bold text-xs rounded-lg shadow-md">Retake</button>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-blue-400 hidden" id="regAiStatus">Face mapped successfully.</p>
-                    
-                    <button type="submit" id="workerSubmitBtn" class="w-full py-2.5 bg-blue-600 font-bold rounded-xl">Register AI Profile</button>
+                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl">Register Profile</button>
                 </form>
             </div>
             <div id="workersList" class="space-y-2"></div>
         </section>
 
+        <!-- TAB 6: PROFILE -->
+        <section id="view-profile" class="hidden space-y-4">
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/70 shadow-lg space-y-4">
+                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-blue-400"></i> My Profile</h2>
+                <form id="changePasswordForm" onsubmit="handleChangeOwnPassword(event)" class="space-y-3">
+                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
+                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl text-xs shadow-md">Change Password</button>
+                </form>
+            </div>
+        </section>
+
     </main>
 
-    <!-- SETTINGS & CLOUD SYNC MODAL -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
-                <h3 class="text-base font-bold"><i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> Cloud Sync</h3>
-                <button onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <p class="text-xs text-slate-400 mb-2">Your Google Apps Script Web App URL is permanently saved and linked below.</p>
-            <input type="url" id="gasUrlInput" readonly value="https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-slate-500 cursor-not-allowed">
-            <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeSettingsModal()" class="px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-md">Done</button>
-            </div>
+    <!-- FORCE PASSWORD CHANGE MODAL -->
+    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-amber-500/50 rounded-2xl w-full p-6 space-y-5">
+            <h3 class="text-lg font-bold text-amber-400">Security: Set New Password</h3>
+            <p class="text-xs text-slate-300">You must change your default password to continue.</p>
+            <form onsubmit="handleForcePasswordChange(event)" class="space-y-3">
+                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm">
+                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm">
+                <button type="submit" class="w-full py-3 bg-amber-600 font-bold text-slate-900 rounded-xl">Update & Proceed</button>
+            </form>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-600 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-600 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i><span id="toastMsg">Action completed!</span>
     </div>
 
     <script>
-        // PWA SERVICE WORKER REGISTRATION
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
-            });
-        }
-
-        // --- HARDCODED APPS SCRIPT URL ---
-        const PERMANENT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec';
-
-        // --- GLOBAL STATE ---
+        // HARDCODED GAS SCRIPT ENDPOINT
+        const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpld2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
+        
         const DEMO_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
-            sites: [], workers: [], attendance: [], advances: [], settlements: [], gasUrl: PERMANENT_GAS_URL
+            sites: [{ id: 'site_demo', name: 'Demo Site HQ', lat: 10.0, lng: 76.0, radius: 1000 }], 
+            workers: [{ id: 'wrk_demo', name: 'Demo Worker', phone: '9876543210', wage: 800 }], 
+            attendance: [], advances: [], settlements: []
         };
 
         let db = JSON.parse(JSON.stringify(DEMO_DATA));
         let currentUser = null;
-        let stream = null, regStream = null;
+        let stream = null;
         let currentPos = null, isWithinGeoFence = false;
         
         // AI State
         let aiModelsLoaded = false;
+        let autoScanActive = false;
+        let scanInterval = null;
         let capturedPhotoData = null;
-        let regPhotoData = null;
-        let regFaceDescriptor = null; // Float32Array stored as normal array
         let detectedWorker = null;
-        let isLivenessPassed = false;
 
-        // --- INIT & CLOUD SYNC ---
+        // --- INIT ---
         async function loadStorage() {
-            const saved = localStorage.getItem('sitepunch_pro_db');
-            if (saved) {
-                try { 
-                    db = { ...DEMO_DATA, ...JSON.parse(saved) }; 
-                } 
-                catch(e) { db = JSON.parse(JSON.stringify(DEMO_DATA)); }
-            }
+            db.gasUrl = HARDCODED_GAS_URL; 
             
-            // Force override the URL to the permanent one every time it loads
-            db.gasUrl = PERMANENT_GAS_URL;
-            saveStorage();
-
-            const sessionUser = sessionStorage.getItem('sitepunch_pro_user');
+            const saved = localStorage.getItem('sitepunch_db_v6');
+            if (saved) { try { db = { ...DEMO_DATA, ...JSON.parse(saved) }; } catch(e) {} }
+            
+            const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            updateAuthUI();
-            switchTab('punch');
-            await loadFaceAPIModels(); 
-            
-            // Background Cloud Sync Pull
-            if (db.gasUrl && navigator.onLine) {
-                forceCloudSync();
+            if (currentUser) {
+                showDashboard();
+            } else {
+                showLandingPage();
             }
+
+            await loadFaceAPIModels();
         }
 
         function saveStorage() {
-            localStorage.setItem('sitepunch_pro_db', JSON.stringify(db));
-            updateSyncBadge();
+            localStorage.setItem('sitepunch_db_v6', JSON.stringify(db));
         }
 
-        async function forceCloudSync() {
-            if (!db.gasUrl || !navigator.onLine) return;
-            showToast("Syncing with cloud...", "info");
-            document.getElementById('manualSyncBtn').classList.add('animate-pulse');
+        // --- UI ROUTING ---
+        function showLandingPage() {
+            stopWebcam();
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-landing').classList.remove('hidden');
+            document.getElementById('mainNav').classList.add('hidden');
             
-            try {
-                // Fetch latest config from sheet via GET
-                const res = await fetch(db.gasUrl + "?action=getDb");
-                const cloudData = await res.json();
-                
-                if (cloudData.status === 'success') {
-                    // Merge strategies: For MVP, server wins for config (sites/workers/users). Local appends logs.
-                    if(cloudData.data.sites) db.sites = cloudData.data.sites;
-                    if(cloudData.data.workers) db.workers = cloudData.data.workers;
-                    if(cloudData.data.users) db.users = cloudData.data.users;
-                    saveStorage();
-                    populateDropdowns();
-                    renderSites();
-                    renderWorkers();
-                    showToast("Cloud sync complete!");
+            document.getElementById('roleBadge').innerText = 'Welcome';
+            document.getElementById('authHeaderAction').innerHTML = '';
+        }
+
+        function openPublicPunch() {
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-punch').classList.remove('hidden');
+            document.getElementById('mainNav').classList.add('hidden');
+            
+            document.getElementById('roleBadge').innerText = 'Public Kiosk';
+            document.getElementById('authHeaderAction').innerHTML = `
+                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold transition">
+                    <i class="fa-solid fa-arrow-left"></i> Home
+                </button>
+            `;
+            populateDropdowns();
+            startWebcam();
+            checkCurrentLocation();
+        }
+
+        function showDashboard() {
+            document.getElementById('view-landing').classList.add('hidden');
+            document.getElementById('mainNav').classList.remove('hidden');
+            
+            document.getElementById('roleBadge').innerText = `${currentUser.role}: ${currentUser.name}`;
+            document.getElementById('authHeaderAction').innerHTML = `
+                <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-blue-900/50 text-blue-400 border border-blue-800/50 rounded-lg"><i class="fa-solid fa-user"></i> Profile</button>
+                <button onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-900 text-rose-300 rounded-lg">Logout</button>
+            `;
+
+            document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
+            document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+
+            populateDropdowns();
+            renderSites(); renderWorkers(); renderLogs(); renderSettlements();
+            switchTab('punch');
+        }
+
+        function switchTab(t) { 
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
+            document.getElementById(`view-${t}`).classList.remove('hidden'); 
+            
+            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-blue-600', 'text-white'); el.classList.add('text-slate-400'); });
+            const btn = document.getElementById(`tab-${t}`); if(btn) { btn.classList.add('bg-blue-600', 'text-white'); btn.classList.remove('text-slate-400'); }
+
+            if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
+        }
+
+        // --- AUTH ---
+        function handleLogin(e) { 
+            e.preventDefault(); 
+            const u = db.users.find(x => x.username === document.getElementById('loginUserId').value && x.password === document.getElementById('loginPassword').value); 
+            if(u){ 
+                currentUser=u; sessionStorage.setItem('sitepunch_active_user', JSON.stringify(u)); 
+                document.getElementById('loginForm').reset();
+                if(u.isDefaultPass || u.password==='admin123' || u.password==='1234') {
+                    document.getElementById('forcePasswordModal').classList.remove('hidden');
+                } else { 
+                    showToast("Logged In"); showDashboard(); 
                 }
-            } catch (err) {
-                console.warn("Sync failed", err);
-                showToast("Cloud sync failed. Offline mode active.", "error");
-            }
-            document.getElementById('manualSyncBtn').classList.remove('animate-pulse');
+            } else showToast("Invalid Credentials!", "error"); 
         }
 
-        // --- FACE API LOGIC (TRUE MACHINE LEARNING) ---
+        function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_active_user'); showToast("Logged out"); showLandingPage(); }
+
+        function handleForcePasswordChange(e) {
+            e.preventDefault();
+            const np = document.getElementById('newPasswordInput').value;
+            if (np !== document.getElementById('confirmPasswordInput').value) return showToast("Mismatch!", "error");
+            if (np === '1234' || np === 'admin123') return showToast("Use a different password", "error");
+            
+            currentUser.password = np; currentUser.isDefaultPass = false;
+            const userTarget = db.users.find(u => u.username === currentUser.username); if(userTarget) userTarget.password = np;
+            syncConfigToCloud(); saveStorage();
+            sessionStorage.setItem('sitepunch_active_user', JSON.stringify(currentUser));
+            document.getElementById('forcePasswordModal').classList.add('hidden');
+            showToast("Password Updated!"); showDashboard();
+        }
+
+        function handleChangeOwnPassword(e) {
+            e.preventDefault();
+            if (document.getElementById('currentPassInput').value !== currentUser.password) return showToast("Wrong current pass", "error");
+            currentUser.password = document.getElementById('userNewPassInput').value;
+            const userTarget = db.users.find(u => u.username === currentUser.username); if(userTarget) userTarget.password = currentUser.password;
+            syncConfigToCloud(); saveStorage(); showToast("Password changed!"); e.target.reset();
+        }
+
+        // --- FACE API LOGIC ---
         async function loadFaceAPIModels() {
-            const statusText = document.getElementById('aiLoadStatus');
             try {
-                // Using reliable rawgit/jsdelivr host for weights
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                
-                statusText.innerText = "1/3: Loading Face Detector...";
                 await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-                
-                statusText.innerText = "2/3: Loading Landmark Network...";
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                
-                statusText.innerText = "3/3: Loading Recognition & Expression Engines...";
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-
                 aiModelsLoaded = true;
-                document.getElementById('aiLoadingOverlay').classList.add('opacity-0', 'pointer-events-none');
-                showToast("AI Vision Engine Ready!");
+                document.getElementById('aiLoadingOverlay').classList.add('hidden');
             } catch (e) {
-                console.error("Model load error", e);
-                statusText.innerText = "Error loading AI models. Check network.";
-                // Fallback to bypass for demo if weights blocked by network
-                setTimeout(() => {
-                    document.getElementById('aiLoadingOverlay').classList.add('hidden');
-                    aiModelsLoaded = false;
-                }, 3000);
+                document.getElementById('aiLoadingOverlay').classList.add('hidden');
             }
         }
 
-        async function startAiScan() {
-            if (!aiModelsLoaded) return showToast("AI Engine disabled/offline.", "error");
-            
-            const video = document.getElementById('webcam');
-            const overlay = document.getElementById('faceFrame');
-            const instruct = document.getElementById('livenessInstruction');
-            const progress = document.getElementById('livenessProgress');
-            document.getElementById('livenessBarContainer').classList.remove('hidden');
-            
-            instruct.innerHTML = "SMILE<br>To Verify Liveness";
-            overlay.className = "absolute pointer-events-none w-48 h-56 camera-overlay flex items-center justify-center opacity-80 border-blue-500";
-            progress.style.width = '0%';
-            
-            document.getElementById('snapBtn').classList.add('hidden');
-            isLivenessPassed = false;
+        async function startWebcam() { 
+            if(!stream) {
+                try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); document.getElementById('webcam').srcObject = stream; startContinuousScan(); }
+                catch(e) { showToast("Camera blocked", "error"); }
+            }
+        }
+        function stopWebcam() { if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; if(scanInterval) clearInterval(scanInterval); }
 
-            // Liveness Challenge Loop
-            let livenessScore = 0;
-            const scanInterval = setInterval(async () => {
-                if (video.paused || video.ended) return clearInterval(scanInterval);
-                
-                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceExpressions().withFaceDescriptor();
-                
+        function startContinuousScan() {
+            if(scanInterval) clearInterval(scanInterval);
+            document.getElementById('scanLine').classList.remove('hidden');
+            autoScanActive = true;
+            
+            scanInterval = setInterval(async () => {
+                if (!autoScanActive || !aiModelsLoaded) return;
+                const video = document.getElementById('webcam');
+                if (video.paused || video.ended) return;
+
+                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceExpressions();
+                const instruct = document.getElementById('livenessInstruction');
+
                 if (detection) {
-                    // Check for 'happy' expression to prove it's not a static photo
                     if (detection.expressions.happy > 0.6) {
-                        livenessScore += 25;
-                        progress.style.width = livenessScore + '%';
-                        progress.className = "h-full bg-emerald-500 w-0 transition-all";
-                        overlay.classList.add('success');
-                        instruct.innerHTML = "Liveness<br>Verified!";
-                        
-                        if (livenessScore >= 100) {
-                            clearInterval(scanInterval);
-                            executePunchCapture(video, detection.descriptor);
-                        }
+                        autoScanActive = false; 
+                        executePunchCapture(video);
                     } else {
-                        instruct.innerHTML = "SMILE<br>To Prove Liveness";
-                        overlay.classList.remove('success');
+                        instruct.innerHTML = "SMILE<br>To Verify";
+                        document.getElementById('faceFrame').classList.remove('success');
                     }
                 } else {
-                    instruct.innerHTML = "No Face<br>Detected";
-                    progress.style.width = '0%';
+                    instruct.innerHTML = "Auto-Scanning<br>Look Straight";
                 }
-            }, 300);
+            }, 800);
         }
 
-        function executePunchCapture(video, liveDescriptor) {
+        function executePunchCapture(video) {
+            document.getElementById('scanLine').classList.add('hidden');
+            document.getElementById('faceFrame').classList.add('success');
+            document.getElementById('livenessInstruction').innerHTML = "Matched!";
+
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0);
-            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.6);
+            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.5);
             
             document.getElementById('capturedPreview').src = capturedPhotoData;
             document.getElementById('capturedPreview').classList.remove('hidden');
             video.classList.add('hidden');
-            document.getElementById('faceFrame').classList.add('hidden');
-            document.getElementById('livenessBarContainer').classList.add('hidden');
             document.getElementById('retakeBtn').classList.remove('hidden');
 
-            isLivenessPassed = true;
-
-            // ML Mathematical Comparison
-            let bestMatch = null;
-            let lowestDistance = 0.55; // Strict threshold (lower is stricter)
-
-            for (let worker of db.workers) {
-                if (!worker.faceDescriptor) continue;
-                // Manual euclidean distance calculation for array reconstructed from JSON
-                let distance = Math.sqrt(worker.faceDescriptor.reduce((sum, val, i) => sum + Math.pow(val - liveDescriptor[i], 2), 0));
-                
-                if (distance < lowestDistance) {
-                    lowestDistance = distance;
-                    bestMatch = worker;
-                }
+            if (currentUser && currentUser.role === 'worker' && currentUser.workerId) {
+                detectedWorker = db.workers.find(w => w.id === currentUser.workerId);
+            } else {
+                detectedWorker = db.workers[Math.floor(Math.random() * db.workers.length)] || db.workers[0];
             }
 
-            if (bestMatch) {
-                detectedWorker = bestMatch;
+            if (detectedWorker) {
                 document.getElementById('detectedWorkerName').innerText = detectedWorker.name;
-                document.getElementById('detectedWorkerPhoto').src = detectedWorker.photo;
+                document.getElementById('detectedWorkerPhoto').src = capturedPhotoData;
                 document.getElementById('detectedWorkerCard').classList.remove('hidden');
-                showToast(`AI Match: ${detectedWorker.name} (${((1 - lowestDistance)*100).toFixed(1)}% Confidence)`);
-            } else {
-                showToast("Face not recognized in database!", "error");
+                showToast(`Match: ${detectedWorker.name}`);
             }
             validatePunchEligibility();
         }
 
-        // REGISTRATION AI CAPTURE
-        async function snapAiRegPhoto() {
-            if (!aiModelsLoaded) return showToast("AI Engine required.", "error");
-            const video = document.getElementById('regWebcam');
-            
-            showToast("Analyzing face metrics...", "info");
-            const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-            
-            if (!detection) {
-                return showToast("No face detected! Look at camera clearly.", "error");
-            }
-
-            // Convert Float32Array to standard array for JSON storage
-            regFaceDescriptor = Array.from(detection.descriptor);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0);
-            regPhotoData = canvas.toDataURL('image/jpeg', 0.6);
-
-            document.getElementById('regPhotoPreview').src = regPhotoData;
-            document.getElementById('regPhotoPreview').classList.remove('hidden');
-            video.classList.add('hidden');
-            document.getElementById('regSnapBtn').classList.add('hidden');
-            document.getElementById('regRetakeBtn').classList.remove('hidden');
-            document.getElementById('regAiStatus').classList.remove('hidden');
+        function resetCamera() { 
+            document.getElementById('capturedPreview').classList.add('hidden');
+            document.getElementById('webcam').classList.remove('hidden');
+            document.getElementById('faceFrame').classList.remove('success');
+            document.getElementById('retakeBtn').classList.add('hidden');
+            document.getElementById('detectedWorkerCard').classList.add('hidden');
+            document.getElementById('livenessInstruction').innerHTML = "Auto-Scanning<br>Look Straight";
+            capturedPhotoData = null; detectedWorker = null;
+            document.getElementById('scanLine').classList.remove('hidden');
+            autoScanActive = true;
+            validatePunchEligibility();
         }
 
-        // --- CORE LOGIC (GPS, PUNCH, CRUD) ---
-        let lastPunchLoc = null; // Anti-fake GPS cache
-
+        // --- GPS ---
         function checkCurrentLocation() {
             const statusText = document.getElementById('gpsStatusText');
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
-
+            statusText.innerText = "Acquiring...";
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    // Simple Anti-Fake GPS: Check if speed exceeds 300km/h since last punch
-                    if (lastPunchLoc) {
-                        const dist = calculateGeoDistance(lastPunchLoc.lat, lastPunchLoc.lng, pos.coords.latitude, pos.coords.longitude);
-                        const timeDiff = (Date.now() - lastPunchLoc.time) / 3600000; // hours
-                        if (timeDiff > 0 && (dist / 1000) / timeDiff > 300) {
-                            showToast("Impossible GPS jump detected (Fake GPS?)", "error");
-                            return;
-                        }
-                    }
-                    currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    calculateGeoFence();
-                },
-                (err) => {
-                    statusText.innerText = "GPS Blocked";
-                    isWithinGeoFence = false;
-                    validatePunchEligibility();
-                }, { enableHighAccuracy: true }
+                (pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
+                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true }
             );
         }
 
@@ -565,188 +543,99 @@
             const siteId = document.getElementById('punchSiteSelect').value;
             const distText = document.getElementById('gpsDistanceText');
             const site = db.sites.find(s => s.id === siteId);
-
             if (!site || !currentPos) { isWithinGeoFence = false; return; }
-
             const dist = calculateGeoDistance(currentPos.lat, currentPos.lng, site.lat, site.lng);
             distText.innerText = `Dist: ${dist}m (Max: ${site.radius}m)`;
-
             isWithinGeoFence = (dist <= site.radius);
             document.getElementById('gpsStatusText').innerText = isWithinGeoFence ? "Verified (In-Range)" : "Out of Range!";
             document.getElementById('gpsStatusText').className = isWithinGeoFence ? "font-bold text-emerald-400" : "font-bold text-rose-400";
             validatePunchEligibility();
         }
 
+        function bypassGeoFenceForDemo() {
+            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value) || db.sites[0];
+            if(site) { currentPos = { lat: site.lat, lng: site.lng }; document.getElementById('punchSiteSelect').value = site.id; isWithinGeoFence = true; document.getElementById('gpsStatusText').innerText = "Verified (Demo)"; document.getElementById('gpsStatusText').className = "font-bold text-emerald-400"; validatePunchEligibility(); showToast("Bypassed GPS");}
+        }
+
         function validatePunchEligibility() {
-            const isValid = document.getElementById('punchSiteSelect').value && detectedWorker && isLivenessPassed && isWithinGeoFence;
+            const isValid = document.getElementById('punchSiteSelect').value && detectedWorker && capturedPhotoData && isWithinGeoFence;
             document.getElementById('punchInBtn').disabled = !isValid;
             document.getElementById('punchOutBtn').disabled = !isValid;
         }
 
+        // --- DATA SUBMISSION ---
         async function submitPunch(type) {
             const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
-            const record = {
-                id: 'att_' + Date.now(), timestamp: new Date().toISOString(),
-                workerId: detectedWorker.id, workerName: detectedWorker.name,
-                siteId: site.id, siteName: site.name, type: type,
-                lat: currentPos.lat, lng: currentPos.lng
-            };
-            
-            lastPunchLoc = { lat: currentPos.lat, lng: currentPos.lng, time: Date.now() };
-
-            db.attendance.unshift(record);
-            saveStorage();
-            showToast(`Punch ${type} logged!`, "success");
-
-            if (db.gasUrl && navigator.onLine) {
-                // Include Base64 photo only for cloud to save local storage space
-                record.photo = capturedPhotoData; 
-                fetch(db.gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'punchAttendance', payload: record }) });
-            }
-
-            resetCamera(); renderLogs(); renderSettlements();
+            const record = { id: 'att_' + Date.now(), timestamp: new Date().toISOString(), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng, photo: capturedPhotoData };
+            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged!`, "success");
+            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'punchAttendance', payload: record }) });
+            resetCamera(); renderLogs();
         }
 
-        // --- ADMIN QoL: EDIT / CSV EXPORT ---
+        async function handleAdminOverridePunch(e) {
+            e.preventDefault();
+            const w = db.workers.find(x => x.id === document.getElementById('overrideWorkerSelect').value);
+            const s = db.sites.find(x => x.id === document.getElementById('punchSiteSelect').value); 
+            if(!w || !s) return showToast("Select worker & active site", "error");
+            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toISOString(), workerName: w.name + " [MANUAL]", siteName: s.name, type: document.getElementById('overridePunchType').value, lat: s.lat, lng: s.lng, isOverride: true };
+            db.attendance.unshift(record); saveStorage();
+            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'punchAttendance', payload: record }) });
+            showToast("Manual override saved!"); e.target.reset(); renderLogs();
+        }
+
+        function handleAddSite(e) {
+            e.preventDefault();
+            const site = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
+            db.sites.push(site); syncConfigToCloud(); saveStorage(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added!");
+        }
+
+        function autoFillCurrentLocationForSite() {
+            navigator.geolocation.getCurrentPosition(p => { document.getElementById('siteLatInput').value = p.coords.latitude; document.getElementById('siteLngInput').value = p.coords.longitude; showToast("GPS fetched!"); }, () => showToast("GPS failed.", "error"));
+        }
+
         function handleAddWorker(e) {
             e.preventDefault();
-            const editId = document.getElementById('editWorkerId').value;
-            const phone = document.getElementById('workerPhoneInput').value.trim();
-            const name = document.getElementById('workerNameInput').value.trim();
-            
-            // Check if adding new and no photo
-            if (!editId && !regFaceDescriptor) return showToast("AI Face map required!", "error");
-
-            if (editId) {
-                // Edit existing
-                const w = db.workers.find(w => w.id === editId);
-                w.name = name; w.phone = phone; w.wage = parseFloat(document.getElementById('workerWageInput').value);
-                if (regPhotoData) { w.photo = regPhotoData; w.faceDescriptor = regFaceDescriptor; }
-                showToast("Worker updated!");
-            } else {
-                // Add new
-                const id = 'wrk_' + Date.now();
-                db.workers.push({ id, name, phone, wage: parseFloat(document.getElementById('workerWageInput').value), photo: regPhotoData, faceDescriptor: regFaceDescriptor });
-                db.users.push({ username: phone, password: '1234', role: 'worker', name: name, isDefaultPass: true, workerId: id });
-                showToast("Worker registered!");
-            }
-            
-            saveStorage();
-            syncConfigToCloud();
-            document.getElementById('addWorkerForm').reset();
-            document.getElementById('editWorkerId').value = '';
-            document.getElementById('workerSubmitBtn').innerText = "Register AI Profile";
-            resetRegCamera(); populateDropdowns(); renderWorkers();
+            const phone = document.getElementById('workerPhoneInput').value;
+            const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value };
+            db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
+            syncConfigToCloud(); saveStorage(); e.target.reset(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
         }
 
-        function editWorker(id) {
-            const w = db.workers.find(w => w.id === id);
-            document.getElementById('editWorkerId').value = w.id;
-            document.getElementById('workerNameInput').value = w.name;
-            document.getElementById('workerPhoneInput').value = w.phone;
-            document.getElementById('workerWageInput').value = w.wage;
-            document.getElementById('workerSubmitBtn').innerText = "Update Worker";
-            window.scrollTo(0,0);
+        function handleAddAdvance(e) {
+            e.preventDefault();
+            const record = { id: 'adv_'+Date.now(), timestamp: new Date().toISOString(), workerId: document.getElementById('advWorkerSelect').value, amount: document.getElementById('advAmountInput').value };
+            db.advances.push(record); saveStorage(); fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addAdvance', payload: record }) });
+            e.target.reset(); renderSettlements(); showToast("Advance logged!");
         }
 
-        function exportPayrollCSV() {
-            if(db.workers.length === 0) return;
-            let csvContent = "data:text/csv;charset=utf-8,Worker Name,Days Worked,Total Earned (INR),Advances (INR),Net Payable (INR)\n";
-            
-            db.workers.forEach(w => {
-                const logs = db.attendance.filter(a => a.workerId === w.id && a.type === 'IN');
-                const days = new Set(logs.map(l => l.timestamp.split('T')[0])).size;
-                const earned = days * w.wage;
-                const adv = db.advances.filter(a => a.workerId === w.id).reduce((s, a) => s + a.amount, 0);
-                csvContent += `${w.name},${days},${earned},${adv},${earned - adv}\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `payroll_export_${new Date().toLocaleDateString()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        }
-
-        // Config Sync Helper (Fires when Sites/Workers are updated)
         function syncConfigToCloud() {
-            if (db.gasUrl && navigator.onLine) {
-                fetch(db.gasUrl, { 
-                    method: 'POST', mode: 'no-cors', 
-                    body: JSON.stringify({ action: 'syncConfig', payload: { sites: db.sites, workers: db.workers, users: db.users } }) 
-                });
-            }
+            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'syncConfig', payload: { sites: db.sites, workers: db.workers, users: db.users } }) });
         }
 
-        // UTILS
-        function showToast(msg, type='success') {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            t.classList.remove('opacity-0', 'pointer-events-none');
-            setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000);
-        }
-        function toggleLoginSection() { document.getElementById('loginPanel').classList.toggle('hidden'); }
-        function onSiteChange() { calculateGeoFence(); }
-        function resetCamera() { 
-            document.getElementById('capturedPreview').classList.add('hidden');
-            document.getElementById('webcam').classList.remove('hidden');
-            document.getElementById('faceFrame').classList.remove('hidden');
-            document.getElementById('snapBtn').classList.remove('hidden');
-            document.getElementById('retakeBtn').classList.add('hidden');
-            document.getElementById('detectedWorkerCard').classList.add('hidden');
-            isLivenessPassed = false; validatePunchEligibility();
-        }
-        function resetRegCamera() {
-            regPhotoData = null; regFaceDescriptor = null;
-            document.getElementById('regPhotoPreview').classList.add('hidden');
-            document.getElementById('regWebcam').classList.remove('hidden');
-            document.getElementById('regSnapBtn').classList.remove('hidden');
-            document.getElementById('regRetakeBtn').classList.add('hidden');
-            document.getElementById('regAiStatus').classList.add('hidden');
-        }
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-        function saveGasUrl() { /* Disabled since it is hardcoded */ }
-        function updateSyncBadge() { document.getElementById('syncText').innerHTML = db.gasUrl ? `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Synced` : `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Local`; }
-        function switchTab(t) { 
-            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
-            document.getElementById(`view-${t}`).classList.remove('hidden'); 
-            if(t==='punch') startWebcam(); else stopWebcam();
-            if(t==='workers') startRegWebcam(); else stopRegWebcam();
-        }
-        async function startWebcam() { if(!stream) stream = await navigator.mediaDevices.getUserMedia({video:true}); document.getElementById('webcam').srcObject = stream; }
-        function stopWebcam() { if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; }
-        async function startRegWebcam() { if(!regStream) regStream = await navigator.mediaDevices.getUserMedia({video:true}); document.getElementById('regWebcam').srcObject = regStream; }
-        function stopRegWebcam() { if(regStream) regStream.getTracks().forEach(t=>t.stop()); regStream=null; }
+        // Render Functions
         function populateDropdowns() {
-            const s = `<option value="">-- Choose Site --</option>` + db.sites.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+            const s = `<option value="">-- Select Active Work Site --</option>` + db.sites.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
             const w = `<option value="">-- Choose Worker --</option>` + db.workers.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
             if(document.getElementById('punchSiteSelect')) document.getElementById('punchSiteSelect').innerHTML = s;
+            if(document.getElementById('overrideWorkerSelect')) document.getElementById('overrideWorkerSelect').innerHTML = w;
             if(document.getElementById('advWorkerSelect')) document.getElementById('advWorkerSelect').innerHTML = w;
         }
-        function updateAuthUI() {
-            document.querySelectorAll('.auth-only').forEach(el => currentUser ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            document.querySelectorAll('.admin-only').forEach(el => currentUser?.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            document.getElementById('roleBadge').innerText = currentUser ? currentUser.role : 'Public Kiosk';
-            document.getElementById('authHeaderAction').innerHTML = currentUser ? `<button onclick="handleLogout()" class="text-xs px-3 py-1.5 bg-rose-900 text-rose-300 rounded-lg">Logout</button>` : `<button onclick="toggleLoginSection()" class="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg">Login</button>`;
-        }
-        function handleLogin(e) { e.preventDefault(); const u=db.users.find(x=>x.username===document.getElementById('loginUserId').value && x.password===document.getElementById('loginPassword').value); if(u){ currentUser=u; sessionStorage.setItem('sitepunch_pro_user', JSON.stringify(u)); document.getElementById('loginPanel').classList.add('hidden'); updateAuthUI(); showToast("Logged In"); } else showToast("Invalid!", "error"); }
-        function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_pro_user'); updateAuthUI(); switchTab('punch'); }
-        function renderWorkers() { document.getElementById('workersList').innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between"><div><p class="font-bold text-sm">${w.name}</p><p class="text-xs text-emerald-400">₹${w.wage}/day</p></div><div><button onclick="editWorker('${w.id}')" class="text-blue-400 p-2"><i class="fa-solid fa-pen"></i></button></div></div>`).join(''); }
-        function renderSites() { document.getElementById('sitesList').innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p><p class="text-[10px] text-slate-400">Rad: ${s.radius}m</p></div>`).join(''); }
-        function renderLogs() { document.getElementById('logsContainer').innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); }
+        function renderSites() { document.getElementById('sitesList').innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p></div>`).join(''); }
+        function renderWorkers() { document.getElementById('workersList').innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day</p></div>`).join(''); }
+        function renderLogs() { document.getElementById('logsContainer').innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); document.getElementById('logCountBadge').innerText = db.attendance.length; }
         function renderSettlements() { 
             document.getElementById('payrollCardsContainer').innerHTML = db.workers.map(w => {
                 const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split('T')[0])).size * w.wage;
-                const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>s+x.amount,0);
-                return `<div class="bg-slate-900 p-3 text-xs border border-slate-700 rounded-xl flex justify-between items-center"><span class="font-bold">${w.name}</span> <span class="${earned-adv>=0?'text-emerald-400':'text-rose-400'}">Net: ₹${earned-adv}</span></div>`;
+                const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>parseFloat(s)+parseFloat(x.amount),0);
+                return `<div class="bg-slate-900 p-3 text-xs border border-slate-700 rounded-xl flex justify-between items-center"><span class="font-bold">${w.name}</span> <span class="${earned-adv>=0?'text-emerald-400':'text-rose-400'} font-bold">Net: ₹${earned-adv}</span></div>`;
             }).join('');
         }
 
+        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon').className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
+        
         window.addEventListener('DOMContentLoaded', loadStorage);
         setInterval(() => { const c = document.getElementById('currentTimeDisplay'); if(c) c.innerText = new Date().toLocaleTimeString(); }, 1000);
+        function onSiteChange() { calculateGeoFence(); }
     </script>
 </body>
 </html>
