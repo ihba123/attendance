@@ -312,10 +312,9 @@
     </div>
 
     <script>
-        // HARDCODED GAS SCRIPT ENDPOINT
+        // HARDCODED GOOGLE APPS SCRIPT URL
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpld2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         
-        // CLEAN INITIAL DATABASE WITH NO DEMO DATA
         const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
             sites: [], 
@@ -509,11 +508,11 @@
             document.getElementById('livenessInstruction').innerHTML = "Matched!";
 
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.width = 240; canvas.height = 180; // Compressed small thumbnail
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0);
-            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.5);
+            ctx.drawImage(video, 0, 0, 240, 180);
+            capturedPhotoData = canvas.toDataURL('image/jpeg', 0.3);
             
             document.getElementById('capturedPreview').src = capturedPhotoData;
             document.getElementById('capturedPreview').classList.remove('hidden');
@@ -532,7 +531,7 @@
                 document.getElementById('detectedWorkerCard').classList.remove('hidden');
                 showToast(`Match: ${detectedWorker.name}`);
             } else {
-                showToast("No registered worker found in database!", "error");
+                showToast("No registered worker found!", "error");
             }
             validatePunchEligibility();
         }
@@ -572,11 +571,11 @@
             const preview = document.getElementById('regPhotoPreview');
 
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+            canvas.width = 240; canvas.height = 180;
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0);
-            regPhotoData = canvas.toDataURL('image/jpeg', 0.5);
+            ctx.drawImage(video, 0, 0, 240, 180);
+            regPhotoData = canvas.toDataURL('image/jpeg', 0.3);
 
             preview.src = regPhotoData;
             preview.classList.remove('hidden');
@@ -636,30 +635,79 @@
             document.getElementById('punchOutBtn').disabled = !isValid;
         }
 
+        // --- HTTP POST TO GOOGLE SHEETS ---
+        function postToGoogleSheet(action, payload) {
+            try {
+                fetch(HARDCODED_GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: action, payload: payload })
+                });
+            } catch(e) {
+                console.error("Sheet send error", e);
+            }
+        }
+
         // --- DATA SUBMISSION ---
         async function submitPunch(type) {
             const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
-            const record = { id: 'att_' + Date.now(), timestamp: new Date().toISOString(), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng, photo: capturedPhotoData };
-            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged!`, "success");
-            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'punchAttendance', payload: record }) });
-            resetCamera(); renderLogs();
+            const record = { 
+                id: 'att_' + Date.now(), 
+                timestamp: new Date().toLocaleString('en-IN'), 
+                workerId: detectedWorker.id, 
+                workerName: detectedWorker.name, 
+                siteId: site.id, 
+                siteName: site.name, 
+                type: type, 
+                lat: currentPos.lat, 
+                lng: currentPos.lng 
+            };
+            
+            db.attendance.unshift(record); 
+            saveStorage(); 
+            showToast(`Punch ${type} logged!`, "success");
+            
+            postToGoogleSheet('punchAttendance', record);
+            resetCamera(); 
+            renderLogs();
         }
 
         async function handleAdminOverridePunch(e) {
             e.preventDefault();
             const w = db.workers.find(x => x.id === document.getElementById('overrideWorkerSelect').value);
             const s = db.sites.find(x => x.id === document.getElementById('overrideSiteSelect').value); 
-            if(!w || !s) return showToast("Select worker & active site", "error");
-            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toISOString(), workerName: w.name + " [MANUAL]", siteName: s.name, type: document.getElementById('overridePunchType').value, lat: s.lat, lng: s.lng, isOverride: true };
-            db.attendance.unshift(record); saveStorage();
-            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'punchAttendance', payload: record }) });
-            showToast("Manual override saved!"); e.target.reset(); renderLogs();
+            if(!w || !s) return showToast("Select worker & site", "error");
+            
+            const record = { 
+                id: 'att_ovr_' + Date.now(), 
+                timestamp: new Date().toLocaleString('en-IN'), 
+                workerName: w.name, 
+                siteName: s.name, 
+                type: document.getElementById('overridePunchType').value, 
+                lat: s.lat, 
+                lng: s.lng, 
+                isOverride: true 
+            };
+            
+            db.attendance.unshift(record); 
+            saveStorage();
+            postToGoogleSheet('punchAttendance', record);
+            showToast("Manual override saved!"); 
+            e.target.reset(); 
+            renderLogs();
         }
 
         function handleAddSite(e) {
             e.preventDefault();
             const site = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
-            db.sites.push(site); syncConfigToCloud(); saveStorage(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added!");
+            db.sites.push(site); 
+            saveStorage(); 
+            syncConfigToCloud(); 
+            e.target.reset(); 
+            renderSites(); 
+            populateDropdowns(); 
+            showToast("Site added to sheet!");
         }
 
         function autoFillCurrentLocationForSite() {
@@ -675,19 +723,33 @@
             }
 
             const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value, photo: regPhotoData };
-            db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
-            syncConfigToCloud(); saveStorage(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
+            db.workers.push(w); 
+            db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
+            
+            saveStorage(); 
+            syncConfigToCloud(); 
+            e.target.reset(); 
+            resetRegCamera(); 
+            renderWorkers(); 
+            populateDropdowns(); 
+            showToast("Worker registered!");
         }
 
         function handleAddAdvance(e) {
             e.preventDefault();
-            const record = { id: 'adv_'+Date.now(), timestamp: new Date().toISOString(), workerId: document.getElementById('advWorkerSelect').value, amount: document.getElementById('advAmountInput').value };
-            db.advances.push(record); saveStorage(); fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addAdvance', payload: record }) });
-            e.target.reset(); renderSettlements(); showToast("Advance logged!");
+            const record = { id: 'adv_'+Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: document.getElementById('advWorkerSelect').value, amount: document.getElementById('advAmountInput').value };
+            db.advances.push(record); 
+            saveStorage(); 
+            postToGoogleSheet('addAdvance', record);
+            e.target.reset(); 
+            renderSettlements(); 
+            showToast("Advance logged!");
         }
 
         function syncConfigToCloud() {
-            fetch(HARDCODED_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'syncConfig', payload: { sites: db.sites, workers: db.workers, users: db.users } }) });
+            // Send clean config without heavy photo strings to avoid size bloat
+            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage }));
+            postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users });
         }
 
         // Render Functions
@@ -718,11 +780,11 @@
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
             if (!db.attendance || db.attendance.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs logged yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
                 document.getElementById('logCountBadge').innerText = "0 logs";
                 return;
             }
-            container.innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); 
+            container.innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName} <span class="text-[10px] text-slate-500">(${a.timestamp})</span></div>`).join(''); 
             document.getElementById('logCountBadge').innerText = `${db.attendance.length} logs`; 
         }
         function renderSettlements() { 
@@ -732,7 +794,7 @@
                 return;
             }
             container.innerHTML = db.workers.map(w => {
-                const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split('T')[0])).size * w.wage;
+                const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split(',')[0])).size * w.wage;
                 const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>parseFloat(s)+parseFloat(x.amount),0);
                 return `<div class="bg-slate-900 p-3 text-xs border border-slate-700 rounded-xl flex justify-between items-center"><span class="font-bold">${w.name}</span> <span class="${earned-adv>=0?'text-emerald-400':'text-rose-400'} font-bold">Net: ₹${earned-adv}</span></div>`;
             }).join('');
