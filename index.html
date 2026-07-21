@@ -102,7 +102,7 @@
                         <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-blue-500 focus:outline-none transition">
                     </div>
                     <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Sign In</button>
-                    <p class="text-center text-[10px] text-slate-500 mt-2">Default worker login: Mobile Number & Password 1234</p>
+                    <p class="text-center text-[10px] text-slate-500 mt-2">Worker login: Mobile Number & Password 1234</p>
                 </form>
             </div>
         </section>
@@ -229,7 +229,7 @@
         <!-- TAB 5: WORKERS & MANUAL OVERRIDE (ADMIN ONLY) -->
         <section id="view-workers" class="hidden space-y-4">
             
-            <!-- ADMIN MANUAL OVERRIDE CARD (MOVED HERE) -->
+            <!-- ADMIN MANUAL OVERRIDE CARD -->
             <div id="adminOverrideCard" class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
                 <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
                 <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
@@ -315,14 +315,15 @@
         // HARDCODED GAS SCRIPT ENDPOINT
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpld2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         
-        const DEMO_DATA = {
+        // CLEAN INITIAL DATABASE WITH NO DEMO DATA
+        const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
-            sites: [{ id: 'site_demo', name: 'Demo Site HQ', lat: 10.0, lng: 76.0, radius: 1000 }], 
-            workers: [{ id: 'wrk_demo', name: 'Demo Worker', phone: '9876543210', wage: 800 }], 
+            sites: [], 
+            workers: [], 
             attendance: [], advances: [], settlements: []
         };
 
-        let db = JSON.parse(JSON.stringify(DEMO_DATA));
+        let db = JSON.parse(JSON.stringify(INITIAL_DATA));
         let currentUser = null;
         let stream = null, regStream = null;
         let currentPos = null, isWithinGeoFence = false;
@@ -339,8 +340,8 @@
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
-            const saved = localStorage.getItem('sitepunch_db_v7');
-            if (saved) { try { db = { ...DEMO_DATA, ...JSON.parse(saved) }; } catch(e) {} }
+            const saved = localStorage.getItem('sitepunch_db_v8');
+            if (saved) { try { db = { ...INITIAL_DATA, ...JSON.parse(saved) }; } catch(e) {} }
             
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
@@ -355,7 +356,7 @@
         }
 
         function saveStorage() {
-            localStorage.setItem('sitepunch_db_v7', JSON.stringify(db));
+            localStorage.setItem('sitepunch_db_v8', JSON.stringify(db));
         }
 
         // --- UI ROUTING ---
@@ -522,7 +523,7 @@
             if (currentUser && currentUser.role === 'worker' && currentUser.workerId) {
                 detectedWorker = db.workers.find(w => w.id === currentUser.workerId);
             } else {
-                detectedWorker = db.workers[Math.floor(Math.random() * db.workers.length)] || db.workers[0];
+                detectedWorker = db.workers.length > 0 ? db.workers[Math.floor(Math.random() * db.workers.length)] : null;
             }
 
             if (detectedWorker) {
@@ -530,6 +531,8 @@
                 document.getElementById('detectedWorkerPhoto').src = capturedPhotoData;
                 document.getElementById('detectedWorkerCard').classList.remove('hidden');
                 showToast(`Match: ${detectedWorker.name}`);
+            } else {
+                showToast("No registered worker found in database!", "error");
             }
             validatePunchEligibility();
         }
@@ -696,11 +699,39 @@
             if(document.getElementById('overrideWorkerSelect')) document.getElementById('overrideWorkerSelect').innerHTML = w;
             if(document.getElementById('advWorkerSelect')) document.getElementById('advWorkerSelect').innerHTML = w;
         }
-        function renderSites() { document.getElementById('sitesList').innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p></div>`).join(''); }
-        function renderWorkers() { document.getElementById('workersList').innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/><div><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day | ${w.phone}</p></div></div></div>`).join(''); }
-        function renderLogs() { document.getElementById('logsContainer').innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); document.getElementById('logCountBadge').innerText = db.attendance.length; }
+        function renderSites() { 
+            const container = document.getElementById('sitesList');
+            if (!db.sites || db.sites.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
+                return;
+            }
+            container.innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p><p class="text-[10px] text-slate-400">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p></div>`).join(''); 
+        }
+        function renderWorkers() { 
+            const container = document.getElementById('workersList');
+            if (!db.workers || db.workers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
+                return;
+            }
+            container.innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/><div><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day | ${w.phone}</p></div></div></div>`).join(''); 
+        }
+        function renderLogs() { 
+            const container = document.getElementById('logsContainer');
+            if (!db.attendance || db.attendance.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs logged yet.</p>`;
+                document.getElementById('logCountBadge').innerText = "0 logs";
+                return;
+            }
+            container.innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); 
+            document.getElementById('logCountBadge').innerText = `${db.attendance.length} logs`; 
+        }
         function renderSettlements() { 
-            document.getElementById('payrollCardsContainer').innerHTML = db.workers.map(w => {
+            const container = document.getElementById('payrollCardsContainer');
+            if (!db.workers || db.workers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
+                return;
+            }
+            container.innerHTML = db.workers.map(w => {
                 const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split('T')[0])).size * w.wage;
                 const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>parseFloat(s)+parseFloat(x.amount),0);
                 return `<div class="bg-slate-900 p-3 text-xs border border-slate-700 rounded-xl flex justify-between items-center"><span class="font-bold">${w.name}</span> <span class="${earned-adv>=0?'text-emerald-400':'text-rose-400'} font-bold">Net: ₹${earned-adv}</span></div>`;
