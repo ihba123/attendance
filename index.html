@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jithu Corporation | SitePunch AI Attendance</title>
+    
+    <!-- PWA / INSTALL APP SUPPORT -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SitePunch AI">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBmMTcyYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwZjE3MmEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
@@ -31,8 +41,8 @@
             <div>
                 <h1 class="font-extrabold text-base leading-tight text-white tracking-wide">Jithu Corporation</h1>
                 <p class="text-[11px] text-slate-400 flex items-center gap-1.5" id="headerSubText">
+                    <span id="cloudStatusText" class="text-blue-400 font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
                     <span id="roleBadge" class="bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
-                    <span id="cloudStatusText" class="text-slate-500 font-semibold ml-1"><i class="fa-solid fa-cloud"></i> Connecting...</span>
                 </p>
             </div>
         </div>
@@ -308,14 +318,14 @@
     </div>
 
     <script>
-        // =========================================================================
-        // CORRECTED GOOGLE APPS SCRIPT URL
-        // =========================================================================
-        const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
+        // HARDCODED GOOGLE APPS SCRIPT URL
+        const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpld2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         
         const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
-            sites: [], workers: [], attendance: [], advances: [], settlements: []
+            sites: [], 
+            workers: [], 
+            attendance: [], advances: [], settlements: []
         };
 
         let db = JSON.parse(JSON.stringify(INITIAL_DATA));
@@ -331,68 +341,95 @@
         let regPhotoData = null;
         let detectedWorker = null;
 
-        // --- INIT & CLOUD SYNC ---
+        // --- INIT ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
-            // 1. Load Local Fallback
             const saved = localStorage.getItem('sitepunch_db_v9');
             if (saved) { try { db = { ...INITIAL_DATA, ...JSON.parse(saved) }; } catch(e) {} }
             
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            if (currentUser) showDashboard(); else showLandingPage();
+            if (currentUser) {
+                showDashboard();
+            } else {
+                showLandingPage();
+            }
 
-            // 2. Fetch Latest Database From Google Sheets
+            // ACTIVELY PULL DATA FROM GOOGLE SHEETS
             await fetchCloudData();
 
-            // 3. Start AI Model Loading Silently
-            loadFaceAPIModels();
+            await loadFaceAPIModels();
         }
 
         async function fetchCloudData() {
             try {
-                document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
-                document.getElementById('cloudStatusText').className = "text-amber-400 font-semibold ml-1";
+                const cloudStatus = document.getElementById('cloudStatusText');
+                if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
 
                 const response = await fetch(HARDCODED_GAS_URL + "?action=getDb");
                 const result = await response.json();
                 
-                if (result.status === 'success') {
-                    // Map Sites
+                if (result.status === 'success' && result.data) {
+                    // Map Sites Flexibly
                     if (result.data.sites && result.data.sites.length > 0) {
                         db.sites = result.data.sites.map(s => ({
-                            id: s['Site ID'], name: s['Site Name'], lat: parseFloat(s['Latitude']), lng: parseFloat(s['Longitude']), radius: parseInt(s['Geo-Radius (m)'])
-                        })).filter(s => s.id);
+                            id: s['Site ID'] || s['id'], 
+                            name: s['Site Name'] || s['name'], 
+                            lat: parseFloat(s['Latitude'] || s['lat']), 
+                            lng: parseFloat(s['Longitude'] || s['lng']), 
+                            radius: parseInt(s['Geo-Radius (m)'] || s['radius'] || 150)
+                        })).filter(s => s.id && s.id !== 'undefined');
                     }
-                    // Map Workers
+                    
+                    // Map Workers Flexibly
                     if (result.data.workers && result.data.workers.length > 0) {
                         db.workers = result.data.workers.map(w => ({
-                            id: w['Worker ID'], name: w['Full Name'], phone: String(w['Mobile Number']), wage: parseFloat(w['Daily Wage (₹)'])
-                        })).filter(w => w.id);
+                            id: w['Worker ID'] || w['id'], 
+                            name: w['Full Name'] || w['name'], 
+                            phone: String(w['Mobile Number'] || w['phone']), 
+                            wage: parseFloat(w['Daily Wage (₹)'] || w['wage'] || 0)
+                        })).filter(w => w.id && w.id !== 'undefined');
                     }
-                    // Map Users
+                    
+                    // Map Users Flexibly (Fixes missing accounts)
                     if (result.data.users && result.data.users.length > 0) {
-                        db.users = result.data.users.map(u => ({
-                            username: String(u['Login ID (Phone/Admin)']), password: String(u['Password']), role: u['Account Role'], name: u['Full Name'], workerId: u['Worker ID'], isDefaultPass: (String(u['Password']) === '1234' || String(u['Password']) === 'admin123')
-                        })).filter(u => u.username);
-                    } else {
-                        // Keep admin if sheet is fully empty
-                        if (!db.users.find(u => u.username === 'admin')) db.users.push(INITIAL_DATA.users[0]);
+                        db.users = result.data.users.map(u => {
+                            const uname = String(u['Login ID (Phone/Admin)'] || u['User ID (Phone/Admin)'] || u['Login ID (Phone)'] || u['username'] || '');
+                            const pass = String(u['Password'] || u['password'] || '');
+                            return {
+                                username: uname,
+                                password: pass,
+                                role: u['Account Role'] || u['role'] || 'worker',
+                                name: u['Full Name'] || u['Profile Name'] || u['name'] || 'User',
+                                workerId: u['Worker ID'] || u['workerId'] || null,
+                                isDefaultPass: (pass === '1234' || pass === 'admin123')
+                            };
+                        }).filter(u => u.username && u.username !== 'undefined');
+                    }
+                    
+                    // Guarantee Admin exists if sheet is missing it
+                    if (!db.users.find(u => String(u.username).trim().toLowerCase() === 'admin')) {
+                        db.users.push(INITIAL_DATA.users[0]);
                     }
 
                     saveStorage();
                     populateDropdowns();
                     if(currentUser) { renderSites(); renderWorkers(); renderSettlements(); }
-
-                    document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Synced';
-                    document.getElementById('cloudStatusText').className = "text-emerald-400 font-semibold ml-1";
+                    
+                    if(cloudStatus) {
+                        cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Synced';
+                        cloudStatus.className = 'text-emerald-400 font-semibold';
+                    }
                 }
             } catch (e) {
                 console.warn("Offline Mode Active", e);
-                document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Offline';
-                document.getElementById('cloudStatusText').className = "text-rose-400 font-semibold ml-1";
+                const cloudStatus = document.getElementById('cloudStatusText');
+                if(cloudStatus) {
+                    cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-xmark"></i> Offline';
+                    cloudStatus.className = 'text-rose-400 font-semibold';
+                }
             }
         }
 
@@ -451,14 +488,21 @@
         // --- AUTH ---
         function handleLogin(e) { 
             e.preventDefault(); 
-            const u = db.users.find(x => x.username === document.getElementById('loginUserId').value && x.password === document.getElementById('loginPassword').value); 
+            // .trim() removes invisible spaces from mobile keyboards!
+            const loginId = document.getElementById('loginUserId').value.trim();
+            const loginPass = document.getElementById('loginPassword').value.trim();
+
+            const u = db.users.find(x => String(x.username).trim() === loginId && String(x.password).trim() === loginPass); 
+            
             if(u){ 
                 currentUser=u; sessionStorage.setItem('sitepunch_active_user', JSON.stringify(u)); 
                 document.getElementById('loginForm').reset();
                 if(u.isDefaultPass || u.password==='admin123' || u.password==='1234') {
                     document.getElementById('forcePasswordModal').classList.remove('hidden');
-                } else { showToast("Logged In"); showDashboard(); }
-            } else showToast("Invalid Credentials! Or Sync Failed.", "error"); 
+                } else { 
+                    showToast("Logged In"); showDashboard(); 
+                }
+            } else showToast("Invalid Credentials or Sync Failed!", "error"); 
         }
 
         function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_active_user'); showToast("Logged out"); showLandingPage(); }
