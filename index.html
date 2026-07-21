@@ -45,17 +45,14 @@
     <div id="aiLoadingOverlay" class="fixed inset-0 bg-slate-950/95 z-[100] flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <h2 class="text-xl font-bold text-white mb-1">Jithu Corporation</h2>
-        <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-3">Initializing AI Attendance Engine</p>
-        <p class="text-xs text-slate-400">Downloading facial recognition models...</p>
+        <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-3">Initializing AI Engine</p>
+        <p class="text-xs text-slate-400">Loading face recognition engines...</p>
         <p id="aiLoadStatus" class="text-xs text-slate-500 mt-2 font-mono">0 / 3 Models Loaded</p>
     </div>
 
-    <!-- NAVIGATION TABS -->
+    <!-- NAVIGATION TABS (ADMIN & WORKER DASHBOARD) -->
     <nav id="mainNav" class="hidden bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
-        <button onclick="switchTab('punch')" id="tab-punch" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
-            <i class="fa-solid fa-camera text-base"></i><span>Punch</span>
-        </button>
-        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
             <i class="fa-solid fa-clock-rotate-left text-base"></i><span>Logs</span>
         </button>
         <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn auth-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
@@ -65,7 +62,7 @@
             <i class="fa-solid fa-map-location-dot text-base"></i><span>Sites</span>
         </button>
         <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
-            <i class="fa-solid fa-users text-base"></i><span>Workers</span>
+            <i class="fa-solid fa-users text-base"></i><span>Workers & Override</span>
         </button>
     </nav>
 
@@ -85,7 +82,7 @@
                 <button onclick="openPublicPunch()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/50 flex flex-col items-center justify-center gap-1.5 transition transform hover:scale-[1.02]">
                     <i class="fa-solid fa-camera-retro text-2xl"></i>
                     <span class="text-lg">Record Attendance</span>
-                    <span class="text-[10px] font-normal opacity-80">(Auto-Face & GPS Scan)</span>
+                    <span class="text-[10px] font-normal opacity-80">(Public Face Kiosk)</span>
                 </button>
 
                 <div class="relative flex py-6 items-center">
@@ -110,18 +107,8 @@
             </div>
         </section>
 
-        <!-- TAB 1: PUNCH -->
+        <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
         <section id="view-punch" class="hidden space-y-4">
-            <!-- ADMIN OVERRIDE CARD -->
-            <div id="adminOverrideCard" class="admin-only hidden bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
-                <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
-                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-                    <select id="overrideWorkerSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Worker --</option></select>
-                    <select id="overridePunchType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">IN</option><option value="OUT">OUT</option></select>
-                    <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Override</button>
-                </form>
-            </div>
-
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -239,8 +226,25 @@
             <div id="sitesList" class="space-y-2"></div>
         </section>
 
-        <!-- TAB 5: WORKERS (ADMIN) -->
+        <!-- TAB 5: WORKERS & MANUAL OVERRIDE (ADMIN ONLY) -->
         <section id="view-workers" class="hidden space-y-4">
+            
+            <!-- ADMIN MANUAL OVERRIDE CARD (MOVED HERE) -->
+            <div id="adminOverrideCard" class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
+                <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
+                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overrideSiteSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
+                        <select id="overrideWorkerSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overridePunchType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
+                        <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Log Override Punch</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- REGISTER WORKER WITH LIVE FACE CAPTURE -->
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
                 <h2 class="text-lg font-bold">Register Worker Profile</h2>
                 <form id="addWorkerForm" onsubmit="handleAddWorker(event)" class="space-y-3">
@@ -249,7 +253,26 @@
                         <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                         <input type="number" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl">Register Profile</button>
+
+                    <!-- LIVE CAMERA FACE CAPTURE FOR REGISTRATION -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Capture Reference Face Photo</label>
+                        <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-700 aspect-video relative flex flex-col items-center justify-center">
+                            <video id="regWebcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
+                            <img id="regPhotoPreview" class="hidden w-full h-full object-cover" />
+                            
+                            <div class="absolute bottom-2 flex gap-2">
+                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg shadow-md transition">
+                                    <i class="fa-solid fa-camera mr-1"></i> Capture Live Face
+                                </button>
+                                <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg shadow-md transition">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Retake
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-blue-600 font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
                 </form>
             </div>
             <div id="workersList" class="space-y-2"></div>
@@ -301,7 +324,7 @@
 
         let db = JSON.parse(JSON.stringify(DEMO_DATA));
         let currentUser = null;
-        let stream = null;
+        let stream = null, regStream = null;
         let currentPos = null, isWithinGeoFence = false;
         
         // AI State
@@ -309,13 +332,14 @@
         let autoScanActive = false;
         let scanInterval = null;
         let capturedPhotoData = null;
+        let regPhotoData = null;
         let detectedWorker = null;
 
         // --- INIT ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
-            const saved = localStorage.getItem('sitepunch_db_v6');
+            const saved = localStorage.getItem('sitepunch_db_v7');
             if (saved) { try { db = { ...DEMO_DATA, ...JSON.parse(saved) }; } catch(e) {} }
             
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
@@ -331,12 +355,12 @@
         }
 
         function saveStorage() {
-            localStorage.setItem('sitepunch_db_v6', JSON.stringify(db));
+            localStorage.setItem('sitepunch_db_v7', JSON.stringify(db));
         }
 
         // --- UI ROUTING ---
         function showLandingPage() {
-            stopWebcam();
+            stopWebcam(); stopRegWebcam();
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-landing').classList.remove('hidden');
             document.getElementById('mainNav').classList.add('hidden');
@@ -376,7 +400,7 @@
 
             populateDropdowns();
             renderSites(); renderWorkers(); renderLogs(); renderSettlements();
-            switchTab('punch');
+            switchTab('logs');
         }
 
         function switchTab(t) { 
@@ -387,6 +411,7 @@
             const btn = document.getElementById(`tab-${t}`); if(btn) { btn.classList.add('bg-blue-600', 'text-white'); btn.classList.remove('text-slate-400'); }
 
             if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
+            if(t === 'workers' && currentUser?.role === 'admin') { startRegWebcam(); } else { stopRegWebcam(); }
         }
 
         // --- AUTH ---
@@ -522,6 +547,51 @@
             validatePunchEligibility();
         }
 
+        // --- WEBCAM FOR REGISTRATION FACE SNAP ---
+        async function startRegWebcam() {
+            const video = document.getElementById('regWebcam');
+            if(!video) return;
+            try {
+                if (regStream) stopRegWebcam();
+                regStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                video.srcObject = regStream;
+            } catch (err) {
+                console.warn("Reg camera error", err);
+            }
+        }
+
+        function stopRegWebcam() {
+            if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; }
+        }
+
+        function snapRegWorkerPhoto() {
+            const video = document.getElementById('regWebcam');
+            const preview = document.getElementById('regPhotoPreview');
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0);
+            regPhotoData = canvas.toDataURL('image/jpeg', 0.5);
+
+            preview.src = regPhotoData;
+            preview.classList.remove('hidden');
+            video.classList.add('hidden');
+
+            document.getElementById('regSnapBtn').classList.add('hidden');
+            document.getElementById('regRetakeBtn').classList.remove('hidden');
+            showToast("Worker face photo snapped!");
+        }
+
+        function resetRegCamera() {
+            regPhotoData = null;
+            document.getElementById('regPhotoPreview').classList.add('hidden');
+            document.getElementById('regWebcam').classList.remove('hidden');
+            document.getElementById('regSnapBtn').classList.remove('hidden');
+            document.getElementById('regRetakeBtn').classList.add('hidden');
+        }
+
         // --- GPS ---
         function checkCurrentLocation() {
             const statusText = document.getElementById('gpsStatusText');
@@ -575,7 +645,7 @@
         async function handleAdminOverridePunch(e) {
             e.preventDefault();
             const w = db.workers.find(x => x.id === document.getElementById('overrideWorkerSelect').value);
-            const s = db.sites.find(x => x.id === document.getElementById('punchSiteSelect').value); 
+            const s = db.sites.find(x => x.id === document.getElementById('overrideSiteSelect').value); 
             if(!w || !s) return showToast("Select worker & active site", "error");
             const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toISOString(), workerName: w.name + " [MANUAL]", siteName: s.name, type: document.getElementById('overridePunchType').value, lat: s.lat, lng: s.lng, isOverride: true };
             db.attendance.unshift(record); saveStorage();
@@ -596,9 +666,14 @@
         function handleAddWorker(e) {
             e.preventDefault();
             const phone = document.getElementById('workerPhoneInput').value;
-            const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value };
+            
+            if (!regPhotoData) {
+                return showToast("Please capture worker live face photo first!", "error");
+            }
+
+            const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value, photo: regPhotoData };
             db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
-            syncConfigToCloud(); saveStorage(); e.target.reset(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
+            syncConfigToCloud(); saveStorage(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
         }
 
         function handleAddAdvance(e) {
@@ -617,11 +692,12 @@
             const s = `<option value="">-- Select Active Work Site --</option>` + db.sites.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
             const w = `<option value="">-- Choose Worker --</option>` + db.workers.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
             if(document.getElementById('punchSiteSelect')) document.getElementById('punchSiteSelect').innerHTML = s;
+            if(document.getElementById('overrideSiteSelect')) document.getElementById('overrideSiteSelect').innerHTML = s;
             if(document.getElementById('overrideWorkerSelect')) document.getElementById('overrideWorkerSelect').innerHTML = w;
             if(document.getElementById('advWorkerSelect')) document.getElementById('advWorkerSelect').innerHTML = w;
         }
         function renderSites() { document.getElementById('sitesList').innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p></div>`).join(''); }
-        function renderWorkers() { document.getElementById('workersList').innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day</p></div>`).join(''); }
+        function renderWorkers() { document.getElementById('workersList').innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/><div><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day | ${w.phone}</p></div></div></div>`).join(''); }
         function renderLogs() { document.getElementById('logsContainer').innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName}</div>`).join(''); document.getElementById('logCountBadge').innerText = db.attendance.length; }
         function renderSettlements() { 
             document.getElementById('payrollCardsContainer').innerHTML = db.workers.map(w => {
