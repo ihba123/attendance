@@ -638,11 +638,13 @@
         // --- HTTP POST TO GOOGLE SHEETS ---
         function postToGoogleSheet(action, payload) {
             try {
+                // Encode payload as form-urlencoded data for guaranteed Google Apps Script compatibility
+                const bodyData = 'data=' + encodeURIComponent(JSON.stringify({ action: action, payload: payload }));
                 fetch(HARDCODED_GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: action, payload: payload })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: bodyData
                 });
             } catch(e) {
                 console.error("Sheet send error", e);
