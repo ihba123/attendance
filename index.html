@@ -425,7 +425,14 @@
                     // Map Sites Flexibly
                     if (result.data.sites && result.data.sites.length > 0) {
                         db.sites = result.data.sites.map(s => ({
-                            id: s['Site ID'] || s['id'], 
+                            id: s['Site ID'] || s['id'],
+                            name: s['Site Name'] || s['name'],
+                            lat: parseFloat(s['Latitude'] || s['lat'] || 0),
+                            lng: parseFloat(s['Longitude'] || s['lng'] || 0),
+                            radius: parseFloat(s['Geo-Radius (m)'] || s['radius'] || 150)
+                        })).filter(s => s.id && s.id !== 'undefined');
+                    }
+
                     // Map Workers Flexibly - NOW PARSES BIOMETRICS
                     if (result.data.workers && result.data.workers.length > 0) {
                         db.workers = result.data.workers.map(w => {
