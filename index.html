@@ -299,6 +299,56 @@
 
     </main>
 
+    <!-- CUSTOM CONFIRM MODAL (NO UGLY ALERTS) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-rose-500/50 rounded-2xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-rose-900/50 text-rose-400 mx-auto flex items-center justify-center text-2xl border border-rose-500/30"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="text-xl font-bold text-white" id="confirmTitle">Are you sure?</h3>
+            <p class="text-sm text-slate-300" id="confirmDesc">This action cannot be undone.</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-semibold transition">Cancel</button>
+                <button id="confirmActionBtn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-900/50 transition">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT SITE MODAL -->
+    <div id="editSiteModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Edit Site</h3>
+                <button type="button" onclick="closeEditSite()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="saveEditSite(event)" class="space-y-3">
+                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT WORKER MODAL -->
+    <div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Edit Worker</h3>
+                <button type="button" onclick="closeEditWorker()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="saveEditWorker(event)" class="space-y-3">
+                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="number" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
     <!-- FORCE PASSWORD CHANGE MODAL -->
     <div id="forcePasswordModal" class="hidden fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-amber-500/50 rounded-2xl w-full p-6 space-y-5">
@@ -319,7 +369,7 @@
 
     <script>
         // HARDCODED GOOGLE APPS SCRIPT URL
-        const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpld2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
+        const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         
         const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
@@ -768,15 +818,125 @@
             if(document.getElementById('overrideWorkerSelect')) document.getElementById('overrideWorkerSelect').innerHTML = w;
             if(document.getElementById('advWorkerSelect')) document.getElementById('advWorkerSelect').innerHTML = w;
         }
+
+        // --- CUSTOM CONFIRM MODAL LOGIC ---
+        function openConfirmModal(title, desc, actionCallback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmDesc').innerText = desc;
+            const btn = document.getElementById('confirmActionBtn');
+            const newBtn = btn.cloneNode(true); // Clear old listeners
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => { actionCallback(); closeConfirmModal(); });
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+
+        // --- EDIT & DELETE SITE LOGIC ---
+        function deleteSite(id) {
+            openConfirmModal("Delete Site?", "This will permanently remove the site.", () => {
+                db.sites = db.sites.filter(s => s.id !== id);
+                saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site deleted");
+            });
+        }
+        let editingSiteId = null;
+        function openEditSite(id) {
+            const s = db.sites.find(x => x.id === id);
+            if(!s) return;
+            editingSiteId = id;
+            document.getElementById('editSiteName').value = s.name;
+            document.getElementById('editSiteLat').value = s.lat;
+            document.getElementById('editSiteLng').value = s.lng;
+            document.getElementById('editSiteRadius').value = s.radius;
+            document.getElementById('editSiteModal').classList.remove('hidden');
+        }
+        function closeEditSite() { document.getElementById('editSiteModal').classList.add('hidden'); editingSiteId = null; }
+        function saveEditSite(e) {
+            e.preventDefault();
+            const s = db.sites.find(x => x.id === editingSiteId);
+            if(s) {
+                s.name = document.getElementById('editSiteName').value;
+                s.lat = document.getElementById('editSiteLat').value;
+                s.lng = document.getElementById('editSiteLng').value;
+                s.radius = document.getElementById('editSiteRadius').value;
+                saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site updated");
+            }
+            closeEditSite();
+        }
+
+        // --- EDIT & DELETE WORKER LOGIC ---
+        function deleteWorker(id) {
+            openConfirmModal("Delete Worker?", "This removes the worker and their login access.", () => {
+                db.workers = db.workers.filter(w => w.id !== id);
+                db.users = db.users.filter(u => u.workerId !== id);
+                saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker deleted");
+            });
+        }
+        let editingWorkerId = null;
+        function openEditWorker(id) {
+            const w = db.workers.find(x => x.id === id);
+            if(!w) return;
+            editingWorkerId = id;
+            document.getElementById('editWorkerName').value = w.name;
+            document.getElementById('editWorkerPhone').value = w.phone;
+            document.getElementById('editWorkerWage').value = w.wage;
+            document.getElementById('editWorkerModal').classList.remove('hidden');
+        }
+        function closeEditWorker() { document.getElementById('editWorkerModal').classList.add('hidden'); editingWorkerId = null; }
+        function saveEditWorker(e) {
+            e.preventDefault();
+            const w = db.workers.find(x => x.id === editingWorkerId);
+            const newPhone = document.getElementById('editWorkerPhone').value;
+            if(w) {
+                w.name = document.getElementById('editWorkerName').value;
+                w.phone = newPhone;
+                w.wage = document.getElementById('editWorkerWage').value;
+                
+                const u = db.users.find(x => x.workerId === editingWorkerId);
+                if(u) { u.name = w.name; u.username = newPhone; }
+                
+                saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker updated");
+            }
+            closeEditWorker();
+        }
+
         function renderSites() { 
             const container = document.getElementById('sitesList');
-            if (!db.sites || db.sites.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
-            container.innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p><p class="text-[10px] text-slate-400">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p></div>`).join(''); 
+            if (!db.sites || db.sites.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
+                return;
+            }
+            container.innerHTML = db.sites.map(s => `
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm">${s.name}</p>
+                        <p class="text-[10px] text-slate-400">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditSite('${s.id}')" class="w-8 h-8 rounded-lg bg-blue-900/50 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteSite('${s.id}')" class="w-8 h-8 rounded-lg bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                </div>`).join(''); 
         }
         function renderWorkers() { 
             const container = document.getElementById('workersList');
-            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
-            container.innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/><div><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day | ${w.phone}</p></div></div></div>`).join(''); 
+            if (!db.workers || db.workers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
+                return;
+            }
+            container.innerHTML = db.workers.map(w => `
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/>
+                        <div>
+                            <p class="font-bold text-sm">${w.name}</p>
+                            <p class="text-[10px] text-emerald-400">₹${w.wage}/day | Phone: ${w.phone}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-blue-900/50 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                </div>`).join(''); 
         }
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
