@@ -41,15 +41,6 @@
         </div>
     </header>
 
-    <!-- LOADING AI MODELS OVERLAY WITH FAILSAFE TIMEOUT -->
-    <div id="aiLoadingOverlay" class="fixed inset-0 bg-slate-950/95 z-[100] flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm transition-opacity duration-500">
-        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 class="text-xl font-bold text-white mb-1">Jithu Corporation</h2>
-        <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-3">Initializing AI Engine</p>
-        <p class="text-xs text-slate-400">Loading face recognition engines...</p>
-        <p id="aiLoadStatus" class="text-xs text-slate-500 mt-2 font-mono">Loading models...</p>
-    </div>
-
     <!-- NAVIGATION TABS (ADMIN & WORKER DASHBOARD) -->
     <nav id="mainNav" class="hidden bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
         <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
@@ -335,7 +326,7 @@
         let regPhotoData = null;
         let detectedWorker = null;
 
-        // --- INIT WITH LOADING SAFETY TIMEOUT ---
+        // --- INIT ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
@@ -351,16 +342,8 @@
                 showLandingPage();
             }
 
-            // Safety timeout: dismiss loading screen after max 5 seconds even if CDN fails
-            const safetyTimeout = setTimeout(() => {
-                const overlay = document.getElementById('aiLoadingOverlay');
-                if (overlay && !overlay.classList.contains('hidden')) {
-                    overlay.classList.add('hidden');
-                }
-            }, 5000);
-
-            await loadFaceAPIModels();
-            clearTimeout(safetyTimeout);
+            // Load AI Models silently in the background without blocking the UI
+            loadFaceAPIModels(); 
         }
 
         function saveStorage() {
@@ -470,9 +453,8 @@
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
                 aiModelsLoaded = true;
-                document.getElementById('aiLoadingOverlay').classList.add('hidden');
             } catch (e) {
-                document.getElementById('aiLoadingOverlay').classList.add('hidden');
+                console.error("Failed to load AI models", e);
             }
         }
 
@@ -490,12 +472,18 @@
             autoScanActive = true;
             
             scanInterval = setInterval(async () => {
-                if (!autoScanActive || !aiModelsLoaded) return;
+                if (!autoScanActive) return;
+                const instruct = document.getElementById('livenessInstruction');
+
+                if (!aiModelsLoaded) {
+                    instruct.innerHTML = "Loading AI...<br>Please wait";
+                    return;
+                }
+
                 const video = document.getElementById('webcam');
                 if (video.paused || video.ended) return;
 
                 const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceExpressions();
-                const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
                     if (detection.expressions.happy > 0.6) {
@@ -809,7 +797,7 @@
             }).join('');
         }
 
-        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon'].className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
+        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon').className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
         
         window.addEventListener('DOMContentLoaded', loadStorage);
         setInterval(() => { const c = document.getElementById('currentTimeDisplay'); if(c) c.innerText = new Date().toLocaleTimeString(); }, 1000);
