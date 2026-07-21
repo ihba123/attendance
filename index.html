@@ -41,13 +41,13 @@
         </div>
     </header>
 
-    <!-- LOADING AI MODELS OVERLAY -->
+    <!-- LOADING AI MODELS OVERLAY WITH FAILSAFE TIMEOUT -->
     <div id="aiLoadingOverlay" class="fixed inset-0 bg-slate-950/95 z-[100] flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <h2 class="text-xl font-bold text-white mb-1">Jithu Corporation</h2>
         <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-3">Initializing AI Engine</p>
         <p class="text-xs text-slate-400">Loading face recognition engines...</p>
-        <p id="aiLoadStatus" class="text-xs text-slate-500 mt-2 font-mono">0 / 3 Models Loaded</p>
+        <p id="aiLoadStatus" class="text-xs text-slate-500 mt-2 font-mono">Loading models...</p>
     </div>
 
     <!-- NAVIGATION TABS (ADMIN & WORKER DASHBOARD) -->
@@ -335,7 +335,7 @@
         let regPhotoData = null;
         let detectedWorker = null;
 
-        // --- INIT ---
+        // --- INIT WITH LOADING SAFETY TIMEOUT ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
@@ -351,7 +351,16 @@
                 showLandingPage();
             }
 
+            // Safety timeout: dismiss loading screen after max 5 seconds even if CDN fails
+            const safetyTimeout = setTimeout(() => {
+                const overlay = document.getElementById('aiLoadingOverlay');
+                if (overlay && !overlay.classList.contains('hidden')) {
+                    overlay.classList.add('hidden');
+                }
+            }, 5000);
+
             await loadFaceAPIModels();
+            clearTimeout(safetyTimeout);
         }
 
         function saveStorage() {
@@ -396,7 +405,7 @@
             `;
 
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
-            document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden' ) : el.classList.add('hidden'));
+            document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
 
             populateDropdowns();
             renderSites(); renderWorkers(); renderLogs(); renderSettlements();
@@ -638,7 +647,6 @@
         // --- HTTP POST TO GOOGLE SHEETS ---
         function postToGoogleSheet(action, payload) {
             try {
-                // Encode payload as form-urlencoded data for guaranteed Google Apps Script compatibility
                 const bodyData = 'data=' + encodeURIComponent(JSON.stringify({ action: action, payload: payload }));
                 fetch(HARDCODED_GAS_URL, {
                     method: 'POST',
@@ -749,30 +757,8 @@
         }
 
         function syncConfigToCloud() {
-            // Send clean config without heavy photo strings to avoid size bloat
-            const cleanWorkers = db.workers.map(w => ({ 
-                id: w.id || '', 
-                name: w.name || '', 
-                phone: w.phone || '', 
-                wage: w.wage || 0 
-            }));
-
-            const cleanSites = db.sites.map(s => ({
-                id: s.id || '',
-                name: s.name || '',
-                lat: s.lat || 0,
-                lng: s.lng || 0,
-                radius: s.radius || 150
-            }));
-
-            const cleanUsers = db.users.map(u => ({
-                username: u.username || '',
-                password: u.password || '1234',
-                role: u.role || 'worker',
-                name: u.name || ''
-            }));
-
-            postToGoogleSheet('syncConfig', { sites: cleanSites, workers: cleanWorkers, users: cleanUsers });
+            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage }));
+            postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users });
         }
 
         // Render Functions
