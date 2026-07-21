@@ -31,8 +31,8 @@
             <div>
                 <h1 class="font-extrabold text-base leading-tight text-white tracking-wide">Jithu Corporation</h1>
                 <p class="text-[11px] text-slate-400 flex items-center gap-1.5" id="headerSubText">
-                    <span class="text-blue-400 font-semibold">SitePunch AI</span>
                     <span id="roleBadge" class="bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
+                    <span id="cloudStatusText" class="text-slate-500 font-semibold ml-1"><i class="fa-solid fa-cloud"></i> Connecting...</span>
                 </p>
             </div>
         </div>
@@ -78,7 +78,7 @@
 
                 <div class="relative flex py-6 items-center">
                     <div class="flex-grow border-t border-slate-700"></div>
-                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-semibold tracking-wider uppercase">Or Sign In To Portal</span>
+                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
                     <div class="flex-grow border-t border-slate-700"></div>
                 </div>
 
@@ -101,6 +101,11 @@
         <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
         <section id="view-punch" class="hidden space-y-4">
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
+                
+                <div id="aiLoadBanner" class="bg-blue-900/50 text-blue-400 border border-blue-500/50 p-2 rounded-lg text-xs mb-3 font-semibold animate-pulse text-center">
+                    <i class="fa-solid fa-microchip"></i> Downloading AI Models... Please wait 5 seconds.
+                </div>
+
                 <div class="flex items-center justify-between">
                     <div>
                         <h2 class="text-lg font-bold">Face Station</h2>
@@ -303,14 +308,14 @@
     </div>
 
     <script>
-        // HARDCODED GOOGLE APPS SCRIPT URL
+        // =========================================================================
+        // CORRECTED GOOGLE APPS SCRIPT URL
+        // =========================================================================
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         
         const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
-            sites: [], 
-            workers: [], 
-            attendance: [], advances: [], settlements: []
+            sites: [], workers: [], attendance: [], advances: [], settlements: []
         };
 
         let db = JSON.parse(JSON.stringify(INITIAL_DATA));
@@ -326,28 +331,73 @@
         let regPhotoData = null;
         let detectedWorker = null;
 
-        // --- INIT ---
+        // --- INIT & CLOUD SYNC ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
-            const saved = localStorage.getItem('sitepunch_db_v8');
+            // 1. Load Local Fallback
+            const saved = localStorage.getItem('sitepunch_db_v9');
             if (saved) { try { db = { ...INITIAL_DATA, ...JSON.parse(saved) }; } catch(e) {} }
             
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            if (currentUser) {
-                showDashboard();
-            } else {
-                showLandingPage();
-            }
+            if (currentUser) showDashboard(); else showLandingPage();
 
-            // Load AI Models silently in the background without blocking the UI
-            loadFaceAPIModels(); 
+            // 2. Fetch Latest Database From Google Sheets
+            await fetchCloudData();
+
+            // 3. Start AI Model Loading Silently
+            loadFaceAPIModels();
+        }
+
+        async function fetchCloudData() {
+            try {
+                document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
+                document.getElementById('cloudStatusText').className = "text-amber-400 font-semibold ml-1";
+
+                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb");
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Map Sites
+                    if (result.data.sites && result.data.sites.length > 0) {
+                        db.sites = result.data.sites.map(s => ({
+                            id: s['Site ID'], name: s['Site Name'], lat: parseFloat(s['Latitude']), lng: parseFloat(s['Longitude']), radius: parseInt(s['Geo-Radius (m)'])
+                        })).filter(s => s.id);
+                    }
+                    // Map Workers
+                    if (result.data.workers && result.data.workers.length > 0) {
+                        db.workers = result.data.workers.map(w => ({
+                            id: w['Worker ID'], name: w['Full Name'], phone: String(w['Mobile Number']), wage: parseFloat(w['Daily Wage (₹)'])
+                        })).filter(w => w.id);
+                    }
+                    // Map Users
+                    if (result.data.users && result.data.users.length > 0) {
+                        db.users = result.data.users.map(u => ({
+                            username: String(u['Login ID (Phone/Admin)']), password: String(u['Password']), role: u['Account Role'], name: u['Full Name'], workerId: u['Worker ID'], isDefaultPass: (String(u['Password']) === '1234' || String(u['Password']) === 'admin123')
+                        })).filter(u => u.username);
+                    } else {
+                        // Keep admin if sheet is fully empty
+                        if (!db.users.find(u => u.username === 'admin')) db.users.push(INITIAL_DATA.users[0]);
+                    }
+
+                    saveStorage();
+                    populateDropdowns();
+                    if(currentUser) { renderSites(); renderWorkers(); renderSettlements(); }
+
+                    document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Synced';
+                    document.getElementById('cloudStatusText').className = "text-emerald-400 font-semibold ml-1";
+                }
+            } catch (e) {
+                console.warn("Offline Mode Active", e);
+                document.getElementById('cloudStatusText').innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Offline';
+                document.getElementById('cloudStatusText').className = "text-rose-400 font-semibold ml-1";
+            }
         }
 
         function saveStorage() {
-            localStorage.setItem('sitepunch_db_v8', JSON.stringify(db));
+            localStorage.setItem('sitepunch_db_v9', JSON.stringify(db));
         }
 
         // --- UI ROUTING ---
@@ -356,7 +406,6 @@
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-landing').classList.remove('hidden');
             document.getElementById('mainNav').classList.add('hidden');
-            
             document.getElementById('roleBadge').innerText = 'Welcome';
             document.getElementById('authHeaderAction').innerHTML = '';
         }
@@ -365,22 +414,16 @@
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-punch').classList.remove('hidden');
             document.getElementById('mainNav').classList.add('hidden');
-            
             document.getElementById('roleBadge').innerText = 'Public Kiosk';
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold transition">
-                    <i class="fa-solid fa-arrow-left"></i> Home
-                </button>
+                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
             `;
-            populateDropdowns();
-            startWebcam();
-            checkCurrentLocation();
+            populateDropdowns(); startWebcam(); checkCurrentLocation();
         }
 
         function showDashboard() {
             document.getElementById('view-landing').classList.add('hidden');
             document.getElementById('mainNav').classList.remove('hidden');
-            
             document.getElementById('roleBadge').innerText = `${currentUser.role}: ${currentUser.name}`;
             document.getElementById('authHeaderAction').innerHTML = `
                 <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-blue-900/50 text-blue-400 border border-blue-800/50 rounded-lg"><i class="fa-solid fa-user"></i> Profile</button>
@@ -390,8 +433,7 @@
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
             document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
 
-            populateDropdowns();
-            renderSites(); renderWorkers(); renderLogs(); renderSettlements();
+            populateDropdowns(); renderSites(); renderWorkers(); renderLogs(); renderSettlements();
             switchTab('logs');
         }
 
@@ -415,10 +457,8 @@
                 document.getElementById('loginForm').reset();
                 if(u.isDefaultPass || u.password==='admin123' || u.password==='1234') {
                     document.getElementById('forcePasswordModal').classList.remove('hidden');
-                } else { 
-                    showToast("Logged In"); showDashboard(); 
-                }
-            } else showToast("Invalid Credentials!", "error"); 
+                } else { showToast("Logged In"); showDashboard(); }
+            } else showToast("Invalid Credentials! Or Sync Failed.", "error"); 
         }
 
         function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_active_user'); showToast("Logged out"); showLandingPage(); }
@@ -453,8 +493,9 @@
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
                 aiModelsLoaded = true;
+                const banner = document.getElementById('aiLoadBanner'); if(banner) banner.classList.add('hidden');
             } catch (e) {
-                console.error("Failed to load AI models", e);
+                console.error("AI Models Error", e);
             }
         }
 
@@ -472,18 +513,12 @@
             autoScanActive = true;
             
             scanInterval = setInterval(async () => {
-                if (!autoScanActive) return;
-                const instruct = document.getElementById('livenessInstruction');
-
-                if (!aiModelsLoaded) {
-                    instruct.innerHTML = "Loading AI...<br>Please wait";
-                    return;
-                }
-
+                if (!autoScanActive || !aiModelsLoaded) return;
                 const video = document.getElementById('webcam');
                 if (video.paused || video.ended) return;
 
                 const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceExpressions();
+                const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
                     if (detection.expressions.happy > 0.6) {
@@ -493,9 +528,7 @@
                         instruct.innerHTML = "SMILE<br>To Verify";
                         document.getElementById('faceFrame').classList.remove('success');
                     }
-                } else {
-                    instruct.innerHTML = "Auto-Scanning<br>Look Straight";
-                }
+                } else { instruct.innerHTML = "Auto-Scanning<br>Look Straight"; }
             }, 800);
         }
 
@@ -505,7 +538,7 @@
             document.getElementById('livenessInstruction').innerHTML = "Matched!";
 
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 180; // Compressed small thumbnail
+            canvas.width = 240; canvas.height = 180;
             const ctx = canvas.getContext('2d');
             ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, 240, 180);
@@ -527,9 +560,7 @@
                 document.getElementById('detectedWorkerPhoto').src = capturedPhotoData;
                 document.getElementById('detectedWorkerCard').classList.remove('hidden');
                 showToast(`Match: ${detectedWorker.name}`);
-            } else {
-                showToast("No registered worker found!", "error");
-            }
+            } else { showToast("No registered worker found!", "error"); }
             validatePunchEligibility();
         }
 
@@ -554,19 +585,13 @@
                 if (regStream) stopRegWebcam();
                 regStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 video.srcObject = regStream;
-            } catch (err) {
-                console.warn("Reg camera error", err);
-            }
+            } catch (err) { console.warn("Reg camera error", err); }
         }
-
-        function stopRegWebcam() {
-            if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; }
-        }
+        function stopRegWebcam() { if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; } }
 
         function snapRegWorkerPhoto() {
             const video = document.getElementById('regWebcam');
             const preview = document.getElementById('regPhotoPreview');
-
             const canvas = document.createElement('canvas');
             canvas.width = 240; canvas.height = 180;
             const ctx = canvas.getContext('2d');
@@ -577,7 +602,6 @@
             preview.src = regPhotoData;
             preview.classList.remove('hidden');
             video.classList.add('hidden');
-
             document.getElementById('regSnapBtn').classList.add('hidden');
             document.getElementById('regRetakeBtn').classList.remove('hidden');
             showToast("Worker face photo snapped!");
@@ -635,40 +659,21 @@
         // --- HTTP POST TO GOOGLE SHEETS ---
         function postToGoogleSheet(action, payload) {
             try {
-                const bodyData = 'data=' + encodeURIComponent(JSON.stringify({ action: action, payload: payload }));
                 fetch(HARDCODED_GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: bodyData
+                    body: 'data=' + encodeURIComponent(JSON.stringify({ action: action, payload: payload }))
                 });
-            } catch(e) {
-                console.error("Sheet send error", e);
-            }
+            } catch(e) { console.error("Sheet send error", e); }
         }
 
         // --- DATA SUBMISSION ---
         async function submitPunch(type) {
             const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
-            const record = { 
-                id: 'att_' + Date.now(), 
-                timestamp: new Date().toLocaleString('en-IN'), 
-                workerId: detectedWorker.id, 
-                workerName: detectedWorker.name, 
-                siteId: site.id, 
-                siteName: site.name, 
-                type: type, 
-                lat: currentPos.lat, 
-                lng: currentPos.lng 
-            };
-            
-            db.attendance.unshift(record); 
-            saveStorage(); 
-            showToast(`Punch ${type} logged!`, "success");
-            
-            postToGoogleSheet('punchAttendance', record);
-            resetCamera(); 
-            renderLogs();
+            const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
+            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged!`, "success");
+            postToGoogleSheet('punchAttendance', record); resetCamera(); renderLogs();
         }
 
         async function handleAdminOverridePunch(e) {
@@ -676,36 +681,14 @@
             const w = db.workers.find(x => x.id === document.getElementById('overrideWorkerSelect').value);
             const s = db.sites.find(x => x.id === document.getElementById('overrideSiteSelect').value); 
             if(!w || !s) return showToast("Select worker & site", "error");
-            
-            const record = { 
-                id: 'att_ovr_' + Date.now(), 
-                timestamp: new Date().toLocaleString('en-IN'), 
-                workerName: w.name, 
-                siteName: s.name, 
-                type: document.getElementById('overridePunchType').value, 
-                lat: s.lat, 
-                lng: s.lng, 
-                isOverride: true 
-            };
-            
-            db.attendance.unshift(record); 
-            saveStorage();
-            postToGoogleSheet('punchAttendance', record);
-            showToast("Manual override saved!"); 
-            e.target.reset(); 
-            renderLogs();
+            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerName: w.name, siteName: s.name, type: document.getElementById('overridePunchType').value, lat: s.lat, lng: s.lng, isOverride: true };
+            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); renderLogs();
         }
 
         function handleAddSite(e) {
             e.preventDefault();
             const site = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
-            db.sites.push(site); 
-            saveStorage(); 
-            syncConfigToCloud(); 
-            e.target.reset(); 
-            renderSites(); 
-            populateDropdowns(); 
-            showToast("Site added to sheet!");
+            db.sites.push(site); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
         }
 
         function autoFillCurrentLocationForSite() {
@@ -715,33 +698,16 @@
         function handleAddWorker(e) {
             e.preventDefault();
             const phone = document.getElementById('workerPhoneInput').value;
-            
-            if (!regPhotoData) {
-                return showToast("Please capture worker live face photo first!", "error");
-            }
-
+            if (!regPhotoData) return showToast("Please capture worker live face photo first!", "error");
             const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value, photo: regPhotoData };
-            db.workers.push(w); 
-            db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
-            
-            saveStorage(); 
-            syncConfigToCloud(); 
-            e.target.reset(); 
-            resetRegCamera(); 
-            renderWorkers(); 
-            populateDropdowns(); 
-            showToast("Worker registered!");
+            db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
+            saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
         }
 
         function handleAddAdvance(e) {
             e.preventDefault();
             const record = { id: 'adv_'+Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: document.getElementById('advWorkerSelect').value, amount: document.getElementById('advAmountInput').value };
-            db.advances.push(record); 
-            saveStorage(); 
-            postToGoogleSheet('addAdvance', record);
-            e.target.reset(); 
-            renderSettlements(); 
-            showToast("Advance logged!");
+            db.advances.push(record); saveStorage(); postToGoogleSheet('addAdvance', record); e.target.reset(); renderSettlements(); showToast("Advance logged!");
         }
 
         function syncConfigToCloud() {
@@ -760,36 +726,26 @@
         }
         function renderSites() { 
             const container = document.getElementById('sitesList');
-            if (!db.sites || db.sites.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
-                return;
-            }
+            if (!db.sites || db.sites.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
             container.innerHTML = db.sites.map(s => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700"><p class="font-bold text-sm">${s.name}</p><p class="text-[10px] text-slate-400">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p></div>`).join(''); 
         }
         function renderWorkers() { 
             const container = document.getElementById('workersList');
-            if (!db.workers || db.workers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
-                return;
-            }
+            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
             container.innerHTML = db.workers.map(w => `<div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/><div><p class="font-bold text-sm">${w.name}</p><p class="text-[10px] text-emerald-400">₹${w.wage}/day | ${w.phone}</p></div></div></div>`).join(''); 
         }
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
             if (!db.attendance || db.attendance.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
                 document.getElementById('logCountBadge').innerText = "0 logs";
-                return;
+                return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
             }
             container.innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName} <span class="text-[10px] text-slate-500">(${a.timestamp})</span></div>`).join(''); 
             document.getElementById('logCountBadge').innerText = `${db.attendance.length} logs`; 
         }
         function renderSettlements() { 
             const container = document.getElementById('payrollCardsContainer');
-            if (!db.workers || db.workers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
-                return;
-            }
+            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
             container.innerHTML = db.workers.map(w => {
                 const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split(',')[0])).size * w.wage;
                 const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>parseFloat(s)+parseFloat(x.amount),0);
