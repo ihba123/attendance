@@ -271,11 +271,10 @@
                 <h3 class="text-base font-bold"><i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> Cloud Sync</h3>
                 <button onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-slate-400">Paste Apps Script Web App URL to enable bi-directional sync (PWA Offline First).</p>
-            <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+            <p class="text-xs text-slate-400 mb-2">Your Google Apps Script Web App URL is permanently saved and linked below.</p>
+            <input type="url" id="gasUrlInput" readonly value="https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-slate-500 cursor-not-allowed">
             <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeSettingsModal()" class="px-3 py-1.5 bg-slate-700 text-xs rounded-lg">Cancel</button>
-                <button onclick="saveGasUrl()" class="px-3 py-1.5 bg-blue-600 text-xs font-bold rounded-lg">Save Config</button>
+                <button onclick="closeSettingsModal()" class="px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-md">Done</button>
             </div>
         </div>
     </div>
@@ -293,10 +292,13 @@
             });
         }
 
+        // --- HARDCODED APPS SCRIPT URL ---
+        const PERMANENT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec';
+
         // --- GLOBAL STATE ---
         const DEMO_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
-            sites: [], workers: [], attendance: [], advances: [], settlements: [], gasUrl: ''
+            sites: [], workers: [], attendance: [], advances: [], settlements: [], gasUrl: PERMANENT_GAS_URL
         };
 
         let db = JSON.parse(JSON.stringify(DEMO_DATA));
@@ -316,9 +318,15 @@
         async function loadStorage() {
             const saved = localStorage.getItem('sitepunch_pro_db');
             if (saved) {
-                try { db = { ...DEMO_DATA, ...JSON.parse(saved) }; } 
+                try { 
+                    db = { ...DEMO_DATA, ...JSON.parse(saved) }; 
+                } 
                 catch(e) { db = JSON.parse(JSON.stringify(DEMO_DATA)); }
-            } else { saveStorage(); }
+            }
+            
+            // Force override the URL to the permanent one every time it loads
+            db.gasUrl = PERMANENT_GAS_URL;
+            saveStorage();
 
             const sessionUser = sessionStorage.getItem('sitepunch_pro_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
@@ -672,9 +680,6 @@
             }
         }
 
-        // Include other standard functions here (renderSites, handleAddSite, populateDropdowns, login logic, settings modal logic)
-        // Omitted for brevity in this block, but they follow the exact logic of previous iterations, ensuring you append `syncConfigToCloud()` after adding sites.
-        
         // UTILS
         function showToast(msg, type='success') {
             const t = document.getElementById('toast');
@@ -701,9 +706,9 @@
             document.getElementById('regRetakeBtn').classList.add('hidden');
             document.getElementById('regAiStatus').classList.add('hidden');
         }
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); document.getElementById('gasUrlInput').value = db.gasUrl; }
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-        function saveGasUrl() { db.gasUrl = document.getElementById('gasUrlInput').value; saveStorage(); closeSettingsModal(); showToast("Saved!"); forceCloudSync(); }
+        function saveGasUrl() { /* Disabled since it is hardcoded */ }
         function updateSyncBadge() { document.getElementById('syncText').innerHTML = db.gasUrl ? `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Synced` : `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Local`; }
         function switchTab(t) { 
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
