@@ -6,7 +6,7 @@
     <title>Jithu Corporation | SitePunch AI Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     
     <style>
         .camera-overlay { border: 3px dashed #3b82f6; border-radius: 50%; transition: border-color 0.3s; }
@@ -396,7 +396,7 @@
             `;
 
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
-            document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden' ) : el.classList.add('hidden'));
 
             populateDropdowns();
             renderSites(); renderWorkers(); renderLogs(); renderSettlements();
@@ -823,7 +823,7 @@
             }).join('');
         }
 
-        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon').className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
+        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon'].className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
         
         window.addEventListener('DOMContentLoaded', loadStorage);
         setInterval(() => { const c = document.getElementById('currentTimeDisplay'); if(c) c.innerText = new Date().toLocaleTimeString(); }, 1000);
