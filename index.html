@@ -144,7 +144,7 @@
                 </div>
 
                 <!-- AI Camera Viewfinder -->
-                <div class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] border border-slate-700 flex flex-col items-center justify-center">
+                <div id="cameraWrapper" class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] border border-slate-700 flex flex-col items-center justify-center transition-all duration-300">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
                     
@@ -160,29 +160,28 @@
                     </div>
                 </div>
 
-                <!-- AI Detected Result -->
-                <div id="detectedWorkerCard" class="hidden bg-slate-950 border border-emerald-500/50 rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-xl bg-slate-800 overflow-hidden border border-emerald-400 flex-shrink-0">
-                            <img id="detectedWorkerPhoto" class="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                            <span class="bg-emerald-950 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
-                                <i class="fa-solid fa-check-double"></i> AI Verified Match
-                            </span>
-                            <h3 id="detectedWorkerName" class="font-extrabold text-base text-slate-100 mt-0.5">--</h3>
-                        </div>
+                <!-- SUCCESS: Welcome Screen (Hidden by default) -->
+                <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-slate-900 border border-emerald-500/50 rounded-2xl shadow-2xl transition-all duration-300">
+                    <div class="w-24 h-24 rounded-full border-4 border-emerald-500 overflow-hidden shadow-lg shadow-emerald-500/30">
+                        <img id="welcomeWorkerPhoto" class="w-full h-full object-cover" />
                     </div>
-                </div>
-
-                <!-- Punch Buttons -->
-                <div class="grid grid-cols-2 gap-3 pt-1">
-                    <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="py-3.5 rounded-xl bg-emerald-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition">
-                        <i class="fa-solid fa-right-to-bracket"></i> PUNCH IN
-                    </button>
-                    <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="py-3.5 rounded-xl bg-rose-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition">
-                        <i class="fa-solid fa-right-from-bracket"></i> PUNCH OUT
-                    </button>
+                    <div class="text-center">
+                        <span class="bg-emerald-950 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> AI Verified</span>
+                        <h3 class="font-black text-2xl text-white mt-2">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
+                    </div>
+                    
+                    <!-- Punch Buttons -->
+                    <div class="grid grid-cols-2 gap-3 w-full px-4 pt-2">
+                        <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="py-3.5 rounded-xl bg-emerald-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-emerald-500">
+                            <i class="fa-solid fa-right-to-bracket"></i> PUNCH IN
+                        </button>
+                        <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="py-3.5 rounded-xl bg-rose-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-rose-500">
+                            <i class="fa-solid fa-right-from-bracket"></i> PUNCH OUT
+                        </button>
+                    </div>
+                    
+                    <button onclick="resetCamera()" class="text-xs text-slate-400 hover:text-white underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
                 </div>
             </div>
         </section>
@@ -389,6 +388,7 @@
         let scanInterval = null;
         let capturedPhotoData = null;
         let regPhotoData = null;
+        let regFaceDescriptor = null; // New: Holds biometric data
         let detectedWorker = null;
 
         // --- INIT ---
@@ -426,21 +426,21 @@
                     if (result.data.sites && result.data.sites.length > 0) {
                         db.sites = result.data.sites.map(s => ({
                             id: s['Site ID'] || s['id'], 
-                            name: s['Site Name'] || s['name'], 
-                            lat: parseFloat(s['Latitude'] || s['lat']), 
-                            lng: parseFloat(s['Longitude'] || s['lng']), 
-                            radius: parseInt(s['Geo-Radius (m)'] || s['radius'] || 150)
-                        })).filter(s => s.id && s.id !== 'undefined');
-                    }
-                    
-                    // Map Workers Flexibly
+                    // Map Workers Flexibly - NOW PARSES BIOMETRICS
                     if (result.data.workers && result.data.workers.length > 0) {
-                        db.workers = result.data.workers.map(w => ({
-                            id: w['Worker ID'] || w['id'], 
-                            name: w['Full Name'] || w['name'], 
-                            phone: String(w['Mobile Number'] || w['phone']), 
-                            wage: parseFloat(w['Daily Wage (₹)'] || w['wage'] || 0)
-                        })).filter(w => w.id && w.id !== 'undefined');
+                        db.workers = result.data.workers.map(w => {
+                            let parsedDescriptor = null;
+                            if (w['Face Biometrics']) {
+                                try { parsedDescriptor = JSON.parse(w['Face Biometrics']); } catch(e){}
+                            }
+                            return {
+                                id: w['Worker ID'] || w['id'], 
+                                name: w['Full Name'] || w['name'], 
+                                phone: String(w['Mobile Number'] || w['phone']), 
+                                wage: parseFloat(w['Daily Wage (₹)'] || w['wage'] || 0),
+                                descriptor: parsedDescriptor
+                            };
+                        }).filter(w => w.id && w.id !== 'undefined');
                     }
                     
                     // Map Users Flexibly (Fixes missing accounts)
@@ -583,9 +583,11 @@
         async function loadFaceAPIModels() {
             try {
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                // SWAPPED to tinyFaceDetector for extreme mobile speed
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
                 aiModelsLoaded = true;
                 const banner = document.getElementById('aiLoadBanner'); if(banner) banner.classList.add('hidden');
             } catch (e) {
@@ -606,30 +608,34 @@
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
             
+            // Fast options for scanning
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+            
             scanInterval = setInterval(async () => {
                 if (!autoScanActive || !aiModelsLoaded) return;
                 const video = document.getElementById('webcam');
                 if (video.paused || video.ended) return;
 
-                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceExpressions();
+                // LIGHTWEIGHT CHECK: Only detect face and smile, DO NOT calculate the heavy descriptor yet
+                const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks().withFaceExpressions();
                 const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
-                    if (detection.expressions.happy > 0.6) {
+                    if (detection.expressions.happy > 0.5) {
                         autoScanActive = false; 
-                        executePunchCapture(video);
+                        executePunchCapture(video); // Trigger capture
                     } else {
                         instruct.innerHTML = "SMILE<br>To Verify";
                         document.getElementById('faceFrame').classList.remove('success');
                     }
                 } else { instruct.innerHTML = "Auto-Scanning<br>Look Straight"; }
-            }, 800);
+            }, 600); // Poll slightly faster now that it's lighter
         }
 
-        function executePunchCapture(video) {
+        async function executePunchCapture(video) {
             document.getElementById('scanLine').classList.add('hidden');
             document.getElementById('faceFrame').classList.add('success');
-            document.getElementById('livenessInstruction').innerHTML = "Matched!";
+            document.getElementById('livenessInstruction').innerHTML = "Analyzing...";
 
             const canvas = document.createElement('canvas');
             canvas.width = 240; canvas.height = 180;
@@ -639,31 +645,63 @@
             capturedPhotoData = canvas.toDataURL('image/jpeg', 0.3);
             
             document.getElementById('capturedPreview').src = capturedPhotoData;
-            document.getElementById('capturedPreview').classList.remove('hidden');
-            video.classList.add('hidden');
-            document.getElementById('retakeBtn').classList.remove('hidden');
 
-            if (currentUser && currentUser.role === 'worker' && currentUser.workerId) {
-                detectedWorker = db.workers.find(w => w.id === currentUser.workerId);
-            } else {
-                detectedWorker = db.workers.length > 0 ? db.workers[Math.floor(Math.random() * db.workers.length)] : null;
+            // HEAVY CALCULATION: Now calculate the 128-point biometric map exactly ONCE on the frozen frame
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224 });
+            const detection = await faceapi.detectSingleFace(document.getElementById('capturedPreview'), tinyOptions).withFaceLandmarks().withFaceDescriptor();
+
+            if (!detection) {
+                // If it fails to find a clear face in the frozen image
+                document.getElementById('capturedPreview').classList.remove('hidden');
+                video.classList.add('hidden');
+                document.getElementById('retakeBtn').classList.remove('hidden');
+                showToast("Face blurred. Retake.", "error"); 
+                document.getElementById('livenessInstruction').innerHTML = "Failed";
+                return;
+            }
+
+            const liveDescriptor = detection.descriptor;
+
+            // ACTUAL AI FACE MATCHING LOGIC
+            const labeledDescriptors = db.workers
+                .filter(w => w.descriptor && w.descriptor.length === 128)
+                .map(w => new faceapi.LabeledFaceDescriptors(w.id, [new Float32Array(w.descriptor)]));
+
+            detectedWorker = null;
+            if (labeledDescriptors.length > 0) {
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55); // 0.55 similarity threshold
+                const match = faceMatcher.findBestMatch(liveDescriptor);
+                if (match.label !== 'unknown') {
+                    detectedWorker = db.workers.find(w => w.id === match.label);
+                }
             }
 
             if (detectedWorker) {
-                document.getElementById('detectedWorkerName').innerText = detectedWorker.name;
-                document.getElementById('detectedWorkerPhoto').src = capturedPhotoData;
-                document.getElementById('detectedWorkerCard').classList.remove('hidden');
+                // SUCCESS: Close camera view, open Welcome Card
+                document.getElementById('cameraWrapper').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                document.getElementById('welcomeWorkerName').innerText = detectedWorker.name;
+                document.getElementById('welcomeWorkerPhoto').src = capturedPhotoData;
                 showToast(`Match: ${detectedWorker.name}`);
-            } else { showToast("No registered worker found!", "error"); }
+            } else { 
+                // FAIL: Keep camera visible but frozen on preview
+                document.getElementById('capturedPreview').classList.remove('hidden');
+                video.classList.add('hidden');
+                document.getElementById('retakeBtn').classList.remove('hidden');
+                showToast("Face not recognized in database!", "error"); 
+                document.getElementById('livenessInstruction').innerHTML = "No Match";
+            }
             validatePunchEligibility();
         }
 
         function resetCamera() { 
+            // Reset UI back to camera scanner
+            document.getElementById('cameraWrapper').classList.remove('hidden');
+            document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('capturedPreview').classList.add('hidden');
             document.getElementById('webcam').classList.remove('hidden');
             document.getElementById('faceFrame').classList.remove('success');
             document.getElementById('retakeBtn').classList.add('hidden');
-            document.getElementById('detectedWorkerCard').classList.add('hidden');
             document.getElementById('livenessInstruction').innerHTML = "Auto-Scanning<br>Look Straight";
             capturedPhotoData = null; detectedWorker = null;
             document.getElementById('scanLine').classList.remove('hidden');
@@ -683,8 +721,19 @@
         }
         function stopRegWebcam() { if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; } }
 
-        function snapRegWorkerPhoto() {
+        async function snapRegWorkerPhoto() {
             const video = document.getElementById('regWebcam');
+            
+            // Extract biometrics during registration using the fast Tiny model
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224 });
+            const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks().withFaceDescriptor();
+            
+            if (!detection) {
+                showToast("No face detected! Look at camera clearly.", "error");
+                return;
+            }
+            regFaceDescriptor = Array.from(detection.descriptor); // Convert Float32Array to standard array
+
             const preview = document.getElementById('regPhotoPreview');
             const canvas = document.createElement('canvas');
             canvas.width = 240; canvas.height = 180;
@@ -698,11 +747,12 @@
             video.classList.add('hidden');
             document.getElementById('regSnapBtn').classList.add('hidden');
             document.getElementById('regRetakeBtn').classList.remove('hidden');
-            showToast("Worker face photo snapped!");
+            showToast("Worker biometrics scanned & saved!");
         }
 
         function resetRegCamera() {
             regPhotoData = null;
+            regFaceDescriptor = null;
             document.getElementById('regPhotoPreview').classList.add('hidden');
             document.getElementById('regWebcam').classList.remove('hidden');
             document.getElementById('regSnapBtn').classList.remove('hidden');
@@ -746,8 +796,23 @@
 
         function validatePunchEligibility() {
             const isValid = document.getElementById('punchSiteSelect').value && detectedWorker && capturedPhotoData && isWithinGeoFence;
-            document.getElementById('punchInBtn').disabled = !isValid;
-            document.getElementById('punchOutBtn').disabled = !isValid;
+            
+            const btnIn = document.getElementById('punchInBtn');
+            const btnOut = document.getElementById('punchOutBtn');
+            
+            if (btnIn) btnIn.disabled = !isValid;
+            if (btnOut) btnOut.disabled = !isValid;
+
+            const instText = document.getElementById('welcomeInstructionText');
+            if (instText) {
+                if (!isWithinGeoFence) {
+                    instText.innerHTML = "<span class='text-rose-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> GPS Out of Range</span>";
+                } else if (!document.getElementById('punchSiteSelect').value) {
+                    instText.innerHTML = "<span class='text-rose-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Select Active Work Site</span>";
+                } else {
+                    instText.innerHTML = "Please select your punch type below.";
+                }
+            }
         }
 
         // --- HTTP POST TO GOOGLE SHEETS ---
@@ -792,8 +857,17 @@
         function handleAddWorker(e) {
             e.preventDefault();
             const phone = document.getElementById('workerPhoneInput').value;
-            if (!regPhotoData) return showToast("Please capture worker live face photo first!", "error");
-            const w = { id: 'wrk_'+Date.now(), name: document.getElementById('workerNameInput').value, phone, wage: document.getElementById('workerWageInput').value, photo: regPhotoData };
+            if (!regPhotoData || !regFaceDescriptor) return showToast("Please capture worker live face photo first!", "error");
+            
+            const w = { 
+                id: 'wrk_'+Date.now(), 
+                name: document.getElementById('workerNameInput').value, 
+                phone, 
+                wage: document.getElementById('workerWageInput').value, 
+                photo: regPhotoData,
+                descriptor: regFaceDescriptor // Save biometrics array
+            };
+            
             db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
             saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
         }
@@ -805,7 +879,7 @@
         }
 
         function syncConfigToCloud() {
-            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage }));
+            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage, descriptor: w.descriptor }));
             postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users });
         }
 
