@@ -919,14 +919,20 @@
 
             // Prevent Double Punching & Multi-Site Conflicts
             if (isValid && detectedWorker) {
-                const todayDate = new Date().toLocaleDateString('en-IN');
+                // More robust date matching to prevent cross-browser format issues (e.g., 22/7 vs 22/07)
+                const todayStr = new Date().toLocaleString('en-IN').split(',')[0].trim();
                 // db.attendance is sorted newest first, so .find() gets their last punch today
-                const lastPunch = db.attendance.find(a => a.workerId === detectedWorker.id && a.timestamp.includes(todayDate));
+                const lastPunch = db.attendance.find(a => a.workerId === detectedWorker.id && a.timestamp.split(',')[0].trim() === todayStr);
+                
                 const selectedSiteId = document.getElementById('punchSiteSelect').value;
+                const selectedSite = db.sites.find(s => s.id === selectedSiteId);
                 
                 if (lastPunch) {
                     if (lastPunch.type === 'IN') {
-                        if (lastPunch.siteId !== selectedSiteId) {
+                        // Check both ID and Name to support older records sitting in Google Sheets safely
+                        const isSameSite = (lastPunch.siteId === selectedSiteId) || (selectedSite && lastPunch.siteName === selectedSite.name);
+                        
+                        if (!isSameSite) {
                             // Worker is currently punched in, but selected a DIFFERENT site
                             disableIn = true;
                             disableOut = true;
