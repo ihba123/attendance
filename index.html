@@ -533,6 +533,55 @@
                         db.users.push(INITIAL_DATA.users[0]);
                     }
 
+                    // Map Attendance Logs (Reversed so newest is at the top)
+                    if (result.data.attendance && result.data.attendance.length > 0) {
+                        db.attendance = result.data.attendance.map(a => {
+                            // Fallback for old logs that didn't save Worker ID in the sheet
+                            let wId = a['Worker ID'] || a['workerId'];
+                            if (!wId && a['Worker Name']) {
+                                const w = db.workers.find(x => x.name === a['Worker Name']);
+                                if(w) wId = w.id;
+                            }
+                            return {
+                                id: a['ID'] || a['id'],
+                                timestamp: a['Timestamp'] || a['timestamp'],
+                                workerId: wId,
+                                workerName: a['Worker Name'] || a['workerName'],
+                                siteId: a['Site ID'] || a['siteId'] || a['Site Name'], 
+                                siteName: a['Site Name'] || a['siteName'],
+                                type: a['Punch Type'] || a['type'],
+                                lat: parseFloat(a['Latitude'] || a['lat'] || 0),
+                                lng: parseFloat(a['Longitude'] || a['lng'] || 0),
+                                isOverride: a['Admin Override'] === 'YES'
+                            };
+                        }).filter(a => a.id).reverse();
+                    }
+
+                    // Map Advances
+                    if (result.data.advances && result.data.advances.length > 0) {
+                        db.advances = result.data.advances.map(a => ({
+                            id: a['ID'] || a['id'],
+                            timestamp: a['Timestamp'] || a['timestamp'],
+                            workerId: a['Worker ID'] || a['workerId'],
+                            amount: parseFloat(a['Amount Paid (₹)'] || a['amount'] || 0)
+                        })).filter(a => a.id);
+                    }
+
+                    // Map Settlements
+                    if (result.data.settlements && result.data.settlements.length > 0) {
+                        db.settlements = result.data.settlements.map(s => ({
+                            id: s['ID'] || s['id'],
+                            settlementDate: s['Settlement Date'] || s['settlementDate'],
+                            workerName: s['Worker Name'] || s['workerName'],
+                            workerId: s['Worker ID'] || s['workerId'],
+                            settlementMs: parseInt(s['Settlement Time (ms)'] || s['settlementMs'] || 0),
+                            daysWorked: parseInt(s['Days Worked'] || s['daysWorked'] || 0),
+                            totalEarned: parseFloat(s['Total Earned (₹)'] || s['totalEarned'] || 0),
+                            totalAdvances: parseFloat(s['Total Advances (₹)'] || s['totalAdvances'] || 0),
+                            netAmountPaid: parseFloat(s['Net Amount Paid (₹)'] || s['netAmountPaid'] || 0)
+                        })).filter(s => s.id);
+                    }
+
                     saveStorage();
                     populateDropdowns();
                     if(currentUser) { renderSites(); renderWorkers(); renderSettlements(); }
