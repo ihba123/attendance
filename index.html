@@ -704,7 +704,8 @@
                 // SWAPPED to tinyFaceDetector for extreme mobile speed
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); // Removed expression net to speed up loading
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); 
+                await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL); // ADDED BACK FOR ANTI-SPOOFING
                 aiModelsLoaded = true;
             } catch (e) {
                 console.error("AI Models Error", e);
@@ -723,6 +724,7 @@
             if(scanInterval) clearInterval(scanInterval);
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
+            livenessStage = 0; // Reset spoofing check
             
             // Fast options for scanning
             const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
@@ -732,20 +734,38 @@
                 const video = document.getElementById('webcam');
                 if (video.paused || video.ended) return;
 
-                // LIGHTWEIGHT CHECK: Only detect face, DO NOT require a smile
-                const detection = await faceapi.detectSingleFace(video, tinyOptions);
+                // HEAVY CHECK: Detect face AND expressions for Anti-Spoofing
+                const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceExpressions();
                 const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
-                    autoScanActive = false; 
-                    instruct.innerHTML = "Hold Still...";
-                    document.getElementById('faceFrame').classList.add('success');
-                    executePunchCapture(video); // Trigger capture
+                    const isSmiling = detection.expressions.happy > 0.65;
+                    const isNeutral = detection.expressions.neutral > 0.65;
+
+                    if (livenessStage === 0) {
+                        instruct.innerHTML = "Security Check:<br><span class='text-amber-400'>Please SMILE!</span>";
+                        document.getElementById('faceFrame').classList.remove('success');
+                        if (isSmiling) {
+                            livenessStage = 1;
+                            showToast("Smile Detected! Now relax.", "success");
+                        }
+                    } else if (livenessStage === 1) {
+                        instruct.innerHTML = "Security Check:<br><span class='text-blue-400'>Look NEUTRAL!</span>";
+                        document.getElementById('faceFrame').classList.add('success');
+                        if (isNeutral) {
+                            autoScanActive = false; 
+                            livenessStage = 0;
+                            instruct.innerHTML = "Hold Still...";
+                            executePunchCapture(video); // Trigger true capture
+                        }
+                    }
                 } else { 
+                    // Face lost, reset security check
+                    livenessStage = 0;
                     instruct.innerHTML = "Auto-Scanning<br>Look Straight"; 
                     document.getElementById('faceFrame').classList.remove('success');
                 }
-            }, 600); // Poll slightly faster now that it's lighter
+            }, 600);
         }
 
         async function executePunchCapture(video) {
