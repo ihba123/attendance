@@ -877,13 +877,35 @@
         }
 
         // --- GPS ---
+        function onSiteChange() {
+            if (!currentPos) {
+                checkCurrentLocation();
+            } else {
+                calculateGeoFence();
+            }
+        }
+
         function checkCurrentLocation() {
             const statusText = document.getElementById('gpsStatusText');
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
             statusText.innerText = "Acquiring...";
+            statusText.className = "font-semibold text-slate-300";
+            
             navigator.geolocation.getCurrentPosition(
-                (pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
-                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, 
+                (pos) => { 
+                    currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
+                    if (!document.getElementById('punchSiteSelect').value) {
+                        statusText.innerText = "GPS Found. Select Site.";
+                        statusText.className = "font-bold text-blue-400";
+                    }
+                    calculateGeoFence(); 
+                },
+                (err) => { 
+                    statusText.innerText = "GPS Failed."; 
+                    statusText.className = "font-bold text-rose-400";
+                    isWithinGeoFence = false; 
+                    validatePunchEligibility(); 
+                }, 
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
@@ -898,12 +920,22 @@
             const siteId = document.getElementById('punchSiteSelect').value;
             const distText = document.getElementById('gpsDistanceText');
             const site = db.sites.find(s => s.id === siteId);
-            if (!site || !currentPos) { isWithinGeoFence = false; return; }
+            
+            if (!site || !currentPos) { 
+                isWithinGeoFence = false; 
+                distText.innerText = "Distance: --";
+                validatePunchEligibility();
+                return; 
+            }
+            
             const dist = calculateGeoDistance(currentPos.lat, currentPos.lng, site.lat, site.lng);
             distText.innerText = `Dist: ${dist}m (Max: ${site.radius}m)`;
             isWithinGeoFence = (dist <= site.radius);
-            document.getElementById('gpsStatusText').innerText = isWithinGeoFence ? "Verified (In-Range)" : "Out of Range!";
-            document.getElementById('gpsStatusText').className = isWithinGeoFence ? "font-bold text-emerald-400" : "font-bold text-rose-400";
+            
+            const statusText = document.getElementById('gpsStatusText');
+            statusText.innerText = isWithinGeoFence ? "Verified (In-Range)" : "Out of Range!";
+            statusText.className = isWithinGeoFence ? "font-bold text-emerald-400" : "font-bold text-rose-400";
+            
             validatePunchEligibility();
         }
 
