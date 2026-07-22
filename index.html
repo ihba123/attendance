@@ -200,12 +200,17 @@
         <!-- TAB 3: PAYROLL -->
         <section id="view-settlement" class="hidden space-y-4">
             <div class="admin-only hidden bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-3">
-                <h2 class="text-md font-bold text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-hand-holding-dollar"></i> Add Advance (₹)</h2>
-                <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <select id="advWorkerSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
-                    <input type="number" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
-                    <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs">Record</button>
-                </form>
+                <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-md font-bold text-emerald-400 flex items-center justify-between gap-1.5 transition">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar"></i> Add Advance (₹)</span> 
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                </button>
+                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-slate-700">
+                    <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <select id="advWorkerSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
+                        <input type="number" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                        <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs shadow-md">Record</button>
+                    </form>
+                </div>
             </div>
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
                 <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
@@ -811,20 +816,36 @@
             let disableOut = !isValid;
             let currentStatusText = "Please select your punch type below.";
 
-            // Prevent Double Punching (Check if already Punched In/Out today)
+            // Prevent Double Punching & Multi-Site Conflicts
             if (isValid && detectedWorker) {
                 const todayDate = new Date().toLocaleDateString('en-IN');
                 // db.attendance is sorted newest first, so .find() gets their last punch today
                 const lastPunch = db.attendance.find(a => a.workerId === detectedWorker.id && a.timestamp.includes(todayDate));
+                const selectedSiteId = document.getElementById('punchSiteSelect').value;
                 
                 if (lastPunch) {
                     if (lastPunch.type === 'IN') {
-                        disableIn = true; // Already punched in, block the IN button
-                        currentStatusText = "<span class='text-emerald-400'>Status: <b>PUNCHED IN</b></span>. Ready to punch out?";
+                        if (lastPunch.siteId !== selectedSiteId) {
+                            // Worker is currently punched in, but selected a DIFFERENT site
+                            disableIn = true;
+                            disableOut = true;
+                            currentStatusText = `<span class='text-amber-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Action Blocked</span><br><span class="text-xs">You are currently punched in at <b>${lastPunch.siteName}</b>. Please change your site selection to punch out there first.</span>`;
+                        } else {
+                            // Worker is punched in at THIS site
+                            disableIn = true; 
+                            disableOut = false; 
+                            currentStatusText = "<span class='text-emerald-400'>Status: <b>PUNCHED IN</b></span>. Ready to punch out?";
+                        }
                     } else if (lastPunch.type === 'OUT') {
-                        disableOut = true; // Already punched out, block the OUT button
+                        // Worker is completely punched out, free to punch in anywhere
+                        disableIn = false; 
+                        disableOut = true; 
                         currentStatusText = "<span class='text-rose-400'>Status: <b>PUNCHED OUT</b></span>. Ready to punch in?";
                     }
+                } else {
+                    // First interaction of the day
+                    disableIn = false;
+                    disableOut = true; 
                 }
             }
 
@@ -1053,30 +1074,157 @@
                     </div>
                 </div>`).join(''); 
         }
+
+        // --- TIME HELPER FOR CALCULATING HOURS ---
+        function parseCustomDate(str) {
+            if (!str) return 0;
+            try {
+                const parts = str.split(',');
+                if (parts.length < 2) return 0;
+                const dateParts = parts[0].trim().split('/');
+                const timeParts = parts[1].trim().split(' ');
+                const hms = timeParts[0].split(':');
+                let hr = parseInt(hms[0]);
+                const min = parseInt(hms[1]);
+                const sec = hms.length > 2 ? parseInt(hms[2]) : 0;
+                const ampm = (timeParts[1] || '').toLowerCase();
+                if (ampm === 'pm' && hr < 12) hr += 12;
+                if (ampm === 'am' && hr === 12) hr = 0;
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], hr, min, sec).getTime();
+            } catch(e) { return 0; }
+        }
+
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
             if (!db.attendance || db.attendance.length === 0) {
                 document.getElementById('logCountBadge').innerText = "0 logs";
                 return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
             }
-            container.innerHTML = db.attendance.map(a => `<div class="bg-slate-900 p-2 text-xs border-b border-slate-700">${a.workerName} - ${a.type} @ ${a.siteName} <span class="text-[10px] text-slate-500">(${a.timestamp})</span></div>`).join(''); 
+
+            // Group logs by Date -> Site Name
+            const grouped = {};
+            db.attendance.forEach(log => {
+                const date = log.timestamp.split(',')[0].trim();
+                if (!grouped[date]) grouped[date] = {};
+                if (!grouped[date][log.siteName]) grouped[date][log.siteName] = [];
+                grouped[date][log.siteName].push(log);
+            });
+
+            let html = '';
+            for (const date in grouped) {
+                html += `<div class="mb-5"><h3 class="text-sm font-black text-blue-400 border-b border-blue-900/50 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
+                
+                for (const siteName in grouped[date]) {
+                    html += `<div class="bg-slate-900/80 rounded-xl p-3 mb-3 border border-slate-700/60 shadow-sm">`;
+                    html += `<h4 class="text-[11px] font-bold text-slate-300 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-blue-500"></i> ${siteName}</h4>`;
+                    
+                    // Sort logs chronologically to accurately calculate durations
+                    const siteLogs = grouped[date][siteName].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                    let lastInObj = {}; 
+                    
+                    const displayLogs = siteLogs.map(a => {
+                        const timeOnly = a.timestamp.split(',')[1].trim();
+                        let durationStr = '';
+                        const currentTime = parseCustomDate(a.timestamp);
+                        
+                        if (a.type === 'IN') {
+                            lastInObj[a.workerId] = currentTime;
+                        } else if (a.type === 'OUT') {
+                            if (lastInObj[a.workerId]) {
+                                const diffHrs = (currentTime - lastInObj[a.workerId]) / (1000 * 60 * 60);
+                                durationStr = `<span class="bg-blue-900/50 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2">${diffHrs.toFixed(2)} hrs</span>`;
+                                lastInObj[a.workerId] = null; // Reset after out punch
+                            }
+                        }
+
+                        const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-400"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-400"></i>';
+                        const typeColor = a.type === 'IN' ? 'text-emerald-400' : 'text-rose-400';
+                        
+                        return `<div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-800/60 last:border-0">
+                            <span class="flex items-center gap-2">
+                                <span class="w-5 text-center">${typeIcon}</span>
+                                <span class="font-medium text-slate-200">${a.workerName}</span> 
+                                <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span>
+                            </span>
+                            <span class="text-slate-400 flex items-center">${timeOnly}${durationStr}</span>
+                        </div>`;
+                    });
+                    
+                    html += displayLogs.reverse().join(''); 
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
             document.getElementById('logCountBadge').innerText = `${db.attendance.length} logs`; 
         }
+
         function renderSettlements() { 
             const container = document.getElementById('payrollCardsContainer');
             if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
+            
             container.innerHTML = db.workers.map(w => {
-                const earned = new Set(db.attendance.filter(a => a.workerId===w.id && a.type==='IN').map(l=>l.timestamp.split(',')[0])).size * w.wage;
-                const adv = db.advances.filter(a=>a.workerId===w.id).reduce((s,x)=>parseFloat(s)+parseFloat(x.amount),0);
-                return `<div class="bg-slate-900 p-3 text-xs border border-slate-700 rounded-xl flex justify-between items-center"><span class="font-bold">${w.name}</span> <span class="${earned-adv>=0?'text-emerald-400':'text-rose-400'} font-bold">Net: ₹${earned-adv}</span></div>`;
+                let totalMs = 0;
+                let daysSet = new Set();
+                
+                // Get all logs for this worker and sort them chronologically
+                const workerLogs = [...db.attendance].filter(a => a.workerId === w.id).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                let lastIn = null;
+                
+                // Calculate Exact Working Hours
+                workerLogs.forEach(log => {
+                    const date = log.timestamp.split(',')[0].trim();
+                    const logTime = parseCustomDate(log.timestamp);
+                    
+                    if (log.type === 'IN') {
+                        lastIn = logTime;
+                        daysSet.add(date);
+                    } else if (log.type === 'OUT' && lastIn) {
+                        totalMs += (logTime - lastIn);
+                        lastIn = null;
+                    }
+                });
+                
+                const totalHours = totalMs / (1000 * 60 * 60);
+                const hourlyWage = w.wage / 8; // Provided wage is for 8 hours
+                const earned = totalHours * hourlyWage;
+                const adv = db.advances.filter(a => a.workerId === w.id).reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+                const net = earned - adv;
+                const isPositive = net >= 0;
+
+                return `
+                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden transition-all shadow-md">
+                    <!-- Accordion Header -->
+                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-slate-800 transition">
+                        <span class="font-bold text-sm text-white flex items-center gap-2">
+                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-slate-700" />
+                            ${w.name}
+                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} font-black text-sm">₹${net.toFixed(0)}</span>
+                            <i class="fa-solid fa-chevron-down text-slate-500"></i>
+                        </div>
+                    </button>
+                    <!-- Accordion Details (Hidden by default) -->
+                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-slate-950/60 border-t border-slate-700/50 space-y-2.5 text-xs">
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Total Site Hours:</span> <span class="font-bold text-blue-400">${totalHours.toFixed(2)} hrs</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (8 hr shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Calculated Hourly Rate:</span> <span class="font-medium text-emerald-400/80">₹${hourlyWage.toFixed(2)} / hr</span></div>
+                        
+                        <div class="my-2 border-t border-slate-800/80"></div>
+                        
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Total Earned:</span> <span class="text-emerald-400 font-bold">₹${earned.toFixed(0)}</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Advances Taken:</span> <span class="text-rose-400 font-bold">-₹${adv.toFixed(0)}</span></div>
+                        
+                        <div class="mt-2 pt-2 border-t border-slate-800/80 flex justify-between items-center">
+                            <span class="text-slate-300 font-bold uppercase tracking-wider">Net Settlement</span> 
+                            <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} text-base font-black">₹${net.toFixed(0)}</span>
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        function showToast(msg, type='success') { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; document.getElementById('toastIcon').className = type==='error'?'fa-solid fa-circle-exclamation text-rose-400':'fa-solid fa-circle-check text-emerald-400'; t.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000); }
-        
-        window.addEventListener('DOMContentLoaded', loadStorage);
-        setInterval(() => { const c = document.getElementById('currentTimeDisplay'); if(c) c.innerText = new Date().toLocaleTimeString(); }, 1000);
-        function onSiteChange() { calculateGeoFence(); }
-    </script>
-</body>
-</html>
+        function showToast(msg, type='success') {
