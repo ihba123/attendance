@@ -17,6 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         .camera-overlay { border: 3px dashed #3b82f6; border-radius: 50%; transition: border-color 0.3s; }
@@ -138,7 +139,6 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="bypassGeoFenceForDemo()" title="Force location match" class="px-2 py-1.5 bg-amber-600/30 text-amber-300 rounded-lg text-[10px] font-medium"><i class="fa-solid fa-bug"></i></button>
                         <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-slate-800 rounded-lg text-slate-300"><i class="fa-solid fa-rotate-right"></i></button>
                     </div>
                 </div>
@@ -212,8 +212,33 @@
                     </form>
                 </div>
             </div>
+            
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
-                <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
+                <!-- HEADER & PDF BUTTON -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
+                    <button onclick="downloadMasterPayrollPDF()" class="w-full sm:w-auto py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
+                    </button>
+                </div>
+                
+                <!-- DATE RANGE FILTERS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">From Date</label>
+                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">To Date</label>
+                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-rotate-left"></i> Current Cycle
+                        </button>
+                    </div>
+                </div>
+
                 <div id="payrollCardsContainer" class="space-y-3"></div>
             </div>
         </section>
@@ -801,11 +826,6 @@
             validatePunchEligibility();
         }
 
-        function bypassGeoFenceForDemo() {
-            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value) || db.sites[0];
-            if(site) { currentPos = { lat: site.lat, lng: site.lng }; document.getElementById('punchSiteSelect').value = site.id; isWithinGeoFence = true; document.getElementById('gpsStatusText').innerText = "Verified (Demo)"; document.getElementById('gpsStatusText').className = "font-bold text-emerald-400"; validatePunchEligibility(); showToast("Bypassed GPS");}
-        }
-
         function validatePunchEligibility() {
             const isValid = document.getElementById('punchSiteSelect').value && detectedWorker && capturedPhotoData && isWithinGeoFence;
             
@@ -1094,6 +1114,10 @@
             } catch(e) { return 0; }
         }
 
+        // New Helper functions for precise date filtering
+        function getStartOfDayMs(dateStr) { if(!dateStr) return 0; const [y,m,d] = dateStr.split('-'); return new Date(y, m-1, d, 0, 0, 0, 0).getTime(); }
+        function getEndOfDayMs(dateStr) { if(!dateStr) return Infinity; const [y,m,d] = dateStr.split('-'); return new Date(y, m-1, d, 23, 59, 59, 999).getTime(); }
+
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
             if (!db.attendance || db.attendance.length === 0) {
@@ -1164,38 +1188,88 @@
             const container = document.getElementById('payrollCardsContainer');
             if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
             
-            container.innerHTML = db.workers.map(w => {
+            // Check for Custom Date Filters
+            const fromVal = document.getElementById('payrollFrom')?.value;
+            const toVal = document.getElementById('payrollTo')?.value;
+            const isCustomRange = (fromVal || toVal);
+            const filterStartMs = getStartOfDayMs(fromVal);
+            const filterEndMs = getEndOfDayMs(toVal);
+            
+            let html = db.workers.map(w => {
                 let totalMs = 0;
                 let daysSet = new Set();
                 
-                // Get all logs for this worker and sort them chronologically
-                const workerLogs = [...db.attendance].filter(a => a.workerId === w.id).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
-                let lastIn = null;
+                // Track the last time this worker was marked "Paid" (Only applies if NOT using custom dates)
+                const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
+                const lastSettledMs = workerSettlements.length > 0 ? Math.max(...workerSettlements.map(s => s.settlementMs || 0)) : 0;
                 
-                // Calculate Exact Working Hours
+                const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
+                const actualEndMs = isCustomRange ? filterEndMs : Infinity;
+                
+                // Get all logs for this worker strictly within the target time range
+                const workerLogs = [...db.attendance]
+                    .filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; })
+                    .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                
+                let sessionRows = '';
+                let currentIn = null;
+                
+                // Calculate Exact Working Hours & Build HTML Session Rows
                 workerLogs.forEach(log => {
-                    const date = log.timestamp.split(',')[0].trim();
                     const logTime = parseCustomDate(log.timestamp);
+                    const date = log.timestamp.split(',')[0].trim();
                     
                     if (log.type === 'IN') {
-                        lastIn = logTime;
+                        currentIn = log;
                         daysSet.add(date);
-                    } else if (log.type === 'OUT' && lastIn) {
-                        totalMs += (logTime - lastIn);
-                        lastIn = null;
+                    } else if (log.type === 'OUT' && currentIn) {
+                        const durationMs = logTime - parseCustomDate(currentIn.timestamp);
+                        totalMs += durationMs;
+                        const durationHrs = durationMs / (1000 * 60 * 60);
+                        
+                        sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
+                            <div class="col-span-1">${date}</div>
+                            <div class="col-span-1 truncate" title="${currentIn.siteName}">${currentIn.siteName}</div>
+                            <div class="col-span-1">${currentIn.timestamp.split(',')[1].trim()} - ${log.timestamp.split(',')[1].trim()}</div>
+                            <div class="col-span-1 text-right font-bold text-blue-400">${durationHrs.toFixed(2)} hr</div>
+                        </div>`;
+                        currentIn = null;
                     }
                 });
+                
+                // Handle a dangling IN punch that missed an OUT punch
+                if (currentIn) {
+                    const date = currentIn.timestamp.split(',')[0].trim();
+                    daysSet.add(date);
+                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
+                        <div class="col-span-1">${date}</div>
+                        <div class="col-span-1 truncate">${currentIn.siteName}</div>
+                        <div class="col-span-1 text-amber-400">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
+                        <div class="col-span-1 text-right text-amber-400">Missed OUT</div>
+                    </div>`;
+                }
                 
                 const totalHours = totalMs / (1000 * 60 * 60);
                 const hourlyWage = w.wage / 8; // Provided wage is for 8 hours
                 const earned = totalHours * hourlyWage;
-                const adv = db.advances.filter(a => a.workerId === w.id).reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+                
+                // Filter advances to only include ones inside the specific time range
+                const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
+                const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+                
                 const net = earned - adv;
                 const isPositive = net >= 0;
 
+                // Only display the card if they actually have unpaid sessions or a balance
+                if (daysSet.size === 0 && adv === 0) return '';
+                
+                // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
+                const markPaidBtn = isCustomRange ? 
+                    `<button disabled class="py-2 bg-slate-700 opacity-50 cursor-not-allowed text-slate-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
+                    `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
+
                 return `
                 <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden transition-all shadow-md">
-                    <!-- Accordion Header -->
                     <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-slate-800 transition">
                         <span class="font-bold text-sm text-white flex items-center gap-2">
                             <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-slate-700" />
@@ -1206,25 +1280,291 @@
                             <i class="fa-solid fa-chevron-down text-slate-500"></i>
                         </div>
                     </button>
-                    <!-- Accordion Details (Hidden by default) -->
-                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-slate-950/60 border-t border-slate-700/50 space-y-2.5 text-xs">
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Total Site Hours:</span> <span class="font-bold text-blue-400">${totalHours.toFixed(2)} hrs</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (8 hr shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Calculated Hourly Rate:</span> <span class="font-medium text-emerald-400/80">₹${hourlyWage.toFixed(2)} / hr</span></div>
+                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-slate-950/60 border-t border-slate-700/50 space-y-3 text-xs">
                         
-                        <div class="my-2 border-t border-slate-800/80"></div>
+                        <div class="bg-slate-900 rounded-lg border border-slate-800 p-2">
+                            <h4 class="text-[10px] uppercase text-slate-500 font-bold mb-1.5 flex justify-between">
+                                <span>Detailed Work Sessions</span>
+                                <span>Total: ${totalHours.toFixed(2)} Hrs</span>
+                            </h4>
+                            ${sessionRows || '<p class="text-[10px] text-slate-500 italic">No completed sessions.</p>'}
+                        </div>
+
+                        <div class="space-y-1.5 px-1">
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (8 hr shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Calculated Hourly Rate:</span> <span class="font-medium text-emerald-400/80">₹${hourlyWage.toFixed(2)} / hr</span></div>
+                            
+                            <div class="my-2 border-t border-slate-800/80"></div>
+                            
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Total Earned:</span> <span class="text-emerald-400 font-bold">₹${earned.toFixed(0)}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Advances Taken:</span> <span class="text-rose-400 font-bold">-₹${adv.toFixed(0)}</span></div>
+                            
+                            <div class="mt-2 pt-2 border-t border-slate-800/80 flex justify-between items-center">
+                                <span class="text-slate-300 font-bold uppercase tracking-wider">Net Settlement</span> 
+                                <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} text-base font-black">₹${net.toFixed(0)}</span>
+                            </div>
+                        </div>
                         
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Total Earned:</span> <span class="text-emerald-400 font-bold">₹${earned.toFixed(0)}</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400">Advances Taken:</span> <span class="text-rose-400 font-bold">-₹${adv.toFixed(0)}</span></div>
-                        
-                        <div class="mt-2 pt-2 border-t border-slate-800/80 flex justify-between items-center">
-                            <span class="text-slate-300 font-bold uppercase tracking-wider">Net Settlement</span> 
-                            <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} text-base font-black">₹${net.toFixed(0)}</span>
+                        <div class="grid grid-cols-2 gap-2 pt-2">
+                            <button onclick="downloadSettlementPDF('${w.id}')" class="py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-file-pdf text-rose-400"></i> Save PDF
+                            </button>
+                            ${markPaidBtn}
                         </div>
                     </div>
                 </div>`;
             }).join('');
+            
+            container.innerHTML = html || `<p class="text-xs text-slate-500 py-3 text-center">No records found for the selected period.</p>`;
+        }
+
+        function handleMarkPaid(workerId) {
+            const w = db.workers.find(x => x.id === workerId);
+            if(!w) return;
+            
+            openConfirmModal("Mark as Paid?", `This will clear ${w.name}'s current balance and start a fresh billing cycle for them.`, () => {
+                const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
+                const lastSettledMs = workerSettlements.length > 0 ? Math.max(...workerSettlements.map(s => s.settlementMs || 0)) : 0;
+                const workerLogs = [...db.attendance].filter(a => a.workerId === w.id && parseCustomDate(a.timestamp) > lastSettledMs);
+                
+                let totalMs = 0; let daysSet = new Set(); let currentIn = null;
+                workerLogs.sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp)).forEach(log => {
+                    if (log.type === 'IN') { currentIn = log; daysSet.add(log.timestamp.split(',')[0].trim()); } 
+                    else if (log.type === 'OUT' && currentIn) { totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)); currentIn = null; }
+                });
+                
+                const totalHours = totalMs / (1000 * 60 * 60);
+                const earned = totalHours * (w.wage / 8);
+                const unpaidAdv = db.advances.filter(a => a.workerId === w.id && parseCustomDate(a.timestamp) > lastSettledMs);
+                const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+                const net = earned - adv;
+                
+                const record = {
+                    id: 'set_' + Date.now(),
+                    settlementDate: new Date().toLocaleString('en-IN'),
+                    workerName: w.name,
+                    workerId: w.id,
+                    settlementMs: Date.now(),
+                    daysWorked: daysSet.size,
+                    totalEarned: earned.toFixed(2),
+                    totalAdvances: adv.toFixed(2),
+                    netAmountPaid: net.toFixed(2)
+                };
+                
+                db.settlements.push(record);
+                saveStorage();
+                postToGoogleSheet('settleSalary', record);
+                renderSettlements();
+                showToast("Worker balance cleared!");
+            });
+        }
+
+        function downloadSettlementPDF(workerId) {
+            const w = db.workers.find(x => x.id === workerId);
+            if(!w) return;
+
+            showToast("Generating Invoice...");
+            
+            // Respect Custom Date Filters for the PDF
+            const fromVal = document.getElementById('payrollFrom')?.value;
+            const toVal = document.getElementById('payrollTo')?.value;
+            const isCustomRange = (fromVal || toVal);
+            const filterStartMs = getStartOfDayMs(fromVal);
+            const filterEndMs = getEndOfDayMs(toVal);
+            
+            const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
+            const lastSettledMs = workerSettlements.length > 0 ? Math.max(...workerSettlements.map(s => s.settlementMs || 0)) : 0;
+            const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
+            const actualEndMs = isCustomRange ? filterEndMs : Infinity;
+            
+            const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+            
+            let sessionRows = ''; let totalMs = 0; let daysSet = new Set(); let currentIn = null;
+            workerLogs.forEach(log => {
+                const date = log.timestamp.split(',')[0].trim();
+                if (log.type === 'IN') { currentIn = log; daysSet.add(date); } 
+                else if (log.type === 'OUT' && currentIn) {
+                    const durationHrs = (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)) / (1000 * 60 * 60);
+                    totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp));
+                    sessionRows += `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[1].trim()} - ${log.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${durationHrs.toFixed(2)} hr</td></tr>`;
+                    currentIn = null;
+                }
+            });
+            
+            if (currentIn) {
+                sessionRows += `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[0]}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[1].trim()} - Missed OUT</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">--</td></tr>`;
+            }
+
+            const totalHours = totalMs / (1000 * 60 * 60);
+            const earned = totalHours * (w.wage / 8);
+            const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
+            const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+            const net = earned - adv;
+            
+            const dateRangeStr = isCustomRange ? `Period: ${fromVal || 'Start'} to ${toVal || 'End'}` : `Current Billing Cycle (Up to ${new Date().toLocaleDateString('en-IN')})`;
+
+            const pdfDiv = document.createElement('div');
+            // Build absolute inline CSS layout to guarantee PDF perfection
+            pdfDiv.innerHTML = `
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Salary Settlement Statement</p>
+                    <hr style="margin: 30px 0; border: 0; border-top: 2px solid #eee;">
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px;">Worker: ${w.name}</h3>
+                            <p style="margin: 5px 0; color: #555;">Phone: ${w.phone}</p>
+                            <p style="margin: 5px 0; color: #555;">Base Wage: ₹${w.wage} / 8hr shift</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 5px 0; color: #555;">${dateRangeStr}</p>
+                            <p style="margin: 5px 0; color: #555;">Active Days: ${daysSet.size}</p>
+                        </div>
+                    </div>
+
+                    <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Detailed Work Sessions</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background: #f8fafc; text-align: left;">
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Date</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Site</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Time (IN - OUT)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd; text-align: right;">Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sessionRows || '<tr><td colspan="4" style="text-align: center; padding: 20px;">No recorded sessions.</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Financial Summary</h4>
+                    <table style="width: 100%; font-size: 14px; margin-bottom: 40px;">
+                        <tr><td style="padding: 5px 0;">Total Hours Worked:</td><td style="text-align: right; font-weight: bold;">${totalHours.toFixed(2)} Hrs</td></tr>
+                        <tr><td style="padding: 5px 0;">Calculated Earnings:</td><td style="text-align: right; font-weight: bold; color: #16a34a;">₹${earned.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 5px 0;">Less Advances Taken:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">-₹${adv.toFixed(2)}</td></tr>
+                        <tr><td colspan="2"><hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;"></td></tr>
+                        <tr>
+                            <td style="padding: 10px 0; font-size: 18px; font-weight: bold;">Net Settlement Amount:</td>
+                            <td style="text-align: right; font-size: 20px; font-weight: bold; color: ${net >= 0 ? '#16a34a' : '#dc2626'};">₹${net.toFixed(2)}</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+                        <div style="text-align: center; width: 200px;">
+                            <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 5px;">
+                            <p style="margin: 0; font-size: 12px;">Admin Signature</p>
+                        </div>
+                        <div style="text-align: center; width: 200px;">
+                            <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 5px;">
+                            <p style="margin: 0; font-size: 12px;">Worker Signature</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            html2pdf().set({
+                margin: 0,
+                filename: `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(pdfDiv).save();
+        }
+
+        function downloadMasterPayrollPDF() {
+            showToast("Generating Master Payroll...");
+            
+            const fromVal = document.getElementById('payrollFrom')?.value;
+            const toVal = document.getElementById('payrollTo')?.value;
+            const isCustomRange = (fromVal || toVal);
+            const filterStartMs = getStartOfDayMs(fromVal);
+            const filterEndMs = getEndOfDayMs(toVal);
+            
+            let dateRangeStr = isCustomRange ? `${fromVal || 'Start'} to ${toVal || 'End'}` : `Current Billing Cycle (Up to ${new Date().toLocaleDateString('en-IN')})`;
+
+            let rows = '';
+            let grandTotalEarned = 0;
+            let grandTotalAdv = 0;
+            let grandTotalNet = 0;
+
+            db.workers.forEach(w => {
+                const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
+                const lastSettledMs = workerSettlements.length > 0 ? Math.max(...workerSettlements.map(s => s.settlementMs || 0)) : 0;
+                const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
+                const actualEndMs = isCustomRange ? filterEndMs : Infinity;
+                
+                const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                
+                let totalMs = 0; let daysSet = new Set(); let currentIn = null;
+                workerLogs.forEach(log => {
+                    if (log.type === 'IN') { currentIn = log; daysSet.add(log.timestamp.split(',')[0].trim()); } 
+                    else if (log.type === 'OUT' && currentIn) { totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)); currentIn = null; }
+                });
+                
+                const totalHours = totalMs / (1000 * 60 * 60);
+                const earned = totalHours * (w.wage / 8);
+                const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
+                const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
+                const net = earned - adv;
+
+                if (daysSet.size === 0 && adv === 0) return; // Skip workers with no activity
+
+                grandTotalEarned += earned;
+                grandTotalAdv += adv;
+                grandTotalNet += net;
+
+                rows += `<tr>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;">${w.name}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${daysSet.size}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${totalHours.toFixed(2)}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;">₹${earned.toFixed(0)}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;color:#dc2626;">₹${adv.toFixed(0)}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;font-weight:bold;color:${net >= 0 ? '#16a34a' : '#dc2626'};">₹${net.toFixed(0)}</td>
+                </tr>`;
+            });
+
+            const pdfDiv = document.createElement('div');
+            pdfDiv.innerHTML = `
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Master Payroll Statement</p>
+                    <p style="text-align: center; color: #888; font-size: 12px; margin-bottom: 30px;">Period: ${dateRangeStr}</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background: #f8fafc; text-align: left;">
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Worker Name</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Days Active</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Total Hours</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Total Earned</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Advances</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Net Pay</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows || '<tr><td colspan="6" style="text-align: center; padding: 30px;">No payroll activity found for this specific period.</td></tr>'}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #f1f5f9; font-weight: bold; border-top: 2px solid #333;">
+                                <td colspan="3" style="padding: 12px 8px; text-align: right;">GRAND TOTALS:</td>
+                                <td style="padding: 12px 8px; text-align: right; color:#16a34a;">₹${grandTotalEarned.toFixed(0)}</td>
+                                <td style="padding: 12px 8px; text-align: right; color:#dc2626;">₹${grandTotalAdv.toFixed(0)}</td>
+                                <td style="padding: 12px 8px; text-align: right; font-size:14px;">₹${grandTotalNet.toFixed(0)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            html2pdf().set({
+                margin: 0,
+                filename: `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(pdfDiv).save();
         }
 
         function showToast(msg, type='success') { 
@@ -1239,6 +1579,14 @@
         // START THE APP
         window.onload = function() {
             loadStorage();
+            
+            // Start the live clock for the Face Station view
+            setInterval(() => {
+                const timeDisplay = document.getElementById('currentTimeDisplay');
+                if (timeDisplay) {
+                    timeDisplay.innerText = new Date().toLocaleTimeString('en-IN', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+            }, 1000);
         };
     </script>
 </body>
