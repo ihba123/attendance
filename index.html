@@ -447,11 +447,15 @@
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            // Wait for both Cloud Data and AI Models to load BEFORE showing the UI
+            // Wait for Cloud Data & AI Models with a strict 5-second timeout safeguard to prevent freezing
             try {
-                await Promise.all([fetchCloudData(), loadFaceAPIModels()]);
+                const maxWaitTimer = new Promise(resolve => setTimeout(resolve, 5000));
+                await Promise.race([
+                    Promise.all([fetchCloudData(), loadFaceAPIModels()]),
+                    maxWaitTimer
+                ]);
             } catch (error) {
-                console.warn("Bootup partial failure (likely offline mode)", error);
+                console.warn("Bootup partial failure or timeout", error);
             }
 
             // Hide the initial loader smoothly
@@ -955,9 +959,28 @@
             e.preventDefault();
             const w = db.workers.find(x => x.id === document.getElementById('overrideWorkerSelect').value);
             const s = db.sites.find(x => x.id === document.getElementById('overrideSiteSelect').value); 
+            const punchType = document.getElementById('overridePunchType').value;
             if(!w || !s) return showToast("Select worker & site", "error");
-            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerName: w.name, siteName: s.name, type: document.getElementById('overridePunchType').value, lat: s.lat, lng: s.lng, isOverride: true };
-            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); renderLogs();
+            
+            // --- VALIDATION TO PREVENT DUPLICATES ---
+            const todayDate = new Date().toLocaleDateString('en-IN');
+            const lastPunch = db.attendance.find(a => a.workerId === w.id && a.timestamp.includes(todayDate));
+
+            if (punchType === 'IN' && lastPunch && lastPunch.type === 'IN') {
+                return showToast(`${w.name} is already PUNCHED IN at ${lastPunch.siteName}!`, "error");
+            }
+            if (punchType === 'OUT') {
+                if (!lastPunch || lastPunch.type === 'OUT') {
+                    return showToast(`${w.name} is already PUNCHED OUT!`, "error");
+                }
+                if (lastPunch.siteId !== s.id) {
+                    return showToast(`Cannot punch out. Worker is currently at ${lastPunch.siteName}.`, "error");
+                }
+            }
+            // ----------------------------------------
+
+            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: w.id, workerName: w.name, siteId: s.id, siteName: s.name, type: punchType, lat: s.lat, lng: s.lng, isOverride: true };
+            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); renderLogs(); renderSettlements();
         }
 
         function handleAddSite(e) {
