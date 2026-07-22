@@ -819,8 +819,8 @@
             document.getElementById('webcam').classList.remove('hidden');
             document.getElementById('faceFrame').classList.remove('success');
             document.getElementById('retakeBtn').classList.add('hidden');
-            document.getElementById('livenessInstruction').innerHTML = "Auto-Scanning<br>Look Straight";
-            capturedPhotoData = null; detectedWorker = null;
+            document.getElementById('livenessInstruction').innerHTML = "Initializing...";
+            capturedPhotoData = null; detectedWorker = null; livenessStage = 0;
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
             validatePunchEligibility();
