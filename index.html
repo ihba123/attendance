@@ -1227,4 +1227,19 @@
             }).join('');
         }
 
-        function showToast(msg, type='success') {
+        function showToast(msg, type='success') { 
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            const icon = document.getElementById('toastIcon');
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-triangle-exclamation text-rose-400';
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+        }
+
+        // START THE APP
+        window.onload = function() {
+            loadStorage();
+        };
+    </script>
+</body>
+</html>
