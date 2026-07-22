@@ -829,9 +829,9 @@
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
             statusText.innerText = "Acquiring...";
             navigator.geolocation.getCurrentPosition(
-                <comment-tag id="5">(pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
-                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true }</comment-tag id="5" text="(pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
-                (err) => { statusText.innerText = 'GPS Failed.'; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }" type="suggestion">
+                (pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
+                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, 
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
 
