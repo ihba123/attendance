@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="text-center space-y-2">
-            <h1 class="text-2xl font-black text-white tracking-widest uppercase">SitePunch AI</h1>
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase">Jithu Corporation</h1>
             <p id="loaderStatusText" class="text-xs font-semibold text-blue-400 flex items-center gap-2 justify-center tracking-wide">
                 <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
             </p>
@@ -233,7 +233,7 @@
                 <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
-                    <button onclick="downloadMasterPayrollPDF()" class="w-full sm:w-auto py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                    <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden w-full sm:w-auto py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
                     </button>
                 </div>
@@ -927,7 +927,12 @@
 
         // --- DATA SUBMISSION ---
         async function submitPunch(type) {
-            <comment-tag id="2">const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
+            if (!navigator.onLine) {
+                showToast('You are offline! Please connect to internet to punch.', 'error');
+                return;
+            }
+
+            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
             const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
             db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, "success");
             
@@ -935,20 +940,8 @@
             document.getElementById('punchInBtn').disabled = true;
             document.getElementById('punchOutBtn').disabled = true;
 
-            postToGoogleSheet('punchAttendance', record);</comment-tag id="2" text="if (!navigator.onLine) {
-                showToast('You are offline! Please connect to internet to punch.', 'error');
-                return;
-            }
-
-            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
-            const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
-            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, 'success');
+            postToGoogleSheet('punchAttendance', record);
             
-            // Disable buttons immediately to prevent rapid double-clicks
-            document.getElementById('punchInBtn').disabled = true;
-            document.getElementById('punchOutBtn').disabled = true;
-
-            postToGoogleSheet('punchAttendance', record);" type="suggestion"> 
             renderLogs();
 
             // Wait 1.5 seconds for the user to see the success message, then close camera and return home
@@ -1236,7 +1229,13 @@
             const filterStartMs = getStartOfDayMs(fromVal);
             const filterEndMs = getEndOfDayMs(toVal);
             
-            let html = db.workers.map(w => {
+            // SECURITY: Restrict view to only the logged-in worker if they are not an Admin
+            let displayWorkers = db.workers;
+            if (currentUser && currentUser.role !== 'admin') {
+                displayWorkers = db.workers.filter(w => w.id === currentUser.workerId);
+            }
+            
+            let html = displayWorkers.map(w => {
                 let totalMs = 0;
                 let daysSet = new Set();
                 
@@ -1305,9 +1304,12 @@
                 if (daysSet.size === 0 && adv === 0) return '';
                 
                 // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
-                const markPaidBtn = isCustomRange ? 
+                const markPaidBtn = (currentUser && currentUser.role === 'admin') ? (isCustomRange ? 
                     `<button disabled class="py-2 bg-slate-700 opacity-50 cursor-not-allowed text-slate-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
-                    `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
+                    `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
+
+                const actionGridClass = (currentUser && currentUser.role === 'admin') ? 'grid grid-cols-2 gap-2' : 'flex flex-col';
+                const pdfBtnClass = (currentUser && currentUser.role === 'admin') ? '' : 'w-full';
 
                 return `
                 <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden transition-all shadow-md">
@@ -1347,8 +1349,8 @@
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-2 pt-2">
-                            <button onclick="downloadSettlementPDF('${w.id}')" class="py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        <div class="${actionGridClass} pt-2">
+                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-file-pdf text-rose-400"></i> Save PDF
                             </button>
                             ${markPaidBtn}
