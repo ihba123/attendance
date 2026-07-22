@@ -33,6 +33,26 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col pb-10">
 
+    <!-- INITIAL FULLSCREEN LOADER -->
+    <div id="initialLoader" class="fixed inset-0 z-[999] bg-slate-950 flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
+        <div class="relative flex items-center justify-center w-32 h-32">
+            <!-- Outer spinning rings -->
+            <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+            <div class="absolute inset-3 border-r-4 border-emerald-500 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            <div class="absolute inset-6 border-b-4 border-blue-300 border-solid rounded-full animate-spin" style="animation-duration: 2s;"></div>
+            <!-- Center Logo -->
+            <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/50 z-10 animate-pulse">
+                <i class="fa-solid fa-building"></i>
+            </div>
+        </div>
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase">SitePunch AI</h1>
+            <p id="loaderStatusText" class="text-xs font-semibold text-blue-400 flex items-center gap-2 justify-center tracking-wide">
+                <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
+            </p>
+        </div>
+    </div>
+
     <!-- HEADER / NAVBAR -->
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-3">
@@ -112,10 +132,6 @@
         <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
         <section id="view-punch" class="hidden space-y-4">
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
-                
-                <div id="aiLoadBanner" class="bg-blue-900/50 text-blue-400 border border-blue-500/50 p-2 rounded-lg text-xs mb-3 font-semibold animate-pulse text-center">
-                    <i class="fa-solid fa-microchip"></i> Downloading AI Models... Please wait 5 seconds.
-                </div>
 
                 <div class="flex items-center justify-between">
                     <div>
@@ -207,7 +223,7 @@
                 <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-slate-700">
                     <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <select id="advWorkerSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
-                        <input type="number" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                        <comment-tag id="1"><input type="number" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></comment-tag id="1" text="<input type='number' min='0' step='any' id='advAmountInput' required placeholder='Amount (₹)' class='bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none'>" type="suggestion">
                         <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs shadow-md">Record</button>
                     </form>
                 </div>
@@ -286,7 +302,7 @@
                     <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="number" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
 
                     <!-- LIVE CAMERA FACE CAPTURE FOR REGISTRATION -->
@@ -371,7 +387,7 @@
                 <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
                 <div class="grid grid-cols-2 gap-2">
                     <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
-                    <input type="number" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
                 </div>
                 <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
@@ -431,16 +447,28 @@
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
+            // Wait for both Cloud Data and AI Models to load BEFORE showing the UI
+            try {
+                await Promise.all([fetchCloudData(), loadFaceAPIModels()]);
+            } catch (error) {
+                console.warn("Bootup partial failure (likely offline mode)", error);
+            }
+
+            // Hide the initial loader smoothly
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 500); // wait for CSS transition
+            }
+
+            // Route to correct screen based on session
             if (currentUser) {
                 showDashboard();
             } else {
                 showLandingPage();
             }
-
-            // ACTIVELY PULL DATA FROM GOOGLE SHEETS
-            await fetchCloudData();
-
-            await loadFaceAPIModels();
         }
 
         async function fetchCloudData() {
@@ -625,7 +653,6 @@
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); // Removed expression net to speed up loading
                 aiModelsLoaded = true;
-                const banner = document.getElementById('aiLoadBanner'); if(banner) banner.classList.add('hidden');
             } catch (e) {
                 console.error("AI Models Error", e);
             }
@@ -802,8 +829,9 @@
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
             statusText.innerText = "Acquiring...";
             navigator.geolocation.getCurrentPosition(
-                (pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
-                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true }
+                <comment-tag id="5">(pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
+                (err) => { statusText.innerText = "GPS Failed."; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true }</comment-tag id="5" text="(pos) => { currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; calculateGeoFence(); },
+                (err) => { statusText.innerText = 'GPS Failed.'; isWithinGeoFence = false; validatePunchEligibility(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }" type="suggestion">
             );
         }
 
@@ -899,7 +927,7 @@
 
         // --- DATA SUBMISSION ---
         async function submitPunch(type) {
-            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
+            <comment-tag id="2">const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
             const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
             db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, "success");
             
@@ -907,7 +935,20 @@
             document.getElementById('punchInBtn').disabled = true;
             document.getElementById('punchOutBtn').disabled = true;
 
-            postToGoogleSheet('punchAttendance', record); 
+            postToGoogleSheet('punchAttendance', record);</comment-tag id="2" text="if (!navigator.onLine) {
+                showToast('You are offline! Please connect to internet to punch.', 'error');
+                return;
+            }
+
+            const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
+            const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
+            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, 'success');
+            
+            // Disable buttons immediately to prevent rapid double-clicks
+            document.getElementById('punchInBtn').disabled = true;
+            document.getElementById('punchOutBtn').disabled = true;
+
+            postToGoogleSheet('punchAttendance', record);" type="suggestion"> 
             renderLogs();
 
             // Wait 1.5 seconds for the user to see the success message, then close camera and return home
