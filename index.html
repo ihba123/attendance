@@ -166,8 +166,8 @@
                     
                     <div id="scanLine" class="hidden scan-line z-10"></div>
                     <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex flex-col items-center justify-center opacity-80 gap-1">
-                        <span id="livenessInstruction" class="text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
-                        <span id="earDebug" class="text-[9px] text-slate-400 bg-slate-900/70 px-2 py-0.5 rounded-full"></span>
+                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
+                        <span id="earDebug" class="hidden text-[9px] text-slate-400 bg-slate-900/70 px-2 py-0.5 rounded-full"></span>
                     </div>
 
                     <div class="absolute bottom-3 flex gap-2 z-20">
@@ -790,15 +790,17 @@
             autoScanActive = true;
             livenessStage = 0; // 0 = calibrating this person's "eyes open" baseline, 1 = waiting for blink
 
-            // Fast options for scanning
-            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+            // Fast options for scanning - smaller inputSize than the one-shot final capture,
+            // since this runs continuously many times per second and needs to be quick;
+            // accuracy is refined once at the end by executePunchCapture anyway.
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 });
 
             // ADAPTIVE thresholds instead of one-size-fits-all numbers: everyone's resting
             // EAR differs by eye shape, camera angle and lighting, so we calibrate a personal
             // "eyes open" baseline first, then look for a RELATIVE drop from it (a blink),
             // rather than comparing against a fixed absolute number that may never match.
             const MIN_VALID_EAR = 0.12;      // below this, landmarks are unreliable - ignore the frame
-            const OPEN_CALIBRATION_FRAMES = 3; // consecutive good "open" reads needed before trusting the baseline
+            const OPEN_CALIBRATION_FRAMES = 2; // consecutive good "open" reads needed before trusting the baseline
             const BLINK_DROP_RATIO = 0.72;    // "closed" = EAR falls to <=72% of this person's open baseline
             let openBaseline = null;
             let openReadingsCount = 0;
@@ -859,7 +861,7 @@
                 }
                 // Re-schedule only after this frame finishes processing (avoids pile-ups on
                 // slower phones) at a fast-enough cadence to actually catch a natural blink.
-                scanInterval = setTimeout(scanLoop, 150);
+                scanInterval = setTimeout(scanLoop, 80);
             }
             scanLoop();
         }
@@ -901,12 +903,25 @@
                 .map(w => new faceapi.LabeledFaceDescriptors(w.id, [new Float32Array(w.descriptor)]));
 
             detectedWorker = null;
-            if (labeledDescriptors.length > 0) {
-                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.60); // 0.60 threshold is much better for mobile cameras
-                const match = faceMatcher.findBestMatch(liveDescriptor);
-                if (match.label !== 'unknown') {
-                    detectedWorker = db.workers.find(w => w.id === match.label);
-                }
+
+            if (labeledDescriptors.length === 0) {
+                // DIAGNOSTIC: nobody has usable biometric data loaded at all - this is a data/sync
+                // problem, not a camera or lighting problem. Surface it clearly instead of a
+                // generic "not recognized" so it's obvious the fix is re-registering faces or
+                // checking the sync, not adjusting lighting/angle.
+                document.getElementById('capturedPreview').classList.remove('hidden');
+                video.classList.add('hidden');
+                document.getElementById('retakeBtn').classList.remove('hidden');
+                showToast(`No face data loaded for any worker (0/${db.workers.length} have valid biometrics). Try Sync, or re-register faces.`, "error");
+                document.getElementById('livenessInstruction').innerHTML = "No Data";
+                validatePunchEligibility();
+                return;
+            }
+
+            const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.60); // 0.60 threshold is much better for mobile cameras
+            const match = faceMatcher.findBestMatch(liveDescriptor);
+            if (match.label !== 'unknown') {
+                detectedWorker = db.workers.find(w => w.id === match.label);
             }
 
             if (detectedWorker) {
@@ -915,13 +930,17 @@
                 document.getElementById('welcomeScreen').classList.remove('hidden');
                 document.getElementById('welcomeWorkerName').innerText = detectedWorker.name;
                 document.getElementById('welcomeWorkerPhoto').src = capturedPhotoData;
-                showToast(`Match: ${detectedWorker.name}`);
+                showToast(`Match: ${detectedWorker.name} (distance ${match.distance.toFixed(2)})`);
             } else { 
                 // FAIL: Keep camera visible but frozen on preview
                 document.getElementById('capturedPreview').classList.remove('hidden');
                 video.classList.add('hidden');
                 document.getElementById('retakeBtn').classList.remove('hidden');
-                showToast("Face not recognized in database!", "error"); 
+                // DIAGNOSTIC: show the actual distance to the closest worker. Under 0.60 it
+                // would have matched; a value just above (e.g. 0.62-0.70) points to a lighting/
+                // angle/threshold issue, while a high value (0.9+) means this face genuinely
+                // isn't a close match to anyone's stored biometrics.
+                showToast(`Face not recognized (${labeledDescriptors.length} workers checked, closest distance ${match.distance.toFixed(2)}, needs ≤0.60)`, "error"); 
                 document.getElementById('livenessInstruction').innerHTML = "No Match";
             }
             validatePunchEligibility();
@@ -1411,20 +1430,42 @@
                 container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
                 return;
             }
-            container.innerHTML = db.workers.map(w => `
+            container.innerHTML = db.workers.map(w => {
+                const hasValidFace = w.descriptor && Array.isArray(w.descriptor) && w.descriptor.length === 128;
+                const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-0.5 text-[9px] font-bold text-amber-400 bg-amber-900/30 border border-amber-800/50 px-1.5 py-0.5 rounded">⚠ No Face Data</span>`;
+                return `
                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/>
                         <div>
                             <p class="font-bold text-sm">${w.name}</p>
                             <p class="text-[10px] text-emerald-400">₹${w.wage}/day | Phone: ${w.phone}</p>
+                            ${faceBadge}
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="openEditWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-blue-900/50 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
                         <button onclick="deleteWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
-                </div>`).join(''); 
+                </div>`;
+            }).join(''); 
+        }
+
+        // Matches an attendance log to a worker. Prefers the stored workerId, but falls
+        // back to matching by name if that ID doesn't belong to ANY currently-registered
+        // worker - this happens if a worker was ever deleted and re-registered (which
+        // mints a brand new ID), leaving old attendance rows pointing at an ID nobody
+        // currently has. Without this fallback, payroll would silently show "no records"
+        // for that worker even though their punches are still visible in the Attendance
+        // Logs tab (which doesn't require an ID match). `knownWorkerIds` should be a Set
+        // of every current worker's id, so we only fall back for truly orphaned IDs and
+        // never accidentally merge two different active workers who share a name.
+        function logMatchesWorker(log, worker, knownWorkerIds) {
+            if (log.workerId === worker.id) return true;
+            if (log.workerName && worker.name && log.workerName === worker.name && !knownWorkerIds.has(log.workerId)) {
+                return true;
+            }
+            return false;
         }
 
         // Normalizes a timestamp value back into our expected "DD/MM/YYYY, hh:mm:ss am/pm"
@@ -1552,6 +1593,7 @@
             if (currentUser && currentUser.role !== 'admin') {
                 displayWorkers = db.workers.filter(w => w.id === currentUser.workerId);
             }
+            const knownWorkerIds = new Set(db.workers.map(w => w.id));
             
             let html = displayWorkers.map(w => {
                 let totalMs = 0;
@@ -1566,7 +1608,7 @@
                 
                 // Get all logs for this worker strictly within the target time range
                 const workerLogs = [...db.attendance]
-                    .filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; })
+                    .filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; })
                     .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
                 let sessionRows = '';
@@ -1677,7 +1719,19 @@
                 </div>`;
             }).join('');
             
-            container.innerHTML = html || `<p class="text-xs text-slate-500 py-3 text-center">No records found for the selected period.</p>`;
+            if (!html) {
+                const totalLogs = db.attendance.length;
+                const orphanLogs = db.attendance.filter(a => !knownWorkerIds.has(a.workerId)).length;
+                let msg = "No records found for the selected period.";
+                if (totalLogs > 0) {
+                    msg += ` (${totalLogs} total attendance log${totalLogs === 1 ? '' : 's'} in the system`;
+                    if (orphanLogs > 0) msg += `, ${orphanLogs} not matched to a current worker`;
+                    msg += `.)`;
+                }
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">${msg}</p>`;
+            } else {
+                container.innerHTML = html;
+            }
         }
 
         function handleMarkPaid(workerId) {
@@ -1685,9 +1739,10 @@
             if(!w) return;
             
             openConfirmModal("Mark as Paid?", `This will clear ${w.name}'s current balance and start a fresh billing cycle for them.`, () => {
+                const knownWorkerIds = new Set(db.workers.map(x => x.id));
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
                 const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
-                const workerLogs = [...db.attendance].filter(a => a.workerId === w.id && parseCustomDate(a.timestamp) > lastSettledMs);
+                const workerLogs = [...db.attendance].filter(a => logMatchesWorker(a, w, knownWorkerIds) && parseCustomDate(a.timestamp) > lastSettledMs);
                 
                 let totalMs = 0; let daysSet = new Set(); let currentIn = null;
                 workerLogs.sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp)).forEach(log => {
@@ -1739,7 +1794,8 @@
             const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
             const actualEndMs = isCustomRange ? filterEndMs : Infinity;
             
-            const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+            const knownWorkerIds = new Set(db.workers.map(x => x.id));
+            const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
             
             let sessionRows = ''; let totalMs = 0; let daysSet = new Set(); let currentIn = null;
             workerLogs.forEach(log => {
@@ -1849,6 +1905,7 @@
             let grandTotalEarned = 0;
             let grandTotalAdv = 0;
             let grandTotalNet = 0;
+            const knownWorkerIds = new Set(db.workers.map(x => x.id));
 
             db.workers.forEach(w => {
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
@@ -1856,7 +1913,7 @@
                 const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
                 const actualEndMs = isCustomRange ? filterEndMs : Infinity;
                 
-                const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
                 let totalMs = 0; let daysSet = new Set(); let currentIn = null;
                 workerLogs.forEach(log => {
