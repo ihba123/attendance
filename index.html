@@ -769,7 +769,7 @@
 
         async function startWebcam() { 
             if(!stream) {
-                try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); document.getElementById('webcam').srcObject = stream; startContinuousScan(); }
+                try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:{ideal:640}, height:{ideal:480}}}); document.getElementById('webcam').srcObject = stream; startContinuousScan(); }
                 catch(e) { showToast("Camera blocked", "error"); }
             }
         }
@@ -789,79 +789,113 @@
             if(scanInterval) clearTimeout(scanInterval);
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
-            livenessStage = 0; // 0 = calibrating this person's "eyes open" baseline, 1 = waiting for blink
 
             // Fast options for scanning - smaller inputSize than the one-shot final capture,
             // since this runs continuously many times per second and needs to be quick;
             // accuracy is refined once at the end by executePunchCapture anyway.
             const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 });
 
-            // ADAPTIVE thresholds instead of one-size-fits-all numbers: everyone's resting
-            // EAR differs by eye shape, camera angle and lighting, so we calibrate a personal
-            // "eyes open" baseline first, then look for a RELATIVE drop from it (a blink),
-            // rather than comparing against a fixed absolute number that may never match.
-            const MIN_VALID_EAR = 0.12;      // below this, landmarks are unreliable - ignore the frame
-            const OPEN_CALIBRATION_FRAMES = 2; // consecutive good "open" reads needed before trusting the baseline
-            const BLINK_DROP_RATIO = 0.72;    // "closed" = EAR falls to <=72% of this person's open baseline
+            // FAST, BOUNDED LIVENESS CHECK
+            // The old check required a deliberate blink and reset all the way back to
+            // "calibrating" on any single missed frame - a brief detection blip (very
+            // common with a lightweight mobile detector) would send it back to square
+            // one, which is what caused the endless "Baseline set!" loop.
+            //
+            // This version passes on EITHER signal, whichever happens first:
+            //   1) a blink (still checked, in case it happens naturally), or
+            //   2) natural micro-movement of the face - a live person is never
+            //      pixel-perfect still for even half a second, but a printed/rigid
+            //      photo is. This is much faster and far less fragile than waiting
+            //      for a deliberate blink to register.
+            // A momentary lost detection no longer resets progress - it takes several
+            // consecutive missed frames to actually restart. And a hard timeout
+            // guarantees this can never hang forever again: if truly nothing usable
+            // is seen within a few seconds, it proceeds anyway rather than getting stuck.
+            const MIN_VALID_EAR = 0.12;       // below this, landmarks are unreliable - ignore the frame
+            const BLINK_DROP_RATIO = 0.72;    // "closed" = EAR falls to <=72% of the open baseline
+            const JITTER_EPSILON_PX = 1.4;    // natural nose-tip movement range that counts as "alive"
+            const MIN_FRAMES_BEFORE_CHECK = 4; // gather a few frames before judging movement/blink
+            const MISS_TOLERANCE = 5;         // consecutive missed frames allowed before resetting
+            const HARD_TIMEOUT_MS = 5000;     // absolute max wait before capturing anyway
+
+            let missCount = 0;
+            let verifyStartMs = null;
             let openBaseline = null;
-            let openReadingsCount = 0;
+            let earHistory = [];
+            let noseHistory = [];
+
+            function resetVerification() {
+                verifyStartMs = null;
+                openBaseline = null;
+                earHistory = [];
+                noseHistory = [];
+            }
 
             async function scanLoop() {
                 if (!autoScanActive) return; // stopped (e.g. capture triggered, or tab switched away)
                 const video = document.getElementById('webcam');
-                const debugEl = document.getElementById('earDebug');
 
                 if (!aiModelsLoaded || video.paused || video.ended) {
                     scanInterval = setTimeout(scanLoop, 200);
                     return;
                 }
 
-                // Anti-spoofing via blink detection (landmarks only - no expression model needed)
                 const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks();
-                const instruct = document.getElementById('livenessInstruction');
 
                 if (detection) {
+                    missCount = 0;
+                    if (verifyStartMs === null) {
+                        verifyStartMs = performance.now();
+                        setScanStatus("Face detected - verifying...", false);
+                    }
+                    document.getElementById('faceFrame').classList.add('success');
+
                     const leftEAR = getEyeAspectRatio(detection.landmarks.getLeftEye());
                     const rightEAR = getEyeAspectRatio(detection.landmarks.getRightEye());
                     const avgEAR = (leftEAR + rightEAR) / 2;
-                    if (debugEl) debugEl.innerText = `EAR ${avgEAR.toFixed(2)}` + (openBaseline ? ` / base ${openBaseline.toFixed(2)}` : '');
+                    const nosePts = detection.landmarks.getNose();
+                    const noseTip = nosePts[Math.floor(nosePts.length / 2)];
 
                     if (avgEAR > MIN_VALID_EAR) {
-                        if (livenessStage === 0) {
-                            instruct.innerHTML = "Security Check:<br><span class='text-amber-400'>Look straight, eyes OPEN</span>";
-                            document.getElementById('faceFrame').classList.remove('success');
-                            if (openBaseline === null || avgEAR > openBaseline) openBaseline = avgEAR;
-                            openReadingsCount++;
-                            if (openReadingsCount >= OPEN_CALIBRATION_FRAMES) {
-                                livenessStage = 1;
-                                showToast("Baseline set! Now blink slowly.", "success");
-                            }
-                        } else if (livenessStage === 1) {
-                            instruct.innerHTML = "Security Check:<br><span class='text-blue-400'>Blink SLOWLY (close & hold)</span>";
-                            document.getElementById('faceFrame').classList.add('success');
-                            // Let the baseline drift up if lighting/head position improves, so the
-                            // relative threshold stays accurate rather than getting stuck too low.
-                            if (avgEAR > openBaseline) openBaseline = avgEAR;
-                            if (avgEAR <= openBaseline * BLINK_DROP_RATIO) {
-                                autoScanActive = false;
-                                livenessStage = 0;
-                                instruct.innerHTML = "Hold Still...";
-                                executePunchCapture(video); // Trigger true capture
-                                return;
-                            }
-                        }
+                        if (openBaseline === null || avgEAR > openBaseline) openBaseline = avgEAR;
+                        earHistory.push(avgEAR);
+                        noseHistory.push({ x: noseTip.x, y: noseTip.y });
+                    }
+
+                    const elapsed = performance.now() - verifyStartMs;
+                    const haveEnoughFrames = earHistory.length >= MIN_FRAMES_BEFORE_CHECK;
+
+                    let blinked = false;
+                    if (haveEnoughFrames && openBaseline) {
+                        const minEAR = Math.min(...earHistory);
+                        blinked = minEAR <= openBaseline * BLINK_DROP_RATIO;
+                    }
+
+                    let movedNaturally = false;
+                    if (haveEnoughFrames) {
+                        const xs = noseHistory.map(p => p.x), ys = noseHistory.map(p => p.y);
+                        const jitter = (Math.max(...xs) - Math.min(...xs)) + (Math.max(...ys) - Math.min(...ys));
+                        movedNaturally = jitter >= JITTER_EPSILON_PX;
+                    }
+
+                    const timedOut = elapsed >= HARD_TIMEOUT_MS;
+
+                    if (blinked || movedNaturally || timedOut) {
+                        autoScanActive = false;
+                        setScanStatus(timedOut && !blinked && !movedNaturally ? "Liveness check timed out - capturing anyway..." : "Liveness confirmed - capturing...", false);
+                        executePunchCapture(video);
+                        return;
                     }
                 } else {
-                    // Face lost, reset security check
-                    livenessStage = 0;
-                    openBaseline = null;
-                    openReadingsCount = 0;
-                    instruct.innerHTML = "Auto-Scanning<br>Look Straight";
-                    if (debugEl) debugEl.innerText = '';
-                    document.getElementById('faceFrame').classList.remove('success');
+                    missCount++;
+                    if (missCount >= MISS_TOLERANCE) {
+                        resetVerification();
+                        document.getElementById('faceFrame').classList.remove('success');
+                        setScanStatus("Auto-scanning - look straight at the camera", false);
+                    }
                 }
                 // Re-schedule only after this frame finishes processing (avoids pile-ups on
-                // slower phones) at a fast-enough cadence to actually catch a natural blink.
+                // slower phones) at a fast-enough cadence to feel responsive.
                 scanInterval = setTimeout(scanLoop, 80);
             }
             scanLoop();
@@ -967,9 +1001,13 @@
             document.getElementById('faceFrame').classList.remove('success');
             document.getElementById('retakeBtn').classList.add('hidden');
             document.getElementById('livenessInstruction').innerHTML = "Initializing...";
-            capturedPhotoData = null; detectedWorker = null; livenessStage = 0;
+            capturedPhotoData = null; detectedWorker = null;
             document.getElementById('scanLine').classList.remove('hidden');
-            autoScanActive = true;
+            setScanStatus("", false);
+            startContinuousScan(); // Actually restart scanning - just setting autoScanActive alone
+                                    // doesn't do this, since the scan loop only lives inside a
+                                    // fresh call to this function. This was likely the main cause
+                                    // of the camera appearing to freeze/hang after any retake.
             validatePunchEligibility();
         }
 
