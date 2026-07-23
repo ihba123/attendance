@@ -176,6 +176,7 @@
                         </button>
                     </div>
                 </div>
+                <p id="scanStatusLine" class="text-[11px] text-slate-400 text-center mt-2 min-h-[1.5em]"></p>
 
                 <!-- SUCCESS: Welcome Screen (Hidden by default) -->
                 <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-slate-900 border border-emerald-500/50 rounded-2xl shadow-2xl transition-all duration-300">
@@ -866,6 +867,13 @@
             scanLoop();
         }
 
+        function setScanStatus(msg, isError) {
+            const el = document.getElementById('scanStatusLine');
+            if (!el) return;
+            el.innerText = msg;
+            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-400' : 'text-slate-400');
+        }
+
         async function executePunchCapture(video) {
             document.getElementById('scanLine').classList.add('hidden');
             document.getElementById('faceFrame').classList.add('success');
@@ -891,6 +899,7 @@
                 video.classList.add('hidden');
                 document.getElementById('retakeBtn').classList.remove('hidden');
                 showToast("Face blurred. Retake.", "error"); 
+                setScanStatus("Face blurred / not detected clearly. Retake in better lighting, facing the camera directly.", true);
                 document.getElementById('livenessInstruction').innerHTML = "Failed";
                 return;
             }
@@ -913,6 +922,7 @@
                 video.classList.add('hidden');
                 document.getElementById('retakeBtn').classList.remove('hidden');
                 showToast(`No face data loaded for any worker (0/${db.workers.length} have valid biometrics). Try Sync, or re-register faces.`, "error");
+                setScanStatus(`No face data loaded for any worker (0/${db.workers.length} have valid biometrics). Try Sync, or re-register faces.`, true);
                 document.getElementById('livenessInstruction').innerHTML = "No Data";
                 validatePunchEligibility();
                 return;
@@ -931,6 +941,7 @@
                 document.getElementById('welcomeWorkerName').innerText = detectedWorker.name;
                 document.getElementById('welcomeWorkerPhoto').src = capturedPhotoData;
                 showToast(`Match: ${detectedWorker.name} (distance ${match.distance.toFixed(2)})`);
+                setScanStatus(`Matched ${detectedWorker.name} (distance ${match.distance.toFixed(2)})`, false);
             } else { 
                 // FAIL: Keep camera visible but frozen on preview
                 document.getElementById('capturedPreview').classList.remove('hidden');
@@ -941,6 +952,7 @@
                 // angle/threshold issue, while a high value (0.9+) means this face genuinely
                 // isn't a close match to anyone's stored biometrics.
                 showToast(`Face not recognized (${labeledDescriptors.length} workers checked, closest distance ${match.distance.toFixed(2)}, needs ≤0.60)`, "error"); 
+                setScanStatus(`Not recognized - ${labeledDescriptors.length} worker(s) checked, closest distance ${match.distance.toFixed(2)} (needs ≤0.60)`, true);
                 document.getElementById('livenessInstruction').innerHTML = "No Match";
             }
             validatePunchEligibility();
@@ -1481,6 +1493,93 @@
             return d.toLocaleString('en-IN');
         }
 
+        // ==================== PAYROLL RULES ====================
+        // Normal shift: 9:00 AM - 5:00 PM (paid at the worker's normal day rate).
+        // - Punching OUT at or after 3:00 PM counts as a FULL day's pay, no matter the
+        //   exact time they left within/after the shift - only leaving BEFORE 3 PM
+        //   gets prorated for the portion of the shift actually covered.
+        // - Any time clocked past 5:00 PM is paid separately as overtime at a flat
+        //   Rs 100/hour, on top of the day's regular pay.
+        const OVERTIME_HOURLY_RATE = 100;
+        const SHIFT_START_HOUR = 9;      // 9 AM
+        const SHIFT_END_HOUR = 17;       // 5 PM
+        const FULL_DAY_CUTOFF_HOUR = 15; // 3 PM
+
+        // Computes one calendar day's pay from that day's earliest IN and latest OUT.
+        function computeDayPay(firstInMs, lastOutMs, dailyWage) {
+            const d = new Date(firstInMs);
+            const shiftStartMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), SHIFT_START_HOUR, 0, 0).getTime();
+            const shiftEndMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), SHIFT_END_HOUR, 0, 0).getTime();
+            const fullDayCutoffMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), FULL_DAY_CUTOFF_HOUR, 0, 0).getTime();
+
+            let regularPay = 0, overtimeHours = 0, overtimePay = 0;
+
+            if (lastOutMs >= fullDayCutoffMs) {
+                // Left at/after 3 PM - full day's pay regardless of the exact time
+                regularPay = dailyWage;
+                if (lastOutMs > shiftEndMs) {
+                    overtimeHours = (lastOutMs - shiftEndMs) / (1000 * 60 * 60);
+                    overtimePay = overtimeHours * OVERTIME_HOURLY_RATE;
+                }
+            } else {
+                // Left before 3 PM - prorate for the portion of the normal shift actually covered
+                const effectiveStart = Math.max(firstInMs, shiftStartMs);
+                const effectiveEnd = Math.min(lastOutMs, shiftEndMs);
+                const workedHours = Math.max(0, (effectiveEnd - effectiveStart) / (1000 * 60 * 60));
+                regularPay = workedHours * (dailyWage / 8);
+            }
+            return { regularPay, overtimeHours, overtimePay, totalPay: regularPay + overtimePay };
+        }
+
+        // Turns a sorted, single-worker list of attendance logs into everything payroll
+        // needs: paired IN/OUT sessions (for display), the set of days worked, any
+        // dangling IN with no matching OUT, and the actual pay totals under the rules
+        // above. Sessions are grouped by calendar day (earliest IN, latest OUT) so a
+        // lunch-break split into two sessions is treated as one day, not two.
+        function summarizeWorkerAttendance(workerLogs, dailyWage) {
+            let currentIn = null;
+            let danglingIn = null;
+            let totalRawHours = 0;
+            const daysSet = new Set();
+            const dayRange = {}; // date string -> { firstIn, lastOut }
+            const sessions = [];
+
+            workerLogs.forEach(log => {
+                const t = parseCustomDate(log.timestamp);
+                const date = log.timestamp.split(',')[0].trim();
+                if (log.type === 'IN') {
+                    currentIn = log;
+                    daysSet.add(date);
+                    if (!dayRange[date]) dayRange[date] = { firstIn: t, lastOut: null };
+                    else if (t < dayRange[date].firstIn) dayRange[date].firstIn = t;
+                } else if (log.type === 'OUT' && currentIn) {
+                    const inT = parseCustomDate(currentIn.timestamp);
+                    const durationHrs = (t - inT) / (1000 * 60 * 60);
+                    totalRawHours += durationHrs;
+                    sessions.push({ date, siteName: currentIn.siteName, inLog: currentIn, outLog: log, durationHrs });
+                    if (!dayRange[date]) dayRange[date] = { firstIn: inT, lastOut: t };
+                    else {
+                        if (inT < dayRange[date].firstIn) dayRange[date].firstIn = inT;
+                        if (dayRange[date].lastOut === null || t > dayRange[date].lastOut) dayRange[date].lastOut = t;
+                    }
+                    currentIn = null;
+                }
+            });
+            if (currentIn) { danglingIn = currentIn; daysSet.add(currentIn.timestamp.split(',')[0].trim()); }
+
+            let totalEarned = 0, totalOvertimeHours = 0, totalOvertimePay = 0;
+            Object.keys(dayRange).forEach(date => {
+                const { firstIn, lastOut } = dayRange[date];
+                if (lastOut === null) return; // No completed OUT for this date yet - can't pay it yet
+                const pay = computeDayPay(firstIn, lastOut, dailyWage);
+                totalEarned += pay.totalPay;
+                totalOvertimeHours += pay.overtimeHours;
+                totalOvertimePay += pay.overtimePay;
+            });
+
+            return { sessions, danglingIn, daysSet, totalRawHours, totalEarned, totalOvertimeHours, totalOvertimePay };
+        }
+
         // --- TIME HELPER FOR CALCULATING HOURS ---
         function parseCustomDate(str) {
             if (!str) return 0;
@@ -1596,9 +1695,6 @@
             const knownWorkerIds = new Set(db.workers.map(w => w.id));
             
             let html = displayWorkers.map(w => {
-                let totalMs = 0;
-                let daysSet = new Set();
-                
                 // Track the last time this worker was marked "Paid" (Only applies if NOT using custom dates)
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
                 const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
@@ -1611,36 +1707,20 @@
                     .filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; })
                     .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
-                let sessionRows = '';
-                let currentIn = null;
-                
-                // Calculate Exact Working Hours & Build HTML Session Rows
-                workerLogs.forEach(log => {
-                    const logTime = parseCustomDate(log.timestamp);
-                    const date = log.timestamp.split(',')[0].trim();
-                    
-                    if (log.type === 'IN') {
-                        currentIn = log;
-                        daysSet.add(date);
-                    } else if (log.type === 'OUT' && currentIn) {
-                        const durationMs = logTime - parseCustomDate(currentIn.timestamp);
-                        totalMs += durationMs;
-                        const durationHrs = durationMs / (1000 * 60 * 60);
-                        
-                        sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
-                            <div class="col-span-1">${date}</div>
-                            <div class="col-span-1 truncate" title="${currentIn.siteName}">${currentIn.siteName}</div>
-                            <div class="col-span-1">${currentIn.timestamp.split(',')[1].trim()} - ${log.timestamp.split(',')[1].trim()}</div>
-                            <div class="col-span-1 text-right font-bold text-blue-400">${durationHrs.toFixed(2)} hr</div>
-                        </div>`;
-                        currentIn = null;
-                    }
-                });
+                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const daysSet = summary.daysSet;
+
+                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
+                            <div class="col-span-1">${s.date}</div>
+                            <div class="col-span-1 truncate" title="${s.siteName}">${s.siteName}</div>
+                            <div class="col-span-1">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</div>
+                            <div class="col-span-1 text-right font-bold text-blue-400">${s.durationHrs.toFixed(2)} hr</div>
+                        </div>`).join('');
                 
                 // Handle a dangling IN punch that missed an OUT punch
-                if (currentIn) {
+                if (summary.danglingIn) {
+                    const currentIn = summary.danglingIn;
                     const date = currentIn.timestamp.split(',')[0].trim();
-                    daysSet.add(date);
                     sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
                         <div class="col-span-1">${date}</div>
                         <div class="col-span-1 truncate">${currentIn.siteName}</div>
@@ -1649,9 +1729,8 @@
                     </div>`;
                 }
                 
-                const totalHours = totalMs / (1000 * 60 * 60);
-                const hourlyWage = w.wage / 8; // Provided wage is for 8 hours
-                const earned = totalHours * hourlyWage;
+                const totalHours = summary.totalRawHours;
+                const earned = summary.totalEarned;
                 
                 // Filter advances to only include ones inside the specific time range
                 const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
@@ -1695,8 +1774,8 @@
 
                         <div class="space-y-1.5 px-1">
                             <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (8 hr shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Calculated Hourly Rate:</span> <span class="font-medium text-emerald-400/80">₹${hourlyWage.toFixed(2)} / hr</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
+                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Overtime (after 5 PM @ ₹100/hr):</span> <span class="font-medium text-amber-400">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
                             <div class="my-2 border-t border-slate-800/80"></div>
                             
@@ -1742,16 +1821,12 @@
                 const knownWorkerIds = new Set(db.workers.map(x => x.id));
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
                 const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
-                const workerLogs = [...db.attendance].filter(a => logMatchesWorker(a, w, knownWorkerIds) && parseCustomDate(a.timestamp) > lastSettledMs);
-                
-                let totalMs = 0; let daysSet = new Set(); let currentIn = null;
-                workerLogs.sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp)).forEach(log => {
-                    if (log.type === 'IN') { currentIn = log; daysSet.add(log.timestamp.split(',')[0].trim()); } 
-                    else if (log.type === 'OUT' && currentIn) { totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)); currentIn = null; }
-                });
-                
-                const totalHours = totalMs / (1000 * 60 * 60);
-                const earned = totalHours * (w.wage / 8);
+                const workerLogs = [...db.attendance].filter(a => logMatchesWorker(a, w, knownWorkerIds) && parseCustomDate(a.timestamp) > lastSettledMs)
+                    .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+
+                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const daysSet = summary.daysSet;
+                const earned = summary.totalEarned;
                 const unpaidAdv = db.advances.filter(a => a.workerId === w.id && parseCustomDate(a.timestamp) > lastSettledMs);
                 const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
                 const net = earned - adv;
@@ -1797,24 +1872,17 @@
             const knownWorkerIds = new Set(db.workers.map(x => x.id));
             const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
             
-            let sessionRows = ''; let totalMs = 0; let daysSet = new Set(); let currentIn = null;
-            workerLogs.forEach(log => {
-                const date = log.timestamp.split(',')[0].trim();
-                if (log.type === 'IN') { currentIn = log; daysSet.add(date); } 
-                else if (log.type === 'OUT' && currentIn) {
-                    const durationHrs = (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)) / (1000 * 60 * 60);
-                    totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp));
-                    sessionRows += `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[1].trim()} - ${log.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${durationHrs.toFixed(2)} hr</td></tr>`;
-                    currentIn = null;
-                }
-            });
+            const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+            const daysSet = summary.daysSet;
+            let sessionRows = summary.sessions.map(s => `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${s.date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${s.durationHrs.toFixed(2)} hr</td></tr>`).join('');
             
-            if (currentIn) {
+            if (summary.danglingIn) {
+                const currentIn = summary.danglingIn;
                 sessionRows += `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[0]}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${currentIn.timestamp.split(',')[1].trim()} - Missed OUT</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">--</td></tr>`;
             }
 
-            const totalHours = totalMs / (1000 * 60 * 60);
-            const earned = totalHours * (w.wage / 8);
+            const totalHours = summary.totalRawHours;
+            const earned = summary.totalEarned;
             const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
             const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
             const net = earned - adv;
@@ -1833,7 +1901,7 @@
                         <div>
                             <h3 style="margin: 0; font-size: 18px;">Worker: ${w.name}</h3>
                             <p style="margin: 5px 0; color: #555;">Phone: ${w.phone}</p>
-                            <p style="margin: 5px 0; color: #555;">Base Wage: ₹${w.wage} / 8hr shift</p>
+                            <p style="margin: 5px 0; color: #555;">Base Wage: ₹${w.wage} / day (9 AM - 5 PM shift)</p>
                         </div>
                         <div style="text-align: right;">
                             <p style="margin: 5px 0; color: #555;">${dateRangeStr}</p>
@@ -1859,6 +1927,7 @@
                     <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Financial Summary</h4>
                     <table style="width: 100%; font-size: 14px; margin-bottom: 40px;">
                         <tr><td style="padding: 5px 0;">Total Hours Worked:</td><td style="text-align: right; font-weight: bold;">${totalHours.toFixed(2)} Hrs</td></tr>
+                        ${summary.totalOvertimeHours > 0 ? `<tr><td style="padding: 5px 0;">Overtime (after 5 PM @ Rs 100/hr):</td><td style="text-align: right; font-weight: bold; color: #d97706;">${summary.totalOvertimeHours.toFixed(2)} Hrs = ₹${summary.totalOvertimePay.toFixed(2)}</td></tr>` : ''}
                         <tr><td style="padding: 5px 0;">Calculated Earnings:</td><td style="text-align: right; font-weight: bold; color: #16a34a;">₹${earned.toFixed(2)}</td></tr>
                         <tr><td style="padding: 5px 0;">Less Advances Taken:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">-₹${adv.toFixed(2)}</td></tr>
                         <tr><td colspan="2"><hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;"></td></tr>
@@ -1905,6 +1974,7 @@
             let grandTotalEarned = 0;
             let grandTotalAdv = 0;
             let grandTotalNet = 0;
+            let grandTotalOvertimePay = 0;
             const knownWorkerIds = new Set(db.workers.map(x => x.id));
 
             db.workers.forEach(w => {
@@ -1915,14 +1985,10 @@
                 
                 const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
-                let totalMs = 0; let daysSet = new Set(); let currentIn = null;
-                workerLogs.forEach(log => {
-                    if (log.type === 'IN') { currentIn = log; daysSet.add(log.timestamp.split(',')[0].trim()); } 
-                    else if (log.type === 'OUT' && currentIn) { totalMs += (parseCustomDate(log.timestamp) - parseCustomDate(currentIn.timestamp)); currentIn = null; }
-                });
-                
-                const totalHours = totalMs / (1000 * 60 * 60);
-                const earned = totalHours * (w.wage / 8);
+                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const daysSet = summary.daysSet;
+                const totalHours = summary.totalRawHours;
+                const earned = summary.totalEarned;
                 const unpaidAdv = db.advances.filter(a => { const t = parseCustomDate(a.timestamp); return a.workerId === w.id && t >= actualStartMs && t <= actualEndMs; });
                 const adv = unpaidAdv.reduce((s, x) => parseFloat(s) + parseFloat(x.amount), 0);
                 const net = earned - adv;
@@ -1932,11 +1998,13 @@
                 grandTotalEarned += earned;
                 grandTotalAdv += adv;
                 grandTotalNet += net;
+                grandTotalOvertimePay += summary.totalOvertimePay;
 
                 rows += `<tr>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;">${w.name}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${daysSet.size}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${totalHours.toFixed(2)}</td>
+                    <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;color:#d97706;">${summary.totalOvertimeHours > 0 ? summary.totalOvertimeHours.toFixed(2) : '-'}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;">₹${earned.toFixed(0)}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;color:#dc2626;">₹${adv.toFixed(0)}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:right;font-weight:bold;color:${net >= 0 ? '#16a34a' : '#dc2626'};">₹${net.toFixed(0)}</td>
@@ -1956,17 +2024,18 @@
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Worker Name</th>
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Days Active</th>
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Total Hours</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">OT Hrs</th>
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Total Earned</th>
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Advances</th>
                                 <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Net Pay</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${rows || '<tr><td colspan="6" style="text-align: center; padding: 30px;">No payroll activity found for this specific period.</td></tr>'}
+                            ${rows || '<tr><td colspan="7" style="text-align: center; padding: 30px;">No payroll activity found for this specific period.</td></tr>'}
                         </tbody>
                         <tfoot>
                             <tr style="background: #f1f5f9; font-weight: bold; border-top: 2px solid #333;">
-                                <td colspan="3" style="padding: 12px 8px; text-align: right;">GRAND TOTALS:</td>
+                                <td colspan="4" style="padding: 12px 8px; text-align: right;">GRAND TOTALS:</td>
                                 <td style="padding: 12px 8px; text-align: right; color:#16a34a;">₹${grandTotalEarned.toFixed(0)}</td>
                                 <td style="padding: 12px 8px; text-align: right; color:#dc2626;">₹${grandTotalAdv.toFixed(0)}</td>
                                 <td style="padding: 12px 8px; text-align: right; font-size:14px;">₹${grandTotalNet.toFixed(0)}</td>
