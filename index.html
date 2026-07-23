@@ -165,8 +165,9 @@
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
                     
                     <div id="scanLine" class="hidden scan-line z-10"></div>
-                    <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex items-center justify-center opacity-80">
+                    <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex flex-col items-center justify-center opacity-80 gap-1">
                         <span id="livenessInstruction" class="text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
+                        <span id="earDebug" class="text-[9px] text-slate-400 bg-slate-900/70 px-2 py-0.5 rounded-full"></span>
                     </div>
 
                     <div class="absolute bottom-3 flex gap-2 z-20">
@@ -771,7 +772,7 @@
                 catch(e) { showToast("Camera blocked", "error"); }
             }
         }
-        function stopWebcam() { if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; if(scanInterval) clearInterval(scanInterval); }
+        function stopWebcam() { if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; autoScanActive=false; if(scanInterval) clearTimeout(scanInterval); }
 
         // Eye Aspect Ratio (EAR): standard blink-detection math from 6 eye landmark points.
         // Ratio drops sharply when the eye closes, so we don't need the expression model at all.
@@ -784,20 +785,33 @@
         }
 
         function startContinuousScan() {
-            if(scanInterval) clearInterval(scanInterval);
+            if(scanInterval) clearTimeout(scanInterval);
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
-            livenessStage = 0; // 0 = waiting for eyes open baseline, 1 = waiting for blink
-            
+            livenessStage = 0; // 0 = calibrating this person's "eyes open" baseline, 1 = waiting for blink
+
             // Fast options for scanning
             const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-            const EAR_OPEN_THRESHOLD = 0.25;   // above this = eyes considered open
-            const EAR_CLOSED_THRESHOLD = 0.18; // below this = eyes considered closed (blink)
-            
-            scanInterval = setInterval(async () => {
-                if (!autoScanActive || !aiModelsLoaded) return;
+
+            // ADAPTIVE thresholds instead of one-size-fits-all numbers: everyone's resting
+            // EAR differs by eye shape, camera angle and lighting, so we calibrate a personal
+            // "eyes open" baseline first, then look for a RELATIVE drop from it (a blink),
+            // rather than comparing against a fixed absolute number that may never match.
+            const MIN_VALID_EAR = 0.12;      // below this, landmarks are unreliable - ignore the frame
+            const OPEN_CALIBRATION_FRAMES = 3; // consecutive good "open" reads needed before trusting the baseline
+            const BLINK_DROP_RATIO = 0.72;    // "closed" = EAR falls to <=72% of this person's open baseline
+            let openBaseline = null;
+            let openReadingsCount = 0;
+
+            async function scanLoop() {
+                if (!autoScanActive) return; // stopped (e.g. capture triggered, or tab switched away)
                 const video = document.getElementById('webcam');
-                if (video.paused || video.ended) return;
+                const debugEl = document.getElementById('earDebug');
+
+                if (!aiModelsLoaded || video.paused || video.ended) {
+                    scanInterval = setTimeout(scanLoop, 200);
+                    return;
+                }
 
                 // Anti-spoofing via blink detection (landmarks only - no expression model needed)
                 const detection = await faceapi.detectSingleFace(video, tinyOptions).withFaceLandmarks();
@@ -807,33 +821,47 @@
                     const leftEAR = getEyeAspectRatio(detection.landmarks.getLeftEye());
                     const rightEAR = getEyeAspectRatio(detection.landmarks.getRightEye());
                     const avgEAR = (leftEAR + rightEAR) / 2;
-                    const eyesOpen = avgEAR > EAR_OPEN_THRESHOLD;
-                    const eyesClosed = avgEAR < EAR_CLOSED_THRESHOLD;
+                    if (debugEl) debugEl.innerText = `EAR ${avgEAR.toFixed(2)}` + (openBaseline ? ` / base ${openBaseline.toFixed(2)}` : '');
 
-                    if (livenessStage === 0) {
-                        instruct.innerHTML = "Security Check:<br><span class='text-amber-400'>Keep eyes OPEN</span>";
-                        document.getElementById('faceFrame').classList.remove('success');
-                        if (eyesOpen) {
-                            livenessStage = 1;
-                            showToast("Baseline set! Now blink.", "success");
-                        }
-                    } else if (livenessStage === 1) {
-                        instruct.innerHTML = "Security Check:<br><span class='text-blue-400'>Please BLINK!</span>";
-                        document.getElementById('faceFrame').classList.add('success');
-                        if (eyesClosed) {
-                            autoScanActive = false;
-                            livenessStage = 0;
-                            instruct.innerHTML = "Hold Still...";
-                            executePunchCapture(video); // Trigger true capture
+                    if (avgEAR > MIN_VALID_EAR) {
+                        if (livenessStage === 0) {
+                            instruct.innerHTML = "Security Check:<br><span class='text-amber-400'>Look straight, eyes OPEN</span>";
+                            document.getElementById('faceFrame').classList.remove('success');
+                            if (openBaseline === null || avgEAR > openBaseline) openBaseline = avgEAR;
+                            openReadingsCount++;
+                            if (openReadingsCount >= OPEN_CALIBRATION_FRAMES) {
+                                livenessStage = 1;
+                                showToast("Baseline set! Now blink slowly.", "success");
+                            }
+                        } else if (livenessStage === 1) {
+                            instruct.innerHTML = "Security Check:<br><span class='text-blue-400'>Blink SLOWLY (close & hold)</span>";
+                            document.getElementById('faceFrame').classList.add('success');
+                            // Let the baseline drift up if lighting/head position improves, so the
+                            // relative threshold stays accurate rather than getting stuck too low.
+                            if (avgEAR > openBaseline) openBaseline = avgEAR;
+                            if (avgEAR <= openBaseline * BLINK_DROP_RATIO) {
+                                autoScanActive = false;
+                                livenessStage = 0;
+                                instruct.innerHTML = "Hold Still...";
+                                executePunchCapture(video); // Trigger true capture
+                                return;
+                            }
                         }
                     }
-                } else { 
+                } else {
                     // Face lost, reset security check
                     livenessStage = 0;
-                    instruct.innerHTML = "Auto-Scanning<br>Look Straight"; 
+                    openBaseline = null;
+                    openReadingsCount = 0;
+                    instruct.innerHTML = "Auto-Scanning<br>Look Straight";
+                    if (debugEl) debugEl.innerText = '';
                     document.getElementById('faceFrame').classList.remove('success');
                 }
-            }, 600);
+                // Re-schedule only after this frame finishes processing (avoids pile-ups on
+                // slower phones) at a fast-enough cadence to actually catch a natural blink.
+                scanInterval = setTimeout(scanLoop, 150);
+            }
+            scanLoop();
         }
 
         async function executePunchCapture(video) {
