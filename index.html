@@ -297,8 +297,9 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <select id="overridePunchType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
-                        <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Log Override Punch</button>
+                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
+                    <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Log Override Punch</button>
                 </form>
             </div>
 
@@ -432,6 +433,23 @@
         </div>
     </div>
 
+    <!-- EDIT PUNCH TIME MODAL (admin only) -->
+    <div id="editPunchModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Edit Punch Time</h3>
+                <button type="button" onclick="closeEditPunchModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-xs text-slate-400" id="editPunchSummary"></p>
+            <form onsubmit="saveEditedPunchTime(event)" class="space-y-3">
+                <label class="block text-xs text-slate-400">Corrected Date &amp; Time
+                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                </label>
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
+            </form>
+        </div>
+    </div>
+
     <!-- PAYROLL RULES MODAL (admin only) -->
     <div id="payrollRulesModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -502,6 +520,65 @@
     <script>
         // HARDCODED GOOGLE APPS SCRIPT URL
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
+
+        // SHARED API SECRET: sent with every request; Code.gs rejects anything that
+        // doesn't match. This is NOT strong cryptographic protection - anyone who views
+        // this page's source can read this value too - but it blocks casual/automated
+        // access from someone who only finds the bare Apps Script URL (e.g. via a
+        // network tab) without inspecting the app's JS. If you change this value, you
+        // MUST change the matching API_SECRET constant at the top of Code.gs to the
+        // exact same string, or every request will start silently failing.
+        const API_SECRET = "p8hozwMSfdtWHpNsZQYiCy-2IhKXgYPP";
+
+        // --- PASSWORD HASHING (Web Crypto, built into the browser - no library needed) ---
+        // Passwords are never stored or synced as plain text. Each user gets a random
+        // salt; we store salt + SHA-256(salt + password) instead of the password
+        // itself. This is not as strong as bcrypt/Argon2 (no deliberate slowness), but
+        // it's a large improvement over plain text and needs no external dependency.
+        async function sha256Hex(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function generateSalt() {
+            const arr = new Uint8Array(16);
+            crypto.getRandomValues(arr);
+            return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        // Sets user.salt + user.passwordHash from a plaintext password, and removes
+        // any leftover plaintext user.password field.
+        async function setUserPassword(user, plainPassword) {
+            user.salt = generateSalt();
+            user.passwordHash = await sha256Hex(user.salt + ':' + plainPassword);
+            delete user.password;
+        }
+        async function verifyUserPassword(user, plainPassword) {
+            if (!user.passwordHash || !user.salt) return false;
+            const hash = await sha256Hex(user.salt + ':' + plainPassword);
+            return hash === user.passwordHash;
+        }
+        // One-time migration for any account still holding a plaintext password (e.g.
+        // the built-in default admin, or accounts loaded from a sheet saved before
+        // hashing existed). Hashes them in place and re-syncs so the sheet stops
+        // holding plaintext passwords going forward.
+        async function migrateLegacyPasswords() {
+            let migrated = false;
+            for (const u of db.users) {
+                if (!u.passwordHash && u.password) {
+                    const wasDefault = (u.password === '1234' || u.password === 'admin123');
+                    await setUserPassword(u, u.password);
+                    u.isDefaultPass = wasDefault || !!u.isDefaultPass;
+                    migrated = true;
+                }
+            }
+            if (migrated) {
+                saveStorage(); syncConfigToCloud();
+                // Keep an already-restored session in sync with the freshly-hashed record
+                if (currentUser) {
+                    const fresh = db.users.find(u => u.username === currentUser.username);
+                    if (fresh) { currentUser = fresh; sessionStorage.setItem('sitepunch_active_user', JSON.stringify(currentUser)); }
+                }
+            }
+        }
         
         const INITIAL_DATA = {
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
@@ -549,6 +626,11 @@
                 console.warn("Bootup partial failure or timeout", error);
             }
 
+            // Hash any legacy plaintext passwords (e.g. the built-in default admin, or
+            // accounts loaded from a sheet saved before password hashing existed).
+            // Doesn't block startup - runs in the background and re-syncs if needed.
+            migrateLegacyPasswords().catch(err => console.warn("Password migration failed", err));
+
             // Hide the initial loader smoothly
             const loader = document.getElementById('initialLoader');
             if (loader) {
@@ -571,7 +653,7 @@
                 const cloudStatus = document.getElementById('cloudStatusText');
                 if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
 
-                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb");
+                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data) {
@@ -632,15 +714,26 @@
                     if (result.data.users && result.data.users.length > 0) {
                         db.users = result.data.users.map(u => {
                             const uname = String(u['Login ID (Phone/Admin)'] || u['User ID (Phone/Admin)'] || u['Login ID (Phone)'] || u['username'] || '');
-                            const pass = String(u['Password'] || u['password'] || '');
-                            return {
+                            const passwordHash = u['Password Hash'] || u['passwordHash'] || '';
+                            const salt = u['Salt'] || u['salt'] || '';
+                            const legacyPassword = u['Password'] || u['password'] || ''; // pre-hashing accounts only
+                            const obj = {
                                 username: uname,
-                                password: pass,
                                 role: u['Account Role'] || u['role'] || 'worker',
                                 name: u['Full Name'] || u['Profile Name'] || u['name'] || 'User',
                                 workerId: u['Worker ID'] || u['workerId'] || null,
-                                isDefaultPass: (pass === '1234' || pass === 'admin123')
+                                isDefaultPass: (u['Is Default Password'] === 'YES') || (u['isDefaultPass'] === true)
                             };
+                            if (passwordHash && salt) {
+                                obj.passwordHash = passwordHash;
+                                obj.salt = salt;
+                            } else if (legacyPassword) {
+                                // Not yet migrated to a hash - migrateLegacyPasswords() will
+                                // hash this and re-sync shortly after load.
+                                obj.password = legacyPassword;
+                                obj.isDefaultPass = obj.isDefaultPass || legacyPassword === '1234' || legacyPassword === 'admin123';
+                            }
+                            return obj;
                         }).filter(u => u.username && u.username !== 'undefined');
                     }
                     
@@ -755,6 +848,7 @@
             document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
 
             populateDropdowns(); renderSites(); renderWorkers(); renderLogs(); renderSettlements();
+            setDefaultOverrideDateTime();
             switchTab('logs');
         }
 
@@ -789,18 +883,29 @@
         }
 
         // --- AUTH ---
-        function handleLogin(e) { 
+        async function handleLogin(e) { 
             e.preventDefault(); 
             // .trim() removes invisible spaces from mobile keyboards!
             const loginId = document.getElementById('loginUserId').value.trim();
             const loginPass = document.getElementById('loginPassword').value.trim();
 
-            const u = db.users.find(x => String(x.username).trim() === loginId && String(x.password).trim() === loginPass); 
+            const u = db.users.find(x => String(x.username).trim() === loginId);
+            let validPassword = false;
+            if (u) {
+                if (u.passwordHash) {
+                    validPassword = await verifyUserPassword(u, loginPass);
+                } else if (u.password) {
+                    // Not yet migrated to a hash (shouldn't normally happen, since
+                    // migration runs right after load) - fall back once, then migrate.
+                    validPassword = String(u.password).trim() === loginPass;
+                    if (validPassword) { await setUserPassword(u, loginPass); saveStorage(); syncConfigToCloud(); }
+                }
+            }
             
-            if(u){ 
+            if (u && validPassword) { 
                 currentUser=u; sessionStorage.setItem('sitepunch_active_user', JSON.stringify(u)); 
                 document.getElementById('loginForm').reset();
-                if(u.isDefaultPass || u.password==='admin123' || u.password==='1234') {
+                if(u.isDefaultPass) {
                     document.getElementById('forcePasswordModal').classList.remove('hidden');
                 } else { 
                     showToast("Logged In"); showDashboard(); 
@@ -810,25 +915,29 @@
 
         function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_active_user'); showToast("Logged out"); showLandingPage(); }
 
-        function handleForcePasswordChange(e) {
+        async function handleForcePasswordChange(e) {
             e.preventDefault();
             const np = document.getElementById('newPasswordInput').value;
             if (np !== document.getElementById('confirmPasswordInput').value) return showToast("Mismatch!", "error");
             if (np === '1234' || np === 'admin123') return showToast("Use a different password", "error");
             
-            currentUser.password = np; currentUser.isDefaultPass = false;
-            const userTarget = db.users.find(u => u.username === currentUser.username); if(userTarget) userTarget.password = np;
+            await setUserPassword(currentUser, np);
+            currentUser.isDefaultPass = false;
+            const userTarget = db.users.find(u => u.username === currentUser.username);
+            if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; userTarget.isDefaultPass = false; delete userTarget.password; }
             syncConfigToCloud(); saveStorage();
             sessionStorage.setItem('sitepunch_active_user', JSON.stringify(currentUser));
             document.getElementById('forcePasswordModal').classList.add('hidden');
             showToast("Password Updated!"); showDashboard();
         }
 
-        function handleChangeOwnPassword(e) {
+        async function handleChangeOwnPassword(e) {
             e.preventDefault();
-            if (document.getElementById('currentPassInput').value !== currentUser.password) return showToast("Wrong current pass", "error");
-            currentUser.password = document.getElementById('userNewPassInput').value;
-            const userTarget = db.users.find(u => u.username === currentUser.username); if(userTarget) userTarget.password = currentUser.password;
+            const validCurrent = await verifyUserPassword(currentUser, document.getElementById('currentPassInput').value);
+            if (!validCurrent) return showToast("Wrong current pass", "error");
+            await setUserPassword(currentUser, document.getElementById('userNewPassInput').value);
+            const userTarget = db.users.find(u => u.username === currentUser.username);
+            if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; delete userTarget.password; }
             syncConfigToCloud(); saveStorage(); showToast("Password changed!"); e.target.reset();
         }
 
@@ -1279,7 +1388,7 @@
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: action, payload: payload })
+                    body: JSON.stringify({ action: action, payload: payload, secret: API_SECRET })
                 });
             } catch(e) { console.error("Sheet send error", e); }
         }
@@ -1316,10 +1425,16 @@
             const s = db.sites.find(x => x.id === document.getElementById('overrideSiteSelect').value); 
             const punchType = document.getElementById('overridePunchType').value;
             if(!w || !s) return showToast("Select worker & site", "error");
+
+            const dtValue = document.getElementById('overrideDateTime').value;
+            if (!dtValue) return showToast("Pick a date & time for this punch", "error");
+            const chosenDate = new Date(dtValue);
+            if (isNaN(chosenDate.getTime())) return showToast("Invalid date/time", "error");
+            const chosenTimestamp = chosenDate.toLocaleString('en-IN');
             
-            // --- VALIDATION TO PREVENT DUPLICATES ---
-            const todayStr = new Date().toLocaleString('en-IN').split(',')[0].trim();
-            const lastPunch = db.attendance.find(a => a.workerId === w.id && a.timestamp.split(',')[0].trim() === todayStr);
+            // --- VALIDATION TO PREVENT DUPLICATES (checked against the CHOSEN date, not always today) ---
+            const chosenDateStr = chosenTimestamp.split(',')[0].trim();
+            const lastPunch = db.attendance.find(a => a.workerId === w.id && a.timestamp.split(',')[0].trim() === chosenDateStr);
 
             if (punchType === 'IN' && lastPunch && lastPunch.type === 'IN') {
                 return showToast(`${w.name} is already PUNCHED IN at ${lastPunch.siteName}!`, "error");
@@ -1337,8 +1452,17 @@
             }
             // ----------------------------------------
 
-            const record = { id: 'att_ovr_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: w.id, workerName: w.name, siteId: s.id, siteName: s.name, type: punchType, lat: s.lat, lng: s.lng, isOverride: true };
-            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); renderLogs(); renderSettlements();
+            const record = { id: 'att_ovr_' + Date.now(), timestamp: chosenTimestamp, workerId: w.id, workerName: w.name, siteId: s.id, siteName: s.name, type: punchType, lat: s.lat, lng: s.lng, isOverride: true };
+            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); setDefaultOverrideDateTime(); renderLogs(); renderSettlements();
+        }
+
+        // Fills the override datetime picker with the current local moment, formatted
+        // for a datetime-local input ("YYYY-MM-DDTHH:MM"), while still leaving it
+        // fully editable so the admin can pick any past date/time instead.
+        function setDefaultOverrideDateTime() {
+            const el = document.getElementById('overrideDateTime');
+            if (!el) return;
+            el.value = dateToDatetimeLocalValue(new Date());
         }
 
         function handleAddSite(e) {
@@ -1351,7 +1475,7 @@
             navigator.geolocation.getCurrentPosition(p => { document.getElementById('siteLatInput').value = p.coords.latitude; document.getElementById('siteLngInput').value = p.coords.longitude; showToast("GPS fetched!"); }, () => showToast("GPS failed.", "error"));
         }
 
-        function handleAddWorker(e) {
+        async function handleAddWorker(e) {
             e.preventDefault();
             const phone = document.getElementById('workerPhoneInput').value;
             if (!regPhotoData || !regFaceDescriptor) return showToast("Please capture worker live face photo first!", "error");
@@ -1367,7 +1491,10 @@
                 descriptor: regFaceDescriptor // Save biometrics array
             };
             
-            db.workers.push(w); db.users.push({ username: phone, password: '1234', role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true });
+            const newUser = { username: phone, role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true };
+            await setUserPassword(newUser, '1234');
+
+            db.workers.push(w); db.users.push(newUser);
             saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
         }
 
@@ -1492,6 +1619,42 @@
         }
         function closePayrollRulesModal() {
             document.getElementById('payrollRulesModal').classList.add('hidden');
+        }
+
+        // Formats a JS Date as the "YYYY-MM-DDTHH:MM" string a <input type="datetime-local"> expects.
+        function dateToDatetimeLocalValue(d) {
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        let editingPunchId = null;
+        function openEditPunchModal(logId) {
+            const log = db.attendance.find(a => a.id === logId);
+            if (!log) return;
+            editingPunchId = logId;
+            document.getElementById('editPunchSummary').innerText = `${log.workerName} - ${log.type} - ${log.siteName}`;
+            document.getElementById('editPunchDateTime').value = dateToDatetimeLocalValue(new Date(parseCustomDate(log.timestamp)));
+            document.getElementById('editPunchModal').classList.remove('hidden');
+        }
+        function closeEditPunchModal() {
+            document.getElementById('editPunchModal').classList.add('hidden');
+            editingPunchId = null;
+        }
+        function saveEditedPunchTime(e) {
+            e.preventDefault();
+            const log = db.attendance.find(a => a.id === editingPunchId);
+            if (!log) return closeEditPunchModal();
+            const newValue = document.getElementById('editPunchDateTime').value;
+            const newDate = new Date(newValue);
+            if (isNaN(newDate.getTime())) return showToast("Invalid date/time", "error");
+
+            const newTimestamp = newDate.toLocaleString('en-IN');
+            log.timestamp = newTimestamp; // Real punched time is only ever what's shown here - this directly corrects it
+            saveStorage();
+            postToGoogleSheet('updateAttendanceTimestamp', { id: log.id, timestamp: newTimestamp });
+            renderLogs(); renderSettlements();
+            showToast("Punch time updated");
+            closeEditPunchModal();
         }
 
         function savePayrollRules(e) {
@@ -1951,6 +2114,9 @@
 
                         const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-400"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-400"></i>';
                         const typeColor = a.type === 'IN' ? 'text-emerald-400' : 'text-rose-400';
+                        const editBtn = (currentUser && currentUser.role === 'admin')
+                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-slate-500 hover:text-blue-400 transition ml-2" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
+                            : '';
                         
                         return `<div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-800/60 last:border-0">
                             <span class="flex items-center gap-2">
@@ -1958,7 +2124,7 @@
                                 <span class="font-medium text-slate-200">${a.workerName}</span> 
                                 <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span>
                             </span>
-                            <span class="text-slate-400 flex items-center">${timeOnly}${durationStr}</span>
+                            <span class="text-slate-400 flex items-center">${timeOnly}${durationStr}${editBtn}</span>
                         </div>`;
                     });
                     
