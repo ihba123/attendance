@@ -77,7 +77,7 @@
         <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
             <i class="fa-solid fa-clock-rotate-left text-base"></i><span>Logs</span>
         </button>
-        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn auth-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-indian-rupee-sign text-base"></i><span>Payroll</span>
         </button>
         <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
@@ -235,9 +235,14 @@
                 <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
-                    <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden w-full sm:w-auto py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
-                    </button>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-sliders"></i> Payroll Rules
+                        </button>
+                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- DATE RANGE FILTERS -->
@@ -427,7 +432,56 @@
         </div>
     </div>
 
-    <!-- FORCE PASSWORD CHANGE MODAL -->
+    <!-- PAYROLL RULES MODAL (admin only) -->
+    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-sliders text-blue-400"></i> Payroll Rules</h3>
+                <button type="button" onclick="closePayrollRulesModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-400 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
+            <form onsubmit="savePayrollRules(event)" class="space-y-4 text-xs">
+                <div>
+                    <p class="font-bold text-slate-300 mb-2">Shift Timing</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-700 pt-3">
+                    <p class="font-bold text-slate-300 mb-2">Arrival Deductions</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
+                </div>
+
+                <div class="border-t border-slate-700 pt-3">
+                    <p class="font-bold text-slate-300 mb-2">Departure "Free Pass"</p>
+                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                    <p class="text-[10px] text-slate-500 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
+                </div>
+
+                <div class="border-t border-slate-700 pt-3">
+                    <p class="font-bold text-slate-300 mb-2">Overtime</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
+            </form>
+        </div>
+    </div>
+
     <div id="forcePasswordModal" class="hidden fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-amber-500/50 rounded-2xl w-full p-6 space-y-5">
             <h3 class="text-lg font-bold text-amber-400">Security: Set New Password</h3>
@@ -453,7 +507,8 @@
             users: [{ username: 'admin', password: 'admin123', role: 'admin', name: 'Site Admin', isDefaultPass: true, workerId: null }],
             sites: [], 
             workers: [], 
-            attendance: [], advances: [], settlements: []
+            attendance: [], advances: [], settlements: [],
+            payrollRulesHistory: []
         };
 
         let db = JSON.parse(JSON.stringify(INITIAL_DATA));
@@ -538,15 +593,39 @@
                             if (w['Face Biometrics']) {
                                 try { parsedDescriptor = JSON.parse(w['Face Biometrics']); } catch(e){}
                             }
+                            const currentWage = parseFloat(w['Daily Wage (₹)'] || w['wage'] || 0);
+                            let parsedWageHistory = null;
+                            if (w['Wage History']) {
+                                try { parsedWageHistory = JSON.parse(w['Wage History']); } catch(e){}
+                            }
+                            // Migration: workers saved before wage history existed only have a
+                            // flat wage - treat it as effective from the beginning so past days
+                            // still calculate correctly.
+                            if (!parsedWageHistory || !Array.isArray(parsedWageHistory) || parsedWageHistory.length === 0) {
+                                parsedWageHistory = [{ effectiveFrom: 0, wage: currentWage }];
+                            }
                             return {
                                 id: w['Worker ID'] || w['id'], 
                                 name: w['Full Name'] || w['name'], 
                                 phone: String(w['Mobile Number'] || w['phone']), 
-                                wage: parseFloat(w['Daily Wage (₹)'] || w['wage'] || 0),
+                                wage: currentWage,
+                                wageHistory: parsedWageHistory,
                                 photo: w['Profile Photo'] || w['photo'] || null,
                                 descriptor: parsedDescriptor
                             };
                         }).filter(w => w.id && w.id !== 'undefined');
+                    }
+
+                    // Map Payroll Rules History
+                    if (result.data.payrollRulesHistory && result.data.payrollRulesHistory.length > 0) {
+                        db.payrollRulesHistory = result.data.payrollRulesHistory.map(r => {
+                            let parsedRules = null;
+                            try { parsedRules = JSON.parse(r['Rules JSON'] || r['rules']); } catch(e) {}
+                            return {
+                                effectiveFrom: parseInt(r['Effective From (ms)'] || r['effectiveFrom'] || 0),
+                                rules: parsedRules || DEFAULT_PAYROLL_RULES
+                            };
+                        }).filter(r => r.rules);
                     }
                     
                     // Map Users Flexibly (Fixes missing accounts)
@@ -680,6 +759,10 @@
         }
 
         function switchTab(t) { 
+            const ADMIN_ONLY_TABS = ['settlement', 'sites', 'workers'];
+            if (ADMIN_ONLY_TABS.includes(t) && (!currentUser || currentUser.role !== 'admin')) {
+                t = 'logs'; // Not an admin - redirect away from admin-only sections
+            }
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
             document.getElementById(`view-${t}`).classList.remove('hidden'); 
             
@@ -1273,11 +1356,13 @@
             const phone = document.getElementById('workerPhoneInput').value;
             if (!regPhotoData || !regFaceDescriptor) return showToast("Please capture worker live face photo first!", "error");
             
+            const initialWage = parseFloat(document.getElementById('workerWageInput').value) || 0;
             const w = { 
                 id: 'wrk_'+Date.now(), 
                 name: document.getElementById('workerNameInput').value, 
                 phone, 
-                wage: document.getElementById('workerWageInput').value, 
+                wage: initialWage, 
+                wageHistory: [{ effectiveFrom: 0, wage: initialWage }], // effective since the beginning - they have no attendance before today anyway
                 photo: regPhotoData,
                 descriptor: regFaceDescriptor // Save biometrics array
             };
@@ -1293,8 +1378,8 @@
         }
 
         function syncConfigToCloud() {
-            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage, photo: w.photo, descriptor: w.descriptor }));
-            postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users });
+            const cleanWorkers = db.workers.map(w => ({ id: w.id, name: w.name, phone: w.phone, wage: w.wage, wageHistory: w.wageHistory, photo: w.photo, descriptor: w.descriptor }));
+            postToGoogleSheet('syncConfig', { sites: db.sites, workers: cleanWorkers, users: db.users, payrollRulesHistory: db.payrollRulesHistory });
         }
 
         // Render Functions
@@ -1377,6 +1462,68 @@
             stopEditWebcam();
         }
 
+        // Converts minutes-since-midnight to an "HH:MM" string for a <input type="time">
+        function minutesToTimeInput(mins) {
+            const h = Math.floor(mins / 60).toString().padStart(2, '0');
+            const m = Math.round(mins % 60).toString().padStart(2, '0');
+            return `${h}:${m}`;
+        }
+        // Converts an "HH:MM" <input type="time"> value back to minutes-since-midnight
+        function timeInputToMinutes(str) {
+            const [h, m] = str.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function openPayrollRulesModal() {
+            const rules = getEffectiveRules(Date.now());
+            document.getElementById('ruleShiftStart').value = minutesToTimeInput(rules.shiftStartMin);
+            document.getElementById('ruleShiftEnd').value = minutesToTimeInput(rules.shiftEndMin);
+            document.getElementById('ruleGraceMin').value = rules.graceMinutes;
+            document.getElementById('ruleHalfDeductMin').value = rules.halfDeductionMinutes;
+            document.getElementById('ruleHalfDeductHrs').value = rules.halfStepDeductionHours;
+            document.getElementById('ruleStepMin').value = rules.stepMinutes;
+            document.getElementById('ruleStepDeductHrs').value = rules.stepDeductionHours;
+            document.getElementById('ruleFreePassStart').value = minutesToTimeInput(rules.freePassStartMin);
+            document.getElementById('ruleOtGraceMin').value = rules.otGraceMinutes;
+            document.getElementById('ruleOtBlockMin').value = rules.otBlockMinutes;
+            document.getElementById('ruleOtBlockHrs').value = rules.otBlockHours;
+            document.getElementById('ruleOtRate').value = rules.otRate;
+            document.getElementById('payrollRulesModal').classList.remove('hidden');
+        }
+        function closePayrollRulesModal() {
+            document.getElementById('payrollRulesModal').classList.add('hidden');
+        }
+
+        function savePayrollRules(e) {
+            e.preventDefault();
+            const newRules = {
+                shiftStartMin: timeInputToMinutes(document.getElementById('ruleShiftStart').value),
+                shiftEndMin: timeInputToMinutes(document.getElementById('ruleShiftEnd').value),
+                graceMinutes: parseFloat(document.getElementById('ruleGraceMin').value) || 0,
+                halfDeductionMinutes: parseFloat(document.getElementById('ruleHalfDeductMin').value) || 0,
+                halfStepDeductionHours: parseFloat(document.getElementById('ruleHalfDeductHrs').value) || 0,
+                stepMinutes: parseFloat(document.getElementById('ruleStepMin').value) || 30,
+                stepDeductionHours: parseFloat(document.getElementById('ruleStepDeductHrs').value) || 0,
+                freePassStartMin: timeInputToMinutes(document.getElementById('ruleFreePassStart').value),
+                otGraceMinutes: parseFloat(document.getElementById('ruleOtGraceMin').value) || 0,
+                otBlockMinutes: parseFloat(document.getElementById('ruleOtBlockMin').value) || 30,
+                otBlockHours: parseFloat(document.getElementById('ruleOtBlockHrs').value) || 0,
+                otRate: parseFloat(document.getElementById('ruleOtRate').value) || 0
+            };
+
+            // Versioned: takes effect from today onwards only. Past days keep using
+            // whichever rules were active on that date (see getEffectiveRules).
+            const todayMs = new Date(); todayMs.setHours(0,0,0,0);
+            if (!db.payrollRulesHistory) db.payrollRulesHistory = [];
+            const existingToday = db.payrollRulesHistory.find(r => r.effectiveFrom === todayMs.getTime());
+            if (existingToday) existingToday.rules = newRules; // Edited again same day - just update it
+            else db.payrollRulesHistory.push({ effectiveFrom: todayMs.getTime(), rules: newRules });
+
+            saveStorage(); syncConfigToCloud(); renderSettlements();
+            showToast("Payroll rules updated - effective from today");
+            closePayrollRulesModal();
+        }
+
         async function startEditRecapture() {
             const video = document.getElementById('editWebcam');
             try {
@@ -1440,7 +1587,18 @@
             if(w) {
                 w.name = document.getElementById('editWorkerName').value;
                 w.phone = newPhone;
-                w.wage = document.getElementById('editWorkerWage').value;
+                const newWage = parseFloat(document.getElementById('editWorkerWage').value) || 0;
+
+                // Version the wage change: only takes effect from today onwards. Past
+                // days keep calculating with whatever wage was actually in effect then.
+                if (newWage !== parseFloat(w.wage)) {
+                    const todayMs = new Date(); todayMs.setHours(0,0,0,0);
+                    if (!w.wageHistory) w.wageHistory = [{ effectiveFrom: 0, wage: parseFloat(w.wage) || 0 }];
+                    const existingToday = w.wageHistory.find(h => h.effectiveFrom === todayMs.getTime());
+                    if (existingToday) existingToday.wage = newWage; // Edited again same day - just update it
+                    else w.wageHistory.push({ effectiveFrom: todayMs.getTime(), wage: newWage });
+                    w.wage = newWage;
+                }
 
                 // Only overwrite biometrics/photo if the admin actually recaptured a new face
                 if (editCapturedPhoto && editCapturedDescriptor) {
@@ -1531,50 +1689,139 @@
             return d.toLocaleString('en-IN');
         }
 
-        // ==================== PAYROLL RULES ====================
-        // Normal shift: 9:00 AM - 5:00 PM (paid at the worker's normal day rate).
-        // - Punching OUT at or after 3:00 PM counts as a FULL day's pay, no matter the
-        //   exact time they left within/after the shift - only leaving BEFORE 3 PM
-        //   gets prorated for the portion of the shift actually covered.
-        // - Any time clocked past 5:00 PM is paid separately as overtime at a flat
-        //   Rs 100/hour, on top of the day's regular pay.
-        const OVERTIME_HOURLY_RATE = 100;
-        const SHIFT_START_HOUR = 9;      // 9 AM
-        const SHIFT_END_HOUR = 17;       // 5 PM
-        const FULL_DAY_CUTOFF_HOUR = 15; // 3 PM
+        // ==================== PAYROLL RULES (admin-configurable, date-versioned) ====================
+        // Standard shift: 9:00 AM - 5:00 PM (8 hours).
+        //
+        // ARRIVAL (punch-IN) deductions:
+        //   - Before 9:00 AM: no bonus - effective start is snapped to 9:00 AM.
+        //   - 9:00-9:15 AM: grace period, 0 deduction. Also grants "Free Pass" eligibility (see below).
+        //   - 9:16-9:30 AM: 0.5 hr deducted (and Free Pass eligibility is lost).
+        //   - 9:31-10:00 AM: 1.0 hr. 10:01-10:30 AM: 1.5 hr. Then +0.5 hr for every
+        //     further 30-minute block late.
+        //
+        // DEPARTURE (punch-OUT) deductions:
+        //   - Leaving before 3:00 PM: deduct the EXACT time short of 5:00 PM.
+        //   - Leaving 3:00-5:00 PM: if the worker still has Free Pass eligibility
+        //     (i.e. arrived by 9:15 AM), snap to 5:00 PM with 0 deduction. Otherwise,
+        //     same exact-time deduction as leaving early.
+        //   - 5:00 PM or later: 0 deduction (see overtime below for anything past 5 PM).
+        //
+        // OVERTIME:
+        //   - 5:00-5:45 PM: snapped to 5:00 PM, no overtime.
+        //   - After 5:45 PM: overtime is calculated from 5:00 PM, rounded UP in
+        //     30-minute blocks (e.g. 75 min past 5 PM = 1.5 hrs OT), paid at a flat
+        //     rate per hour (not the worker's own wage).
+        //
+        // All of the numbers above are defaults and can be changed by an admin via
+        // openPayrollRulesModal() below. Changes only apply to days ON OR AFTER the
+        // date they were saved - db.payrollRulesHistory keeps every past version so
+        // old days are always recalculated with whatever rules were active back then
+        // (exactly like wage history - see getEffectiveWage).
+        const DEFAULT_PAYROLL_RULES = {
+            shiftStartMin: 9 * 60,       // 9:00 AM, in minutes since midnight
+            shiftEndMin: 17 * 60,        // 5:00 PM
+            graceMinutes: 15,            // 9:00-9:15: 0 deduction + Free Pass eligible
+            halfDeductionMinutes: 15,    // 9:16-9:30: flat half-step deduction
+            halfStepDeductionHours: 0.5, // ...worth this many hours
+            stepMinutes: 30,             // every 30 min after that...
+            stepDeductionHours: 0.5,     // ...adds this many more hours deducted
+            freePassStartMin: 15 * 60,   // 3:00 PM - start of the departure "Free Pass" window
+            otGraceMinutes: 45,          // 5:00-5:45 PM: no overtime
+            otBlockMinutes: 30,          // overtime rounds UP in blocks this many minutes wide
+            otBlockHours: 0.5,           // ...worth this many hours each
+            otRate: 100                  // Rs per overtime hour (flat, same for everyone)
+        };
 
-        // Computes one calendar day's pay from that day's earliest IN and latest OUT.
-        function computeDayPay(firstInMs, lastOutMs, dailyWage) {
-            const d = new Date(firstInMs);
-            const shiftStartMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), SHIFT_START_HOUR, 0, 0).getTime();
-            const shiftEndMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), SHIFT_END_HOUR, 0, 0).getTime();
-            const fullDayCutoffMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), FULL_DAY_CUTOFF_HOUR, 0, 0).getTime();
-
-            let regularPay = 0, overtimeHours = 0, overtimePay = 0;
-
-            if (lastOutMs >= fullDayCutoffMs) {
-                // Left at/after 3 PM - full day's pay regardless of the exact time
-                regularPay = dailyWage;
-                if (lastOutMs > shiftEndMs) {
-                    overtimeHours = (lastOutMs - shiftEndMs) / (1000 * 60 * 60);
-                    overtimePay = overtimeHours * OVERTIME_HOURLY_RATE;
-                }
-            } else {
-                // Left before 3 PM - prorate for the portion of the normal shift actually covered
-                const effectiveStart = Math.max(firstInMs, shiftStartMs);
-                const effectiveEnd = Math.min(lastOutMs, shiftEndMs);
-                const workedHours = Math.max(0, (effectiveEnd - effectiveStart) / (1000 * 60 * 60));
-                regularPay = workedHours * (dailyWage / 8);
+        // Returns whichever payroll rules were in effect on a given date (ms). Falls
+        // back to the defaults if no history has loaded yet.
+        function getEffectiveRules(dateMs) {
+            const history = (db.payrollRulesHistory && db.payrollRulesHistory.length > 0)
+                ? db.payrollRulesHistory : [{ effectiveFrom: 0, rules: DEFAULT_PAYROLL_RULES }];
+            const sorted = [...history].sort((a, b) => a.effectiveFrom - b.effectiveFrom);
+            let active = sorted[0].rules;
+            for (const entry of sorted) {
+                if (entry.effectiveFrom <= dateMs) active = entry.rules; else break;
             }
-            return { regularPay, overtimeHours, overtimePay, totalPay: regularPay + overtimePay };
+            return Object.assign({}, DEFAULT_PAYROLL_RULES, active); // fill in any missing keys with defaults
+        }
+
+        // Returns whichever daily wage was in effect for this worker on a given date
+        // (ms). Falls back to the worker's current w.wage if no history exists yet
+        // (e.g. a worker created before wage history existed).
+        function getEffectiveWage(worker, dateMs) {
+            if (!worker.wageHistory || worker.wageHistory.length === 0) return parseFloat(worker.wage) || 0;
+            const sorted = [...worker.wageHistory].sort((a, b) => a.effectiveFrom - b.effectiveFrom);
+            let active = sorted[0].wage;
+            for (const entry of sorted) {
+                if (entry.effectiveFrom <= dateMs) active = entry.wage; else break;
+            }
+            return parseFloat(active) || 0;
+        }
+
+        // Minutes-since-midnight helper for a JS Date.
+        function minutesOfDay(d) { return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; }
+
+        // Computes one calendar day's pay from that day's earliest IN and latest OUT,
+        // under whichever rules/wage were effective on that date. NOTE: this never
+        // changes what's displayed in the Attendance Logs tab - that always shows the
+        // real punched time. Snapping/deductions only affect the payroll math here.
+        function computeDayPay(firstInMs, lastOutMs, worker) {
+            const dayDate = new Date(firstInMs);
+            const rules = getEffectiveRules(firstInMs);
+            const dailyWage = getEffectiveWage(worker, firstInMs);
+            const hourlyRate = dailyWage / 8;
+
+            const inMin = minutesOfDay(new Date(firstInMs));
+            const outMin = minutesOfDay(new Date(lastOutMs));
+
+            // --- Arrival deduction ---
+            const lateMin = Math.max(0, inMin - rules.shiftStartMin);
+            const freePassEligible = lateMin <= rules.graceMinutes;
+            let arrivalDeductionHours = 0;
+            if (lateMin > rules.graceMinutes) {
+                const pastGrace = lateMin - rules.graceMinutes;
+                if (pastGrace <= rules.halfDeductionMinutes) {
+                    arrivalDeductionHours = rules.halfStepDeductionHours;
+                } else {
+                    const pastHalf = pastGrace - rules.halfDeductionMinutes;
+                    const steps = Math.ceil(pastHalf / rules.stepMinutes);
+                    arrivalDeductionHours = rules.halfStepDeductionHours + steps * rules.stepDeductionHours;
+                }
+            }
+
+            // --- Departure deduction ---
+            let departureDeductionHours = 0;
+            if (outMin < rules.shiftEndMin) {
+                const inFreePassWindow = outMin >= rules.freePassStartMin;
+                if (!(inFreePassWindow && freePassEligible)) {
+                    departureDeductionHours = (rules.shiftEndMin - outMin) / 60;
+                }
+            }
+
+            const totalDeductionHours = arrivalDeductionHours + departureDeductionHours;
+            const regularPay = Math.max(0, dailyWage - totalDeductionHours * hourlyRate);
+
+            // --- Overtime ---
+            let overtimeHours = 0, overtimePay = 0;
+            const otMinRaw = outMin - rules.shiftEndMin;
+            if (otMinRaw > rules.otGraceMinutes) {
+                overtimeHours = Math.ceil(otMinRaw / rules.otBlockMinutes) * rules.otBlockHours;
+                overtimePay = overtimeHours * rules.otRate;
+            }
+
+            return {
+                regularPay, overtimeHours, overtimePay, totalPay: regularPay + overtimePay,
+                arrivalDeductionHours, departureDeductionHours, freePassEligible
+            };
         }
 
         // Turns a sorted, single-worker list of attendance logs into everything payroll
-        // needs: paired IN/OUT sessions (for display), the set of days worked, any
-        // dangling IN with no matching OUT, and the actual pay totals under the rules
-        // above. Sessions are grouped by calendar day (earliest IN, latest OUT) so a
-        // lunch-break split into two sessions is treated as one day, not two.
-        function summarizeWorkerAttendance(workerLogs, dailyWage) {
+        // needs: paired IN/OUT sessions (for display, showing the REAL punched times),
+        // the set of days worked, any dangling IN with no matching OUT, and the actual
+        // pay totals under the rules above. Sessions are grouped by calendar day
+        // (earliest IN, latest OUT) so a lunch-break split into two sessions is
+        // treated as one day, not two.
+        function summarizeWorkerAttendance(workerLogs, worker) {
             let currentIn = null;
             let danglingIn = null;
             let totalRawHours = 0;
@@ -1605,17 +1852,18 @@
             });
             if (currentIn) { danglingIn = currentIn; daysSet.add(currentIn.timestamp.split(',')[0].trim()); }
 
-            let totalEarned = 0, totalOvertimeHours = 0, totalOvertimePay = 0;
+            let totalEarned = 0, totalOvertimeHours = 0, totalOvertimePay = 0, totalDeductionHours = 0;
             Object.keys(dayRange).forEach(date => {
                 const { firstIn, lastOut } = dayRange[date];
                 if (lastOut === null) return; // No completed OUT for this date yet - can't pay it yet
-                const pay = computeDayPay(firstIn, lastOut, dailyWage);
+                const pay = computeDayPay(firstIn, lastOut, worker);
                 totalEarned += pay.totalPay;
                 totalOvertimeHours += pay.overtimeHours;
                 totalOvertimePay += pay.overtimePay;
+                totalDeductionHours += pay.arrivalDeductionHours + pay.departureDeductionHours;
             });
 
-            return { sessions, danglingIn, daysSet, totalRawHours, totalEarned, totalOvertimeHours, totalOvertimePay };
+            return { sessions, danglingIn, daysSet, totalRawHours, totalEarned, totalOvertimeHours, totalOvertimePay, totalDeductionHours };
         }
 
         // --- TIME HELPER FOR CALCULATING HOURS ---
@@ -1650,14 +1898,24 @@
 
         function renderLogs() { 
             const container = document.getElementById('logsContainer');
-            if (!db.attendance || db.attendance.length === 0) {
+
+            // SECURITY: A non-admin worker should only ever see their own punch history,
+            // never everyone else's. This was previously missing entirely.
+            let visibleLogs = db.attendance;
+            if (currentUser && currentUser.role !== 'admin') {
+                const me = db.workers.find(w => w.id === currentUser.workerId);
+                const knownWorkerIds = new Set(db.workers.map(w => w.id));
+                visibleLogs = db.attendance.filter(a => me && logMatchesWorker(a, me, knownWorkerIds));
+            }
+
+            if (!visibleLogs || visibleLogs.length === 0) {
                 document.getElementById('logCountBadge').innerText = "0 logs";
                 return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
             }
 
             // Group logs by Date -> Site Name
             const grouped = {};
-            db.attendance.forEach(log => {
+            visibleLogs.forEach(log => {
                 const date = log.timestamp.split(',')[0].trim();
                 if (!grouped[date]) grouped[date] = {};
                 if (!grouped[date][log.siteName]) grouped[date][log.siteName] = [];
@@ -1711,7 +1969,7 @@
             }
 
             container.innerHTML = html;
-            document.getElementById('logCountBadge').innerText = `${db.attendance.length} logs`; 
+            document.getElementById('logCountBadge').innerText = `${visibleLogs.length} logs`; 
         }
 
         function renderSettlements() { 
@@ -1745,7 +2003,7 @@
                     .filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; })
                     .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
-                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
 
                 let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
@@ -1813,7 +2071,8 @@
                         <div class="space-y-1.5 px-1">
                             <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
                             <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
-                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Overtime (after 5 PM @ ₹100/hr):</span> <span class="font-medium text-amber-400">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
+                            ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Late/Early Deductions:</span> <span class="font-medium text-rose-400">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
+                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-400">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
                             <div class="my-2 border-t border-slate-800/80"></div>
                             
@@ -1862,7 +2121,7 @@
                 const workerLogs = [...db.attendance].filter(a => logMatchesWorker(a, w, knownWorkerIds) && parseCustomDate(a.timestamp) > lastSettledMs)
                     .sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
 
-                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
                 const earned = summary.totalEarned;
                 const unpaidAdv = db.advances.filter(a => a.workerId === w.id && parseCustomDate(a.timestamp) > lastSettledMs);
@@ -1910,7 +2169,7 @@
             const knownWorkerIds = new Set(db.workers.map(x => x.id));
             const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
             
-            const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+            const summary = summarizeWorkerAttendance(workerLogs, w);
             const daysSet = summary.daysSet;
             let sessionRows = summary.sessions.map(s => `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${s.date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${s.durationHrs.toFixed(2)} hr</td></tr>`).join('');
             
@@ -1965,7 +2224,8 @@
                     <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Financial Summary</h4>
                     <table style="width: 100%; font-size: 14px; margin-bottom: 40px;">
                         <tr><td style="padding: 5px 0;">Total Hours Worked:</td><td style="text-align: right; font-weight: bold;">${totalHours.toFixed(2)} Hrs</td></tr>
-                        ${summary.totalOvertimeHours > 0 ? `<tr><td style="padding: 5px 0;">Overtime (after 5 PM @ Rs 100/hr):</td><td style="text-align: right; font-weight: bold; color: #d97706;">${summary.totalOvertimeHours.toFixed(2)} Hrs = ₹${summary.totalOvertimePay.toFixed(2)}</td></tr>` : ''}
+                        ${summary.totalDeductionHours > 0 ? `<tr><td style="padding: 5px 0;">Late/Early Deductions:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">${summary.totalDeductionHours.toFixed(2)} Hrs</td></tr>` : ''}
+                        ${summary.totalOvertimeHours > 0 ? `<tr><td style="padding: 5px 0;">Overtime (@ Rs ${getEffectiveRules(Date.now()).otRate}/hr):</td><td style="text-align: right; font-weight: bold; color: #d97706;">${summary.totalOvertimeHours.toFixed(2)} Hrs = ₹${summary.totalOvertimePay.toFixed(2)}</td></tr>` : ''}
                         <tr><td style="padding: 5px 0;">Calculated Earnings:</td><td style="text-align: right; font-weight: bold; color: #16a34a;">₹${earned.toFixed(2)}</td></tr>
                         <tr><td style="padding: 5px 0;">Less Advances Taken:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">-₹${adv.toFixed(2)}</td></tr>
                         <tr><td colspan="2"><hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;"></td></tr>
@@ -2023,7 +2283,7 @@
                 
                 const workerLogs = [...db.attendance].filter(a => { const t = parseCustomDate(a.timestamp); return logMatchesWorker(a, w, knownWorkerIds) && t >= actualStartMs && t <= actualEndMs; }).sort((a,b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                 
-                const summary = summarizeWorkerAttendance(workerLogs, w.wage);
+                const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
                 const totalHours = summary.totalRawHours;
                 const earned = summary.totalEarned;
