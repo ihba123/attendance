@@ -1402,7 +1402,28 @@
 
             const site = db.sites.find(s => s.id === document.getElementById('punchSiteSelect').value);
             const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
-            db.attendance.unshift(record); saveStorage(); showToast(`Punch ${type} logged securely!`, "success");
+            db.attendance.unshift(record); saveStorage();
+
+            let toastMsg = `Punch ${type} logged securely!`;
+            let toastDuration = 3000;
+            if (type === 'OUT') {
+                // Show the worker what they earned for today, calculated the same way
+                // the Payroll tab does (day-based rules, deductions, overtime).
+                const worker = db.workers.find(w => w.id === detectedWorker.id);
+                if (worker) {
+                    const todayStr = record.timestamp.split(',')[0].trim();
+                    const todaysLogs = db.attendance
+                        .filter(a => a.workerId === worker.id && a.timestamp.split(',')[0].trim() === todayStr)
+                        .sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                    const summary = summarizeWorkerAttendance(todaysLogs, worker);
+                    if (summary.totalEarned > 0) {
+                        toastMsg += ` Today's earning: ₹${summary.totalEarned.toFixed(0)}`;
+                        if (summary.totalOvertimeHours > 0) toastMsg += ` (incl. ₹${summary.totalOvertimePay.toFixed(0)} OT)`;
+                        toastDuration = 5000; // longer message needs a bit more time to read
+                    }
+                }
+            }
+            showToast(toastMsg, "success", toastDuration);
             
             // Disable buttons immediately to prevent rapid double-clicks
             document.getElementById('punchInBtn').disabled = true;
@@ -2064,11 +2085,20 @@
 
             // SECURITY: A non-admin worker should only ever see their own punch history,
             // never everyone else's. This was previously missing entirely.
+            //
+            // NOTE: this filters directly against currentUser's own workerId/name -
+            // it does NOT require first finding a matching entry in db.workers. An
+            // earlier version depended on that lookup succeeding, and silently showed
+            // "no logs found" for every worker whenever it didn't (e.g. if db.workers
+            // hadn't finished loading yet, or any ID mismatch) - even though the
+            // worker's own logs were sitting right there in db.attendance.
             let visibleLogs = db.attendance;
             if (currentUser && currentUser.role !== 'admin') {
-                const me = db.workers.find(w => w.id === currentUser.workerId);
-                const knownWorkerIds = new Set(db.workers.map(w => w.id));
-                visibleLogs = db.attendance.filter(a => me && logMatchesWorker(a, me, knownWorkerIds));
+                const myId = currentUser.workerId;
+                const myName = currentUser.name;
+                visibleLogs = db.attendance.filter(a =>
+                    (myId && a.workerId === myId) || (myName && a.workerName === myName)
+                );
             }
 
             if (!visibleLogs || visibleLogs.length === 0) {
@@ -2085,6 +2115,26 @@
                 grouped[date][log.siteName].push(log);
             });
 
+            // Precompute each worker's earning for each day they worked (across ALL
+            // their sessions that day, not just one site) so it can be shown on the
+            // OUT row below - "today's earning" should reflect the whole day, even if
+            // someone worked at more than one site.
+            const earningsByWorkerDate = {};
+            const logsByWorkerDate = {};
+            visibleLogs.forEach(log => {
+                const date = log.timestamp.split(',')[0].trim();
+                const key = log.workerId + '|' + date;
+                if (!logsByWorkerDate[key]) logsByWorkerDate[key] = [];
+                logsByWorkerDate[key].push(log);
+            });
+            Object.keys(logsByWorkerDate).forEach(key => {
+                const workerId = key.split('|')[0];
+                const worker = db.workers.find(w => w.id === workerId);
+                if (!worker) return;
+                const dayLogs = [...logsByWorkerDate[key]].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                earningsByWorkerDate[key] = summarizeWorkerAttendance(dayLogs, worker).totalEarned;
+            });
+
             let html = '';
             for (const date in grouped) {
                 html += `<div class="mb-5"><h3 class="text-sm font-black text-blue-400 border-b border-blue-900/50 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
@@ -2097,9 +2147,9 @@
                     const siteLogs = grouped[date][siteName].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
                     let lastInObj = {}; 
                     
-                    const displayLogs = siteLogs.map(a => {
+                    const displayRows = siteLogs.map(a => {
                         const timeOnly = a.timestamp.split(',')[1].trim();
-                        let durationStr = '';
+                        let durationStr = '-';
                         const currentTime = parseCustomDate(a.timestamp);
                         
                         if (a.type === 'IN') {
@@ -2107,7 +2157,7 @@
                         } else if (a.type === 'OUT') {
                             if (lastInObj[a.workerId]) {
                                 const diffHrs = (currentTime - lastInObj[a.workerId]) / (1000 * 60 * 60);
-                                durationStr = `<span class="bg-blue-900/50 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2">${diffHrs.toFixed(2)} hrs</span>`;
+                                durationStr = `<span class="bg-blue-900/50 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded text-[9px] font-bold">${diffHrs.toFixed(2)} hrs</span>`;
                                 lastInObj[a.workerId] = null; // Reset after out punch
                             }
                         }
@@ -2115,20 +2165,37 @@
                         const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-400"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-400"></i>';
                         const typeColor = a.type === 'IN' ? 'text-emerald-400' : 'text-rose-400';
                         const editBtn = (currentUser && currentUser.role === 'admin')
-                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-slate-500 hover:text-blue-400 transition ml-2" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
+                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-slate-500 hover:text-blue-400 transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
                             : '';
+                        const earnKey = a.workerId + '|' + date;
+                        const dayEarning = earningsByWorkerDate[earnKey];
+                        const earnDisplay = (a.type === 'OUT' && dayEarning > 0)
+                            ? `<span class="text-emerald-400 font-bold">₹${dayEarning.toFixed(0)}</span>`
+                            : '-';
                         
-                        return `<div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-800/60 last:border-0">
-                            <span class="flex items-center gap-2">
-                                <span class="w-5 text-center">${typeIcon}</span>
-                                <span class="font-medium text-slate-200">${a.workerName}</span> 
-                                <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span>
-                            </span>
-                            <span class="text-slate-400 flex items-center">${timeOnly}${durationStr}${editBtn}</span>
-                        </div>`;
+                        return `<tr class="border-b border-slate-800/60 last:border-0">
+                            <td class="py-1.5 pr-2 font-medium text-slate-200 whitespace-nowrap">${a.workerName}</td>
+                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span></td>
+                            <td class="py-1.5 pr-2 text-slate-400 whitespace-nowrap">${timeOnly}</td>
+                            <td class="py-1.5 pr-2 text-right whitespace-nowrap">${durationStr}</td>
+                            <td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>
+                            <td class="py-1.5 text-right whitespace-nowrap">${editBtn}</td>
+                        </tr>`;
                     });
                     
-                    html += displayLogs.reverse().join(''); 
+                    html += `<table class="w-full text-xs border-collapse">
+                        <thead>
+                            <tr class="text-[9px] uppercase tracking-wider text-slate-500 border-b border-slate-700/60">
+                                <th class="text-left font-semibold pb-1 pr-2">Worker</th>
+                                <th class="text-left font-semibold pb-1 pr-2">Type</th>
+                                <th class="text-left font-semibold pb-1 pr-2">Time</th>
+                                <th class="text-right font-semibold pb-1 pr-2">Duration</th>
+                                <th class="text-right font-semibold pb-1 pr-2">Earning</th>
+                                <th class="text-right font-semibold pb-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${displayRows.reverse().join('')}</tbody>
+                    </table>`;
                     html += `</div>`;
                 }
                 html += `</div>`;
@@ -2315,8 +2382,9 @@
         }
 
         function downloadSettlementPDF(workerId) {
+          try {
             const w = db.workers.find(x => x.id === workerId);
-            if(!w) return;
+            if(!w) return showToast("Worker not found", "error");
 
             showToast("Generating Invoice...");
             
@@ -2420,10 +2488,18 @@
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save();
+            }).from(pdfDiv).save().catch(err => {
+                console.error("PDF render error", err);
+                showToast("PDF generation failed: " + (err.message || err), "error");
+            });
+          } catch (err) {
+            console.error("Settlement PDF error", err);
+            showToast("Could not generate PDF: " + (err.message || err), "error");
+          }
         }
 
         function downloadMasterPayrollPDF() {
+          try {
             showToast("Generating Master Payroll...");
             
             const fromVal = document.getElementById('payrollFrom')?.value;
@@ -2515,16 +2591,23 @@
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save();
+            }).from(pdfDiv).save().catch(err => {
+                console.error("PDF render error", err);
+                showToast("PDF generation failed: " + (err.message || err), "error");
+            });
+          } catch (err) {
+            console.error("Master Payroll PDF error", err);
+            showToast("Could not generate PDF: " + (err.message || err), "error");
+          }
         }
 
-        function showToast(msg, type='success') { 
+        function showToast(msg, type='success', durationMs=3000) { 
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             const icon = document.getElementById('toastIcon');
             icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-triangle-exclamation text-rose-400';
             toast.classList.remove('opacity-0', 'pointer-events-none');
-            setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+            setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), durationMs);
         }
 
         // START THE APP
