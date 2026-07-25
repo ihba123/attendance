@@ -80,6 +80,9 @@
         <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-indian-rupee-sign text-base"></i><span>Payroll</span>
         </button>
+        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+            <i class="fa-solid fa-book text-base"></i><span>Cash Book</span>
+        </button>
         <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
             <i class="fa-solid fa-map-location-dot text-base"></i><span>Sites</span>
         </button>
@@ -264,6 +267,71 @@
 
                 <div id="payrollCardsContainer" class="space-y-3"></div>
             </div>
+        </section>
+
+        <!-- TAB: CASH BOOK (ADMIN) -->
+        <section id="view-cashbook" class="hidden space-y-4">
+            <!-- Balance Summary -->
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-slate-800 rounded-2xl p-3 border border-emerald-800/50 text-center">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Total Credits</p>
+                    <p id="cashbookTotalCredit" class="text-lg font-black text-emerald-400 mt-1">₹0</p>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-3 border border-rose-800/50 text-center">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Total Debits</p>
+                    <p id="cashbookTotalDebit" class="text-lg font-black text-rose-400 mt-1">₹0</p>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-3 border border-blue-800/50 text-center">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Balance</p>
+                    <p id="cashbookBalance" class="text-lg font-black text-blue-400 mt-1">₹0</p>
+                </div>
+            </div>
+
+            <!-- Add Entry Form -->
+            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-3">
+                <h2 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-plus text-blue-400"></i> Add Entry</h2>
+                <form onsubmit="handleAddCashbookEntry(event)" class="space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="cbType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                            <option value="debit">Debit (Money Out)</option>
+                            <option value="credit">Credit (Money In)</option>
+                        </select>
+                        <select id="cbCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                            <option value="Local Purchase">Local Purchase</option>
+                            <option value="Material Purchase">Material Purchase</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Site Expense">Site Expense</option>
+                            <option value="Client Payment">Client Payment (Credit)</option>
+                            <option value="Capital / Deposit">Capital / Deposit (Credit)</option>
+                            <option value="Worker Settlement">Worker Settlement</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                    </div>
+                    <label class="block text-xs text-slate-400">
+                        Bill / Receipt Photo (optional)
+                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-slate-400">
+                    </label>
+                    <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
+                </form>
+            </div>
+
+            <!-- Filter + Export -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-sm font-bold">Ledger</h2>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs">
+                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs">
+                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
+                </div>
+            </div>
+
+            <div id="cashbookContainer" class="space-y-2"></div>
         </section>
 
         <!-- TAB 4: SITES (ADMIN) -->
@@ -585,7 +653,8 @@
             sites: [], 
             workers: [], 
             attendance: [], advances: [], settlements: [],
-            payrollRulesHistory: []
+            payrollRulesHistory: [],
+            cashbook: []
         };
 
         let db = JSON.parse(JSON.stringify(INITIAL_DATA));
@@ -708,6 +777,20 @@
                                 rules: parsedRules || DEFAULT_PAYROLL_RULES
                             };
                         }).filter(r => r.rules);
+                    }
+
+                    // Map Cash Book entries
+                    if (result.data.cashbook && result.data.cashbook.length > 0) {
+                        db.cashbook = result.data.cashbook.map(c => ({
+                            id: c['ID'] || c['id'],
+                            timestamp: normalizeTimestamp(c['Timestamp'] || c['timestamp']),
+                            type: c['Type'] || c['type'] || 'debit',
+                            category: c['Category'] || c['category'] || 'Other',
+                            description: c['Description'] || c['description'] || '',
+                            amount: parseFloat(c['Amount (₹)'] || c['amount'] || 0),
+                            workerId: c['Worker ID'] || c['workerId'] || null,
+                            billPhoto: c['Bill Photo'] || c['billPhoto'] || null
+                        })).filter(c => c.id);
                     }
                     
                     // Map Users Flexibly (Fixes missing accounts)
@@ -847,13 +930,13 @@
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
             document.querySelectorAll('.admin-only').forEach(el => currentUser.role === 'admin' ? el.classList.remove('hidden') : el.classList.add('hidden'));
 
-            populateDropdowns(); renderSites(); renderWorkers(); renderLogs(); renderSettlements();
-            setDefaultOverrideDateTime();
+            populateDropdowns(); renderSites(); renderWorkers(); renderLogs(); renderSettlements(); renderCashbook();
+            setDefaultOverrideDateTime(); setDefaultCashbookDateTime();
             switchTab('logs');
         }
 
         function switchTab(t) { 
-            const ADMIN_ONLY_TABS = ['settlement', 'sites', 'workers'];
+            const ADMIN_ONLY_TABS = ['settlement', 'sites', 'workers', 'cashbook'];
             if (ADMIN_ONLY_TABS.includes(t) && (!currentUser || currentUser.role !== 'admin')) {
                 t = 'logs'; // Not an admin - redirect away from admin-only sections
             }
@@ -866,6 +949,7 @@
             if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
             if(t === 'workers' && currentUser?.role === 'admin') { startRegWebcam(); } else { stopRegWebcam(); }
             if(t === 'profile') { renderMyProfileCard(); }
+            if(t === 'cashbook') { setDefaultCashbookDateTime(); renderCashbook(); }
         }
 
         function renderMyProfileCard() {
@@ -1404,26 +1488,7 @@
             const record = { id: 'att_' + Date.now(), timestamp: new Date().toLocaleString('en-IN'), workerId: detectedWorker.id, workerName: detectedWorker.name, siteId: site.id, siteName: site.name, type: type, lat: currentPos.lat, lng: currentPos.lng };
             db.attendance.unshift(record); saveStorage();
 
-            let toastMsg = `Punch ${type} logged securely!`;
-            let toastDuration = 3000;
-            if (type === 'OUT') {
-                // Show the worker what they earned for today, calculated the same way
-                // the Payroll tab does (day-based rules, deductions, overtime).
-                const worker = db.workers.find(w => w.id === detectedWorker.id);
-                if (worker) {
-                    const todayStr = record.timestamp.split(',')[0].trim();
-                    const todaysLogs = db.attendance
-                        .filter(a => a.workerId === worker.id && a.timestamp.split(',')[0].trim() === todayStr)
-                        .sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
-                    const summary = summarizeWorkerAttendance(todaysLogs, worker);
-                    if (summary.totalEarned > 0) {
-                        toastMsg += ` Today's earning: ₹${summary.totalEarned.toFixed(0)}`;
-                        if (summary.totalOvertimeHours > 0) toastMsg += ` (incl. ₹${summary.totalOvertimePay.toFixed(0)} OT)`;
-                        toastDuration = 5000; // longer message needs a bit more time to read
-                    }
-                }
-            }
-            showToast(toastMsg, "success", toastDuration);
+            showToast(type === 'OUT' ? "Thank You!" : `Punch ${type} logged securely!`, "success");
             
             // Disable buttons immediately to prevent rapid double-clicks
             document.getElementById('punchInBtn').disabled = true;
@@ -2115,25 +2180,30 @@
                 grouped[date][log.siteName].push(log);
             });
 
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
             // Precompute each worker's earning for each day they worked (across ALL
             // their sessions that day, not just one site) so it can be shown on the
             // OUT row below - "today's earning" should reflect the whole day, even if
-            // someone worked at more than one site.
+            // someone worked at more than one site. Admin-only: workers don't see
+            // earning figures in their own log view.
             const earningsByWorkerDate = {};
-            const logsByWorkerDate = {};
-            visibleLogs.forEach(log => {
-                const date = log.timestamp.split(',')[0].trim();
-                const key = log.workerId + '|' + date;
-                if (!logsByWorkerDate[key]) logsByWorkerDate[key] = [];
-                logsByWorkerDate[key].push(log);
-            });
-            Object.keys(logsByWorkerDate).forEach(key => {
-                const workerId = key.split('|')[0];
-                const worker = db.workers.find(w => w.id === workerId);
-                if (!worker) return;
-                const dayLogs = [...logsByWorkerDate[key]].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
-                earningsByWorkerDate[key] = summarizeWorkerAttendance(dayLogs, worker).totalEarned;
-            });
+            if (isAdmin) {
+                const logsByWorkerDate = {};
+                visibleLogs.forEach(log => {
+                    const date = log.timestamp.split(',')[0].trim();
+                    const key = log.workerId + '|' + date;
+                    if (!logsByWorkerDate[key]) logsByWorkerDate[key] = [];
+                    logsByWorkerDate[key].push(log);
+                });
+                Object.keys(logsByWorkerDate).forEach(key => {
+                    const workerId = key.split('|')[0];
+                    const worker = db.workers.find(w => w.id === workerId);
+                    if (!worker) return;
+                    const dayLogs = [...logsByWorkerDate[key]].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+                    earningsByWorkerDate[key] = summarizeWorkerAttendance(dayLogs, worker).totalEarned;
+                });
+            }
 
             let html = '';
             for (const date in grouped) {
@@ -2167,18 +2237,22 @@
                         const editBtn = (currentUser && currentUser.role === 'admin')
                             ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-slate-500 hover:text-blue-400 transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
                             : '';
-                        const earnKey = a.workerId + '|' + date;
-                        const dayEarning = earningsByWorkerDate[earnKey];
-                        const earnDisplay = (a.type === 'OUT' && dayEarning > 0)
-                            ? `<span class="text-emerald-400 font-bold">₹${dayEarning.toFixed(0)}</span>`
-                            : '-';
+                        let earnCell = '';
+                        if (isAdmin) {
+                            const earnKey = a.workerId + '|' + date;
+                            const dayEarning = earningsByWorkerDate[earnKey];
+                            const earnDisplay = (a.type === 'OUT' && dayEarning > 0)
+                                ? `<span class="text-emerald-400 font-bold">₹${dayEarning.toFixed(0)}</span>`
+                                : '-';
+                            earnCell = `<td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>`;
+                        }
                         
                         return `<tr class="border-b border-slate-800/60 last:border-0">
                             <td class="py-1.5 pr-2 font-medium text-slate-200 whitespace-nowrap">${a.workerName}</td>
                             <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span></td>
                             <td class="py-1.5 pr-2 text-slate-400 whitespace-nowrap">${timeOnly}</td>
                             <td class="py-1.5 pr-2 text-right whitespace-nowrap">${durationStr}</td>
-                            <td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>
+                            ${earnCell}
                             <td class="py-1.5 text-right whitespace-nowrap">${editBtn}</td>
                         </tr>`;
                     });
@@ -2190,7 +2264,7 @@
                                 <th class="text-left font-semibold pb-1 pr-2">Type</th>
                                 <th class="text-left font-semibold pb-1 pr-2">Time</th>
                                 <th class="text-right font-semibold pb-1 pr-2">Duration</th>
-                                <th class="text-right font-semibold pb-1 pr-2">Earning</th>
+                                ${isAdmin ? '<th class="text-right font-semibold pb-1 pr-2">Earning</th>' : ''}
                                 <th class="text-right font-semibold pb-1"></th>
                             </tr>
                         </thead>
@@ -2376,7 +2450,23 @@
                 db.settlements.push(record);
                 saveStorage();
                 postToGoogleSheet('settleSalary', record);
-                renderSettlements();
+
+                // Auto-log this payout as a debit in the Cash Book
+                const cbEntry = {
+                    id: 'cb_' + Date.now(),
+                    timestamp: new Date().toLocaleString('en-IN'),
+                    type: 'debit',
+                    category: 'Worker Settlement',
+                    description: `Settlement paid to ${w.name}`,
+                    amount: parseFloat(net) || 0,
+                    workerId: w.id,
+                    billPhoto: null
+                };
+                db.cashbook.unshift(cbEntry);
+                saveStorage();
+                postToGoogleSheet('addCashbookEntry', cbEntry);
+
+                renderSettlements(); renderCashbook();
                 showToast("Worker balance cleared!");
             });
         }
@@ -2421,6 +2511,13 @@
             const dateRangeStr = isCustomRange ? `Period: ${fromVal || 'Start'} to ${toVal || 'End'}` : `Current Billing Cycle (Up to ${new Date().toLocaleDateString('en-IN')})`;
 
             const pdfDiv = document.createElement('div');
+            // IMPORTANT: html2canvas (which html2pdf uses internally) renders unreliably
+            // on elements that aren't actually attached to the page - this was very
+            // likely why some settlement PDFs came out blank or cut off partway through.
+            // Positioning it off-screen keeps it invisible without affecting layout.
+            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.top = '0';
+            pdfDiv.style.left = '-99999px';
             // Build absolute inline CSS layout to guarantee PDF perfection
             pdfDiv.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
@@ -2482,13 +2579,17 @@
                 </div>
             `;
 
+            document.body.appendChild(pdfDiv);
             html2pdf().set({
                 margin: 0,
                 filename: `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save().catch(err => {
+            }).from(pdfDiv).save().then(() => {
+                document.body.removeChild(pdfDiv);
+            }).catch(err => {
+                document.body.removeChild(pdfDiv);
                 console.error("PDF render error", err);
                 showToast("PDF generation failed: " + (err.message || err), "error");
             });
@@ -2552,6 +2653,9 @@
             });
 
             const pdfDiv = document.createElement('div');
+            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.top = '0';
+            pdfDiv.style.left = '-99999px';
             pdfDiv.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
@@ -2585,18 +2689,201 @@
                 </div>
             `;
 
+            document.body.appendChild(pdfDiv);
             html2pdf().set({
                 margin: 0,
                 filename: `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save().catch(err => {
+            }).from(pdfDiv).save().then(() => {
+                document.body.removeChild(pdfDiv);
+            }).catch(err => {
+                document.body.removeChild(pdfDiv);
                 console.error("PDF render error", err);
                 showToast("PDF generation failed: " + (err.message || err), "error");
             });
           } catch (err) {
             console.error("Master Payroll PDF error", err);
+            showToast("Could not generate PDF: " + (err.message || err), "error");
+          }
+        }
+
+        // ==================== CASH BOOK ====================
+        function setDefaultCashbookDateTime() {
+            const el = document.getElementById('cbDateTime');
+            if (el && !el.value) el.value = dateToDatetimeLocalValue(new Date());
+        }
+
+        function renderCashbook() {
+            const container = document.getElementById('cashbookContainer');
+            if (!container) return; // Not on this tab / not admin
+
+            const fromVal = document.getElementById('cbFrom')?.value;
+            const toVal = document.getElementById('cbTo')?.value;
+            const startMs = getStartOfDayMs(fromVal);
+            const endMs = getEndOfDayMs(toVal);
+
+            const entries = [...db.cashbook]
+                .filter(c => { const t = parseCustomDate(c.timestamp); return t >= startMs && t <= endMs; })
+                .sort((a, b) => parseCustomDate(b.timestamp) - parseCustomDate(a.timestamp));
+
+            // Totals are always across the FULL ledger (not just the filtered view),
+            // so the balance card always reflects the true running total.
+            let totalCredit = 0, totalDebit = 0;
+            db.cashbook.forEach(c => {
+                if (c.type === 'credit') totalCredit += parseFloat(c.amount) || 0;
+                else totalDebit += parseFloat(c.amount) || 0;
+            });
+            document.getElementById('cashbookTotalCredit').innerText = `₹${totalCredit.toFixed(0)}`;
+            document.getElementById('cashbookTotalDebit').innerText = `₹${totalDebit.toFixed(0)}`;
+            document.getElementById('cashbookBalance').innerText = `₹${(totalCredit - totalDebit).toFixed(0)}`;
+
+            if (entries.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No cash book entries for this period.</p>`;
+                return;
+            }
+
+            container.innerHTML = entries.map(c => {
+                const isCredit = c.type === 'credit';
+                const sign = isCredit ? '+' : '-';
+                const colorClass = isCredit ? 'text-emerald-400' : 'text-rose-400';
+                const icon = isCredit ? 'fa-arrow-down text-emerald-400' : 'fa-arrow-up text-rose-400';
+                const billLink = c.billPhoto ? `<a href="${c.billPhoto}" target="_blank" class="text-blue-400 hover:underline text-[10px]"><i class="fa-solid fa-receipt"></i> View Bill</a>` : '';
+                const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-slate-500 hover:text-rose-400 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
+                return `<div class="bg-slate-900 rounded-xl p-3 border border-slate-700/60 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-200">${c.description}</p>
+                            <p class="text-[10px] text-slate-500">${c.category} &bull; ${c.timestamp} ${billLink}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold ${colorClass}">${sign}₹${parseFloat(c.amount).toFixed(0)}</span>
+                        ${deleteBtn}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function handleAddCashbookEntry(e) {
+            e.preventDefault();
+            const type = document.getElementById('cbType').value;
+            const category = document.getElementById('cbCategory').value;
+            const description = document.getElementById('cbDescription').value;
+            const amount = parseFloat(document.getElementById('cbAmount').value) || 0;
+            const dtValue = document.getElementById('cbDateTime').value;
+            const chosenDate = dtValue ? new Date(dtValue) : new Date();
+            const timestamp = chosenDate.toLocaleString('en-IN');
+
+            const fileInput = document.getElementById('cbBillPhoto');
+            let billPhoto = null;
+            if (fileInput.files && fileInput.files[0]) {
+                billPhoto = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(fileInput.files[0]);
+                });
+            }
+
+            const entry = { id: 'cb_' + Date.now(), timestamp, type, category, description, amount, billPhoto };
+            db.cashbook.unshift(entry);
+            saveStorage();
+            postToGoogleSheet('addCashbookEntry', entry);
+            renderCashbook();
+            showToast("Entry added to cash book");
+            e.target.reset();
+            setDefaultCashbookDateTime();
+        }
+
+        function deleteCashbookEntry(id) {
+            openConfirmModal("Delete this entry?", "This cannot be undone.", () => {
+                db.cashbook = db.cashbook.filter(c => c.id !== id);
+                saveStorage();
+                postToGoogleSheet('deleteCashbookEntry', { id });
+                renderCashbook();
+                showToast("Entry deleted");
+            });
+        }
+
+        function downloadCashbookPDF() {
+          try {
+            showToast("Generating Cash Book PDF...");
+            const fromVal = document.getElementById('cbFrom')?.value;
+            const toVal = document.getElementById('cbTo')?.value;
+            const startMs = getStartOfDayMs(fromVal);
+            const endMs = getEndOfDayMs(toVal);
+            const dateRangeStr = (fromVal || toVal) ? `${fromVal || 'Start'} to ${toVal || 'End'}` : 'All Time';
+
+            const entries = [...db.cashbook]
+                .filter(c => { const t = parseCustomDate(c.timestamp); return t >= startMs && t <= endMs; })
+                .sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
+
+            let runningBalance = 0;
+            let totalCredit = 0, totalDebit = 0;
+            const rows = entries.map(c => {
+                const amt = parseFloat(c.amount) || 0;
+                if (c.type === 'credit') { runningBalance += amt; totalCredit += amt; }
+                else { runningBalance -= amt; totalDebit += amt; }
+                return `<tr>
+                    <td style="padding:8px;border-bottom:1px solid #ddd;">${c.timestamp}</td>
+                    <td style="padding:8px;border-bottom:1px solid #ddd;">${c.category}</td>
+                    <td style="padding:8px;border-bottom:1px solid #ddd;">${c.description}</td>
+                    <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;color:${c.type === 'credit' ? '#16a34a' : '#dc2626'};">${c.type === 'credit' ? '+' : '-'}₹${amt.toFixed(2)}</td>
+                    <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">₹${runningBalance.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            const pdfDiv = document.createElement('div');
+            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.top = '0';
+            pdfDiv.style.left = '-99999px';
+            pdfDiv.innerHTML = `
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cash Book Statement</p>
+                    <p style="text-align: center; color: #888; font-size: 12px;">${dateRangeStr}</p>
+                    <hr style="margin: 20px 0; border: 0; border-top: 2px solid #eee;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f8fafc; text-align: left;">
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Date</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Category</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Description</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Amount</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:20px;">No entries for this period.</td></tr>'}</tbody>
+                        <tfoot>
+                            <tr style="background: #f1f5f9; font-weight: bold; border-top: 2px solid #333;">
+                                <td colspan="3" style="padding: 12px 8px; text-align: right;">TOTALS:</td>
+                                <td style="padding: 12px 8px; text-align: right;"><span style="color:#16a34a;">+₹${totalCredit.toFixed(2)}</span> / <span style="color:#dc2626;">-₹${totalDebit.toFixed(2)}</span></td>
+                                <td style="padding: 12px 8px; text-align: right;">₹${runningBalance.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            document.body.appendChild(pdfDiv);
+            html2pdf().set({
+                margin: 0,
+                filename: `JithuCorp_CashBook_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(pdfDiv).save().then(() => {
+                document.body.removeChild(pdfDiv);
+            }).catch(err => {
+                document.body.removeChild(pdfDiv);
+                console.error("PDF render error", err);
+                showToast("PDF generation failed: " + (err.message || err), "error");
+            });
+          } catch (err) {
+            console.error("Cash Book PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
           }
         }
