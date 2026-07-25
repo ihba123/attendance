@@ -6,64 +6,80 @@
     <title>Jithu Corporation | SitePunch AI Attendance</title>
     
     <!-- PWA / INSTALL APP SUPPORT -->
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#F7F5F0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="SitePunch AI">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBmMTcyYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwZjE3MmEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI0Y3RjVGMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxQjJBNEEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        .camera-overlay { border: 3px dashed #3b82f6; border-radius: 50%; transition: border-color 0.3s; }
-        .camera-overlay.success { border-color: #10b981; border-style: solid; }
+        /* ===== SitePunch light-mode design system =====
+           Ground/neutral: Tailwind "stone" (warm gray, not clinical slate/gray).
+           Structural signature: deep navy #1B2A4A (header, primary actions, focus).
+           Accent signature: amber/hi-vis gold #F0A202, used sparingly - the
+           viewfinder ring, small highlight touches - evoking site safety signage.
+           Display type: Space Grotesk (headings, brand, nav labels).
+           Body/data type: Inter (everything else - built for small-size legibility
+           and clean tabular figures, important for currency/time-heavy tables). */
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; }
+
+        .camera-overlay { border: 3px dashed #F0A202; border-radius: 50%; transition: border-color 0.3s; }
+        .camera-overlay.success { border-color: #22C55E; border-style: solid; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .scan-line {
-            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #F0A202, transparent);
             position: absolute; top: 0; animation: scan 2s infinite ease-in-out;
         }
         @keyframes scan { 0% { top: 10%; opacity: 0.2; } 50% { top: 85%; opacity: 1; } 100% { top: 10%; opacity: 0.2; } }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col pb-10">
+<body class="bg-[#F7F5F0] text-stone-800 font-sans min-h-screen flex flex-col pb-10">
 
-    <!-- INITIAL FULLSCREEN LOADER -->
-    <div id="initialLoader" class="fixed inset-0 z-[999] bg-slate-950 flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
+    <!-- INITIAL FULLSCREEN LOADER: the one deliberate bold/dark moment in an
+         otherwise light app - a branded splash, echoed later by the camera
+         viewfinder (the other "moment of focus"). Everything else stays quiet. -->
+    <div id="initialLoader" class="fixed inset-0 z-[999] bg-[#1B2A4A] flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
         <div class="relative flex items-center justify-center w-32 h-32">
             <!-- Outer spinning rings -->
-            <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-            <div class="absolute inset-3 border-r-4 border-emerald-500 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
-            <div class="absolute inset-6 border-b-4 border-blue-300 border-solid rounded-full animate-spin" style="animation-duration: 2s;"></div>
+            <div class="absolute inset-0 border-t-4 border-[#F0A202] border-solid rounded-full animate-spin"></div>
+            <div class="absolute inset-3 border-r-4 border-emerald-400 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            <div class="absolute inset-6 border-b-4 border-white/40 border-solid rounded-full animate-spin" style="animation-duration: 2s;"></div>
             <!-- Center Logo -->
-            <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/50 z-10 animate-pulse">
+            <div class="w-14 h-14 rounded-2xl bg-[#F0A202] flex items-center justify-center text-[#1B2A4A] font-bold text-2xl shadow-lg shadow-black/30 z-10 animate-pulse">
                 <i class="fa-solid fa-building"></i>
             </div>
         </div>
         <div class="text-center space-y-2">
-            <h1 class="text-2xl font-black text-white tracking-widest uppercase">Jithu Corporation</h1>
-            <p id="loaderStatusText" class="text-xs font-semibold text-blue-400 flex items-center gap-2 justify-center tracking-wide">
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase font-display">Jithu Corporation</h1>
+            <p id="loaderStatusText" class="text-xs font-semibold text-[#F0A202] flex items-center gap-2 justify-center tracking-wide">
                 <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
             </p>
         </div>
     </div>
 
-    <!-- HEADER / NAVBAR -->
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md">
+    <!-- HEADER / NAVBAR: the structural navy, carried through every screen -->
+    <header class="bg-[#1B2A4A] sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
+            <div class="w-10 h-10 rounded-xl bg-[#F0A202] flex items-center justify-center text-[#1B2A4A] font-bold text-xl shadow-md">
                 <i class="fa-solid fa-building"></i>
             </div>
             <div>
-                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide">Jithu Corporation</h1>
-                <p class="text-[11px] text-slate-400 flex items-center gap-1.5" id="headerSubText">
-                    <span id="cloudStatusText" class="text-blue-400 font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
-                    <span id="roleBadge" class="bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
+                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide font-display">Jithu Corporation</h1>
+                <p class="text-[11px] text-white/60 flex items-center gap-1.5" id="headerSubText">
+                    <span id="cloudStatusText" class="text-[#F0A202] font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
+                    <span id="roleBadge" class="bg-white/10 text-white/80 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
                 </p>
             </div>
         </div>
@@ -73,20 +89,20 @@
     </header>
 
     <!-- NAVIGATION TABS (ADMIN & WORKER DASHBOARD) -->
-    <nav id="mainNav" class="hidden bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
-        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-blue-600 text-white flex flex-col items-center gap-1">
+    <nav id="mainNav" class="hidden bg-white/90 backdrop-blur-md border-b border-stone-200 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-[#1B2A4A] text-white flex flex-col items-center gap-1">
             <i class="fa-solid fa-clock-rotate-left text-base"></i><span>Logs</span>
         </button>
-        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
             <i class="fa-solid fa-indian-rupee-sign text-base"></i><span>Payroll</span>
         </button>
-        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
             <i class="fa-solid fa-book text-base"></i><span>Cash Book</span>
         </button>
-        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
             <i class="fa-solid fa-map-location-dot text-base"></i><span>Sites</span>
         </button>
-        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 flex flex-col items-center gap-1">
+        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
             <i class="fa-solid fa-users text-base"></i><span>Workers & Override</span>
         </button>
     </nav>
@@ -96,123 +112,124 @@
 
         <!-- INITIAL LANDING / LOGIN SCREEN -->
         <section id="view-landing" class="flex flex-col items-center justify-center min-h-[75vh] space-y-6">
-            <div class="bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-700">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-stone-300/40 max-w-md w-full border border-stone-200">
                 <div class="text-center mb-8">
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-400 bg-blue-950/80 px-3 py-1 rounded-full border border-blue-800/50">Worker Portal</span>
-                    <h2 class="text-3xl font-black text-white mt-3 tracking-tight">Jithu Corporation</h2>
-                    <p class="text-slate-400 text-xs mt-1">Smart Face Recognition & GPS Attendance</p>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#1B2A4A] bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Worker Portal</span>
+                    <h2 class="text-3xl font-black text-stone-900 mt-3 tracking-tight font-display">Jithu Corporation</h2>
+                    <p class="text-stone-500 text-xs mt-1">Smart Face Recognition &amp; GPS Attendance</p>
                 </div>
 
                 <!-- Record Attendance Button -->
-                <button onclick="openPublicPunch()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/50 flex flex-col items-center justify-center gap-1.5 transition transform hover:scale-[1.02]">
+                <button onclick="openPublicPunch()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex flex-col items-center justify-center gap-1.5 transition transform hover:scale-[1.02]">
                     <i class="fa-solid fa-camera-retro text-2xl"></i>
                     <span class="text-lg">Record Attendance</span>
                     <span class="text-[10px] font-normal opacity-80">(Public Face Kiosk)</span>
                 </button>
 
                 <div class="relative flex py-6 items-center">
-                    <div class="flex-grow border-t border-slate-700"></div>
-                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
-                    <div class="flex-grow border-t border-slate-700"></div>
+                    <div class="flex-grow border-t border-stone-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-stone-400 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
+                    <div class="flex-grow border-t border-stone-200"></div>
                 </div>
 
                 <!-- Login Form -->
                 <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
                     <div class="relative">
-                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                        <input type="text" id="loginUserId" required placeholder="User ID (Mobile No or admin)" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-blue-500 focus:outline-none transition">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                        <input type="text" id="loginUserId" required placeholder="User ID (Mobile No or admin)" class="w-full bg-stone-50 border border-stone-300 rounded-xl pl-10 pr-4 py-3 text-sm text-stone-900 focus:border-[#1B2A4A] focus:outline-none transition">
                     </div>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                        <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-blue-500 focus:outline-none transition">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                        <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-stone-50 border border-stone-300 rounded-xl pl-10 pr-4 py-3 text-sm text-stone-900 focus:border-[#1B2A4A] focus:outline-none transition">
                     </div>
-                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Sign In</button>
-                    <p class="text-center text-[10px] text-slate-500 mt-2">Worker login: Mobile Number & Password 1234</p>
+                    <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                    <p class="text-center text-[10px] text-stone-400 mt-2">Worker login: Mobile Number &amp; Password 1234</p>
                 </form>
             </div>
         </section>
 
         <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
         <section id="view-punch" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm space-y-4">
 
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-bold">Face Station</h2>
-                        <p class="text-[11px] text-slate-400">Jithu Corporation Site Kiosk</p>
+                        <h2 class="text-lg font-bold text-stone-900 font-display">Face Station</h2>
+                        <p class="text-[11px] text-stone-500">Jithu Corporation Site Kiosk</p>
                     </div>
-                    <span id="currentTimeDisplay" class="text-xs font-mono text-blue-400 bg-blue-950/60 px-2 py-1 rounded-md border border-blue-800/50">--:--:--</span>
+                    <span id="currentTimeDisplay" class="text-xs font-mono text-[#1B2A4A] bg-stone-100 px-2 py-1 rounded-md border border-stone-200">--:--:--</span>
                 </div>
 
-                <select id="punchSiteSelect" onchange="onSiteChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                <select id="punchSiteSelect" onchange="onSiteChange()" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-sm text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
                     <option value="">-- Select Active Work Site --</option>
                 </select>
 
                 <!-- GPS Status -->
-                <div id="gpsStatusCard" class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/80 flex items-center justify-between text-xs">
+                <div id="gpsStatusCard" class="bg-stone-50 rounded-xl p-3 border border-stone-200 flex items-center justify-between text-xs">
                     <div class="flex items-center gap-3">
-                        <div id="gpsIconBg" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
+                        <div id="gpsIconBg" class="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
                         <div>
-                            <p class="font-semibold" id="gpsStatusText">Checking GPS...</p>
-                            <p class="text-slate-400 text-[11px]" id="gpsDistanceText">Distance: --</p>
+                            <p class="font-semibold text-stone-800" id="gpsStatusText">Checking GPS...</p>
+                            <p class="text-stone-500 text-[11px]" id="gpsDistanceText">Distance: --</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-slate-800 rounded-lg text-slate-300"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 rounded-lg text-stone-600"><i class="fa-solid fa-rotate-right"></i></button>
                     </div>
                 </div>
 
-                <!-- AI Camera Viewfinder -->
-                <div id="cameraWrapper" class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] border border-slate-700 flex flex-col items-center justify-center transition-all duration-300">
+                <!-- AI Camera Viewfinder: deliberately kept dark, echoing the loader -
+                     the "moment of focus" signature, with the amber viewfinder ring -->
+                <div id="cameraWrapper" class="relative bg-[#14181F] rounded-2xl overflow-hidden aspect-[4/3] border border-stone-300 flex flex-col items-center justify-center transition-all duration-300">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
                     
                     <div id="scanLine" class="hidden scan-line z-10"></div>
                     <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex flex-col items-center justify-center opacity-80 gap-1">
-                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-blue-400 font-bold bg-slate-900/80 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
-                        <span id="earDebug" class="hidden text-[9px] text-slate-400 bg-slate-900/70 px-2 py-0.5 rounded-full"></span>
+                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-[#F0A202] font-bold bg-black/60 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
+                        <span id="earDebug" class="hidden text-[9px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full"></span>
                     </div>
 
                     <div class="absolute bottom-3 flex gap-2 z-20">
-                        <button id="retakeBtn" onclick="resetCamera()" class="hidden bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-lg border border-slate-600">
+                        <button id="retakeBtn" onclick="resetCamera()" class="hidden bg-black/60 hover:bg-black/80 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-lg border border-white/20">
                             <i class="fa-solid fa-arrow-rotate-left"></i> Re-Scan Face
                         </button>
                     </div>
                 </div>
-                <p id="scanStatusLine" class="text-[11px] text-slate-400 text-center mt-2 min-h-[1.5em]"></p>
+                <p id="scanStatusLine" class="text-[11px] text-stone-500 text-center mt-2 min-h-[1.5em]"></p>
 
                 <!-- SUCCESS: Welcome Screen (Hidden by default) -->
-                <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-slate-900 border border-emerald-500/50 rounded-2xl shadow-2xl transition-all duration-300">
-                    <div class="w-24 h-24 rounded-full border-4 border-emerald-500 overflow-hidden shadow-lg shadow-emerald-500/30">
+                <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm transition-all duration-300">
+                    <div class="w-24 h-24 rounded-full border-4 border-emerald-500 overflow-hidden shadow-lg shadow-emerald-900/10">
                         <img id="welcomeWorkerPhoto" class="w-full h-full object-cover" />
                     </div>
                     <div class="text-center">
-                        <span class="bg-emerald-950 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> AI Verified</span>
-                        <h3 class="font-black text-2xl text-white mt-2">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
-                        <p class="text-xs text-slate-400 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
+                        <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> AI Verified</span>
+                        <h3 class="font-black text-2xl text-stone-900 mt-2 font-display">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
+                        <p class="text-xs text-stone-500 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
                     </div>
                     
                     <!-- Punch Buttons -->
                     <div class="grid grid-cols-2 gap-3 w-full px-4 pt-2">
-                        <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="py-3.5 rounded-xl bg-emerald-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-emerald-500">
+                        <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="py-3.5 rounded-xl bg-emerald-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-emerald-700">
                             <i class="fa-solid fa-right-to-bracket"></i> PUNCH IN
                         </button>
-                        <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="py-3.5 rounded-xl bg-rose-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-rose-500">
+                        <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="py-3.5 rounded-xl bg-rose-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-rose-700">
                             <i class="fa-solid fa-right-from-bracket"></i> PUNCH OUT
                         </button>
                     </div>
                     
-                    <button onclick="resetCamera()" class="text-xs text-slate-400 hover:text-white underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
+                    <button onclick="resetCamera()" class="text-xs text-stone-500 hover:text-stone-900 underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
                 </div>
             </div>
         </section>
 
         <!-- TAB 2: LOGS -->
         <section id="view-logs" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-3">
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold">Punch History</h2>
-                    <span id="logCountBadge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">0 logs</span>
+                    <h2 class="text-lg font-bold text-stone-900 font-display">Punch History</h2>
+                    <span id="logCountBadge" class="text-xs bg-stone-200 text-stone-700 px-2 py-0.5 rounded-full">0 logs</span>
                 </div>
                 <div id="logsContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 no-scrollbar"></div>
             </div>
@@ -220,46 +237,46 @@
 
         <!-- TAB 3: PAYROLL -->
         <section id="view-settlement" class="hidden space-y-4">
-            <div class="admin-only hidden bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-3">
-                <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-md font-bold text-emerald-400 flex items-center justify-between gap-1.5 transition">
+            <div class="admin-only hidden bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-3">
+                <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-md font-bold text-emerald-600 flex items-center justify-between gap-1.5 transition">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar"></i> Add Advance (₹)</span> 
                     <i class="fa-solid fa-chevron-down text-xs"></i>
                 </button>
-                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-slate-700">
+                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-stone-200">
                     <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <select id="advWorkerSelect" required class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
-                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                        <select id="advWorkerSelect" required class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
+                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                         <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs shadow-md">Record</button>
                     </form>
                 </div>
             </div>
             
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
                 <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-sliders"></i> Payroll Rules
                         </button>
-                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-[#1B2A4A] hover:bg-[#12203A] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
                         </button>
                     </div>
                 </div>
                 
                 <!-- DATE RANGE FILTERS -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
                     <div>
-                        <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">From Date</label>
-                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-[10px] text-stone-500 font-bold mb-1 uppercase tracking-wider">From Date</label>
+                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-stone-50 border border-stone-300 rounded-lg px-2 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">To Date</label>
-                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-[10px] text-stone-500 font-bold mb-1 uppercase tracking-wider">To Date</label>
+                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-stone-50 border border-stone-300 rounded-lg px-2 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
                     </div>
                     <div class="flex items-end">
-                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-bold transition">
+                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition">
                             <i class="fa-solid fa-rotate-left"></i> Current Cycle
                         </button>
                     </div>
@@ -273,30 +290,30 @@
         <section id="view-cashbook" class="hidden space-y-4">
             <!-- Balance Summary -->
             <div class="grid grid-cols-3 gap-2">
-                <div class="bg-slate-800 rounded-2xl p-3 border border-emerald-800/50 text-center">
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Total Credits</p>
-                    <p id="cashbookTotalCredit" class="text-lg font-black text-emerald-400 mt-1">₹0</p>
+                <div class="bg-white rounded-2xl p-3 border border-emerald-200 text-center">
+                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Total Credits</p>
+                    <p id="cashbookTotalCredit" class="text-lg font-black text-emerald-600 mt-1">₹0</p>
                 </div>
-                <div class="bg-slate-800 rounded-2xl p-3 border border-rose-800/50 text-center">
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Total Debits</p>
-                    <p id="cashbookTotalDebit" class="text-lg font-black text-rose-400 mt-1">₹0</p>
+                <div class="bg-white rounded-2xl p-3 border border-rose-200 text-center">
+                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Total Debits</p>
+                    <p id="cashbookTotalDebit" class="text-lg font-black text-rose-600 mt-1">₹0</p>
                 </div>
-                <div class="bg-slate-800 rounded-2xl p-3 border border-blue-800/50 text-center">
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Balance</p>
-                    <p id="cashbookBalance" class="text-lg font-black text-blue-400 mt-1">₹0</p>
+                <div class="bg-white rounded-2xl p-3 border border-blue-200 text-center">
+                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Balance</p>
+                    <p id="cashbookBalance" class="text-lg font-black text-[#1B2A4A] mt-1">₹0</p>
                 </div>
             </div>
 
             <!-- Add Entry Form -->
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-3">
-                <h2 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-plus text-blue-400"></i> Add Entry</h2>
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-3">
+                <h2 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-plus text-[#1B2A4A]"></i> Add Entry</h2>
                 <form onsubmit="handleAddCashbookEntry(event)" class="space-y-2">
                     <div class="grid grid-cols-2 gap-2">
-                        <select id="cbType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <select id="cbType" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="debit">Debit (Money Out)</option>
                             <option value="credit">Credit (Money In)</option>
                         </select>
-                        <select id="cbCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <select id="cbCategory" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="Local Purchase">Local Purchase</option>
                             <option value="Material Purchase">Material Purchase</option>
                             <option value="Transport">Transport</option>
@@ -307,16 +324,16 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
-                    <label class="block text-xs text-slate-400">
+                    <label class="block text-xs text-stone-500">
                         Bill / Receipt Photo (optional)
-                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-slate-400">
+                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none text-stone-500">
                     </label>
-                    <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
                 </form>
             </div>
 
@@ -324,10 +341,10 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <h2 class="text-sm font-bold">Ledger</h2>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs">
-                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs">
-                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
-                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
+                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-stone-200 rounded-xl px-2 py-2 text-xs">
+                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-stone-200 rounded-xl px-2 py-2 text-xs">
+                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
                 </div>
             </div>
 
@@ -336,17 +353,17 @@
 
         <!-- TAB 4: SITES (ADMIN) -->
         <section id="view-sites" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
                 <h2 class="text-lg font-bold">Manage Sites</h2>
                 <form id="addSiteForm" onsubmit="handleAddSite(event)" class="space-y-3">
-                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
-                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-slate-700 text-xs rounded-xl"><i class="fa-solid fa-crosshairs text-blue-400"></i> Auto-detect GPS</button>
-                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl">Save Site</button>
+                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs rounded-xl transition"><i class="fa-solid fa-crosshairs text-[#1B2A4A]"></i> Auto-detect GPS</button>
+                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <button type="submit" class="w-full py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl transition">Save Site</button>
                 </form>
             </div>
             <div id="sitesList" class="space-y-2"></div>
@@ -356,50 +373,50 @@
         <section id="view-workers" class="hidden space-y-4">
             
             <!-- ADMIN MANUAL OVERRIDE CARD -->
-            <div id="adminOverrideCard" class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
-                <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
+            <div id="adminOverrideCard" class="bg-amber-50 border border-amber-300 rounded-2xl p-4 space-y-3 shadow-sm">
+                <h3 class="text-sm font-bold text-amber-700 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
                 <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select id="overrideSiteSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
-                        <select id="overrideWorkerSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
+                        <select id="overrideSiteSelect" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
+                        <select id="overrideWorkerSelect" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select id="overridePunchType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
-                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <select id="overridePunchType" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
+                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full py-2 bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md">Log Override Punch</button>
+                    <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-stone-900 font-bold rounded-xl text-xs shadow-md transition">Log Override Punch</button>
                 </form>
             </div>
 
             <!-- REGISTER WORKER WITH LIVE FACE CAPTURE -->
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/70 shadow-lg space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
                 <h2 class="text-lg font-bold">Register Worker Profile</h2>
                 <form id="addWorkerForm" onsubmit="handleAddWorker(event)" class="space-y-3">
-                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
 
                     <!-- LIVE CAMERA FACE CAPTURE FOR REGISTRATION -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Capture Reference Face Photo</label>
-                        <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-700 aspect-video relative flex flex-col items-center justify-center">
+                        <label class="block text-xs font-semibold text-stone-500 mb-1">Capture Reference Face Photo</label>
+                        <div class="bg-[#14181F] rounded-xl overflow-hidden border border-stone-300 aspect-video relative flex flex-col items-center justify-center">
                             <video id="regWebcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                             <img id="regPhotoPreview" class="hidden w-full h-full object-cover" />
                             
                             <div class="absolute bottom-2 flex gap-2">
-                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg shadow-md transition">
+                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
                                     <i class="fa-solid fa-camera mr-1"></i> Capture Live Face
                                 </button>
-                                <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg shadow-md transition">
+                                <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Retake
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-2.5 bg-blue-600 font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
                 </form>
             </div>
             <div id="workersList" class="space-y-2"></div>
@@ -407,20 +424,20 @@
 
         <!-- TAB 6: PROFILE -->
         <section id="view-profile" class="hidden space-y-4">
-            <div id="myProfileCard" class="hidden bg-slate-800 rounded-2xl p-5 border border-slate-700/70 shadow-lg items-center gap-4">
-                <img id="myProfilePhoto" class="w-16 h-16 rounded-xl object-cover border border-slate-700" src="" />
+            <div id="myProfileCard" class="hidden bg-white rounded-2xl p-5 border border-stone-200 shadow-lg items-center gap-4">
+                <img id="myProfilePhoto" class="w-16 h-16 rounded-xl object-cover border border-stone-200" src="" />
                 <div>
-                    <p class="font-bold text-white text-base" id="myProfileName">-</p>
-                    <p class="text-xs text-slate-400" id="myProfilePhone">-</p>
+                    <p class="font-bold text-stone-900 text-base" id="myProfileName">-</p>
+                    <p class="text-xs text-stone-500" id="myProfilePhone">-</p>
                 </div>
             </div>
-            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/70 shadow-lg space-y-4">
-                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-blue-400"></i> My Profile</h2>
+            <div class="bg-white rounded-2xl p-5 border border-stone-200 shadow-lg space-y-4">
+                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-[#1B2A4A]"></i> My Profile</h2>
                 <form id="changePasswordForm" onsubmit="handleChangeOwnPassword(event)" class="space-y-3">
-                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
-                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
-                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">
-                    <button type="submit" class="w-full py-2 bg-blue-600 font-bold rounded-xl text-xs shadow-md">Change Password</button>
+                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
+                    <button type="submit" class="w-full py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl text-xs shadow-md transition">Change Password</button>
                 </form>
             </div>
         </section>
@@ -428,161 +445,161 @@
     </main>
 
     <!-- CUSTOM CONFIRM MODAL (NO UGLY ALERTS) -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-950/90 z-[200] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-rose-500/50 rounded-2xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl">
-            <div class="w-14 h-14 rounded-full bg-rose-900/50 text-rose-400 mx-auto flex items-center justify-center text-2xl border border-rose-500/30"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3 class="text-xl font-bold text-white" id="confirmTitle">Are you sure?</h3>
-            <p class="text-sm text-slate-300" id="confirmDesc">This action cannot be undone.</p>
+    <div id="confirmModal" class="hidden fixed inset-0 bg-stone-950/60 z-[200] flex items-center justify-center p-4">
+        <div class="bg-white border border-rose-200 rounded-2xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-2xl border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="text-xl font-bold text-stone-900 font-display" id="confirmTitle">Are you sure?</h3>
+            <p class="text-sm text-stone-700" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3 pt-2">
-                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-semibold transition">Cancel</button>
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-sm font-semibold transition">Cancel</button>
                 <button id="confirmActionBtn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-900/50 transition">Delete</button>
             </div>
         </div>
     </div>
 
     <!-- EDIT SITE MODAL -->
-    <div id="editSiteModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4">
+    <div id="editSiteModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
+        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Site</h3>
-                <button type="button" onclick="closeEditSite()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Site</h3>
+                <button type="button" onclick="closeEditSite()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditSite(event)" class="space-y-3">
-                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
-                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
                 </div>
-                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
     <!-- EDIT WORKER MODAL -->
-    <div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="editWorkerModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
+        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Worker</h3>
-                <button type="button" onclick="closeEditWorker()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Worker</h3>
+                <button type="button" onclick="closeEditWorker()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditWorker(event)" class="space-y-3">
-                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
-                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
                 </div>
 
                 <!-- FACE RECAPTURE -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Face Photo / Biometrics</label>
-                    <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-700 aspect-video relative flex flex-col items-center justify-center">
+                    <label class="block text-xs font-semibold text-stone-500 mb-1">Face Photo / Biometrics</label>
+                    <div class="bg-[#14181F] rounded-xl overflow-hidden border border-stone-300 aspect-video relative flex flex-col items-center justify-center">
                         <img id="editCurrentPhoto" class="w-full h-full object-cover" />
                         <video id="editWebcam" autoplay playsinline class="hidden w-full h-full object-cover scale-x-[-1]"></video>
                         <img id="editPhotoPreview" class="hidden w-full h-full object-cover" />
 
                         <div class="absolute bottom-2 flex gap-2">
-                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg shadow-md transition">
+                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
                                 <i class="fa-solid fa-camera-rotate mr-1"></i> Recapture Face
                             </button>
-                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg shadow-md transition">
+                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
                                 <i class="fa-solid fa-camera mr-1"></i> Capture
                             </button>
-                            <button type="button" id="editRetakeBtn" onclick="resetEditCamera()" class="hidden px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg shadow-md transition">
+                            <button type="button" id="editRetakeBtn" onclick="resetEditCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Retake
                             </button>
                         </div>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-1">Only recapture if the worker's stored face no longer matches them well.</p>
+                    <p class="text-[10px] text-stone-400 mt-1">Only recapture if the worker's stored face no longer matches them well.</p>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
     <!-- EDIT PUNCH TIME MODAL (admin only) -->
-    <div id="editPunchModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-sm p-6 space-y-4">
+    <div id="editPunchModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
+        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Punch Time</h3>
-                <button type="button" onclick="closeEditPunchModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Punch Time</h3>
+                <button type="button" onclick="closeEditPunchModal()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-xs text-slate-400" id="editPunchSummary"></p>
+            <p class="text-xs text-stone-500" id="editPunchSummary"></p>
             <form onsubmit="saveEditedPunchTime(event)" class="space-y-3">
-                <label class="block text-xs text-slate-400">Corrected Date &amp; Time
-                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-blue-500">
+                <label class="block text-xs text-stone-500">Corrected Date &amp; Time
+                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
                 </label>
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
+                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
             </form>
         </div>
     </div>
 
     <!-- PAYROLL RULES MODAL (admin only) -->
-    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-slate-950/90 z-[150] flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-blue-500/50 rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
+        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-sliders text-blue-400"></i> Payroll Rules</h3>
-                <button type="button" onclick="closePayrollRulesModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-stone-900 font-display"><i class="fa-solid fa-sliders text-[#1B2A4A]"></i> Payroll Rules</h3>
+                <button type="button" onclick="closePayrollRulesModal()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-[11px] text-slate-400 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
+            <p class="text-[11px] text-stone-500 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
             <form onsubmit="savePayrollRules(event)" class="space-y-4 text-xs">
                 <div>
-                    <p class="font-bold text-slate-300 mb-2">Shift Timing</p>
+                    <p class="font-bold text-stone-700 mb-2">Shift Timing</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-700 pt-3">
-                    <p class="font-bold text-slate-300 mb-2">Arrival Deductions</p>
+                <div class="border-t border-stone-200 pt-3">
+                    <p class="font-bold text-stone-700 mb-2">Arrival Deductions</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
+                    <p class="text-[10px] text-stone-400 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
                 </div>
 
-                <div class="border-t border-slate-700 pt-3">
-                    <p class="font-bold text-slate-300 mb-2">Departure "Free Pass"</p>
-                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                    <p class="text-[10px] text-slate-500 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
+                <div class="border-t border-stone-200 pt-3">
+                    <p class="font-bold text-stone-700 mb-2">Departure "Free Pass"</p>
+                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                    <p class="text-[10px] text-stone-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
                 </div>
 
-                <div class="border-t border-slate-700 pt-3">
-                    <p class="font-bold text-slate-300 mb-2">Overtime</p>
+                <div class="border-t border-stone-200 pt-3">
+                    <p class="font-bold text-stone-700 mb-2">Overtime</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2"></label>
+                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
+                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
             </form>
         </div>
     </div>
 
-    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-amber-500/50 rounded-2xl w-full p-6 space-y-5">
-            <h3 class="text-lg font-bold text-amber-400">Security: Set New Password</h3>
-            <p class="text-xs text-slate-300">You must change your default password to continue.</p>
+    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white border border-amber-300 rounded-2xl w-full p-6 space-y-5">
+            <h3 class="text-lg font-bold text-amber-700">Security: Set New Password</h3>
+            <p class="text-xs text-stone-700">You must change your default password to continue.</p>
             <form onsubmit="handleForcePasswordChange(event)" class="space-y-3">
-                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm">
-                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm">
-                <button type="submit" class="w-full py-3 bg-amber-600 font-bold text-slate-900 rounded-xl">Update & Proceed</button>
+                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-stone-50 border-stone-200 rounded-xl px-3 py-2 text-sm">
+                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-stone-50 border-stone-200 rounded-xl px-3 py-2 text-sm">
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 font-bold text-stone-900 rounded-xl transition">Update & Proceed</button>
             </form>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-600 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i><span id="toastMsg">Action completed!</span>
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-stone-900 border border-stone-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-600"></i><span id="toastMsg">Action completed!</span>
     </div>
 
     <script>
@@ -880,7 +897,7 @@
                     
                     if(cloudStatus) {
                         cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Synced';
-                        cloudStatus.className = 'text-emerald-400 font-semibold';
+                        cloudStatus.className = 'text-emerald-600 font-semibold';
                     }
                 }
             } catch (e) {
@@ -888,7 +905,7 @@
                 const cloudStatus = document.getElementById('cloudStatusText');
                 if(cloudStatus) {
                     cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-xmark"></i> Offline';
-                    cloudStatus.className = 'text-rose-400 font-semibold';
+                    cloudStatus.className = 'text-rose-600 font-semibold';
                 }
             }
         }
@@ -913,7 +930,7 @@
             document.getElementById('mainNav').classList.add('hidden');
             document.getElementById('roleBadge').innerText = 'Public Kiosk';
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
+                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
             `;
             populateDropdowns(); startWebcam(); checkCurrentLocation();
         }
@@ -923,8 +940,8 @@
             document.getElementById('mainNav').classList.remove('hidden');
             document.getElementById('roleBadge').innerText = `${currentUser.role}: ${currentUser.name}`;
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-blue-900/50 text-blue-400 border border-blue-800/50 rounded-lg"><i class="fa-solid fa-user"></i> Profile</button>
-                <button onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-900 text-rose-300 rounded-lg">Logout</button>
+                <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition"><i class="fa-solid fa-user"></i> Profile</button>
+                <button onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition">Logout</button>
             `;
 
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
@@ -943,8 +960,8 @@
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
             document.getElementById(`view-${t}`).classList.remove('hidden'); 
             
-            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-blue-600', 'text-white'); el.classList.add('text-slate-400'); });
-            const btn = document.getElementById(`tab-${t}`); if(btn) { btn.classList.add('bg-blue-600', 'text-white'); btn.classList.remove('text-slate-400'); }
+            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-[#1B2A4A]', 'text-white'); el.classList.add('text-stone-500'); });
+            const btn = document.getElementById(`tab-${t}`); if(btn) { btn.classList.add('bg-[#1B2A4A]', 'text-white'); btn.classList.remove('text-stone-500'); }
 
             if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
             if(t === 'workers' && currentUser?.role === 'admin') { startRegWebcam(); } else { stopRegWebcam(); }
@@ -1181,7 +1198,7 @@
             const el = document.getElementById('scanStatusLine');
             if (!el) return;
             el.innerText = msg;
-            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-400' : 'text-slate-400');
+            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-stone-500');
         }
 
         async function executePunchCapture(video) {
@@ -1350,20 +1367,20 @@
             const statusText = document.getElementById('gpsStatusText');
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
             statusText.innerText = "Acquiring...";
-            statusText.className = "font-semibold text-slate-300";
+            statusText.className = "font-semibold text-stone-600";
             
             navigator.geolocation.getCurrentPosition(
                 (pos) => { 
                     currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
                     if (!document.getElementById('punchSiteSelect').value) {
                         statusText.innerText = "GPS Found. Select Site.";
-                        statusText.className = "font-bold text-blue-400";
+                        statusText.className = "font-bold text-[#1B2A4A]";
                     }
                     calculateGeoFence(); 
                 },
                 (err) => { 
                     statusText.innerText = "GPS Failed."; 
-                    statusText.className = "font-bold text-rose-400";
+                    statusText.className = "font-bold text-rose-600";
                     isWithinGeoFence = false; 
                     validatePunchEligibility(); 
                 }, 
@@ -1395,7 +1412,7 @@
             
             const statusText = document.getElementById('gpsStatusText');
             statusText.innerText = isWithinGeoFence ? "Verified (In-Range)" : "Out of Range!";
-            statusText.className = isWithinGeoFence ? "font-bold text-emerald-400" : "font-bold text-rose-400";
+            statusText.className = isWithinGeoFence ? "font-bold text-emerald-600" : "font-bold text-rose-600";
             
             validatePunchEligibility();
         }
@@ -1429,18 +1446,18 @@
                             // Worker is currently punched in, but selected a DIFFERENT site
                             disableIn = true;
                             disableOut = true;
-                            currentStatusText = `<span class='text-amber-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Action Blocked</span><br><span class="text-xs">You are currently punched in at <b>${lastPunch.siteName}</b>. Please change your site selection to punch out there first.</span>`;
+                            currentStatusText = `<span class='text-amber-700 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Action Blocked</span><br><span class="text-xs">You are currently punched in at <b>${lastPunch.siteName}</b>. Please change your site selection to punch out there first.</span>`;
                         } else {
                             // Worker is punched in at THIS site
                             disableIn = true; 
                             disableOut = false; 
-                            currentStatusText = "<span class='text-emerald-400'>Status: <b>PUNCHED IN</b></span>. Ready to punch out?";
+                            currentStatusText = "<span class='text-emerald-600'>Status: <b>PUNCHED IN</b></span>. Ready to punch out?";
                         }
                     } else if (lastPunch.type === 'OUT') {
                         // Worker is completely punched out, free to punch in anywhere
                         disableIn = false; 
                         disableOut = true; 
-                        currentStatusText = "<span class='text-rose-400'>Status: <b>PUNCHED OUT</b></span>. Ready to punch in?";
+                        currentStatusText = "<span class='text-rose-600'>Status: <b>PUNCHED OUT</b></span>. Ready to punch in?";
                     }
                 } else {
                     // First interaction of the day
@@ -1455,9 +1472,9 @@
             const instText = document.getElementById('welcomeInstructionText');
             if (instText) {
                 if (!isWithinGeoFence) {
-                    instText.innerHTML = "<span class='text-rose-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> GPS Out of Range</span>";
+                    instText.innerHTML = "<span class='text-rose-600 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> GPS Out of Range</span>";
                 } else if (!document.getElementById('punchSiteSelect').value) {
-                    instText.innerHTML = "<span class='text-rose-400 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Select Active Work Site</span>";
+                    instText.innerHTML = "<span class='text-rose-600 font-bold'><i class='fa-solid fa-triangle-exclamation'></i> Select Active Work Site</span>";
                 } else {
                     instText.innerHTML = currentStatusText;
                 }
@@ -1866,43 +1883,43 @@
         function renderSites() { 
             const container = document.getElementById('sitesList');
             if (!db.sites || db.sites.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No work sites added yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No work sites added yet.</p>`;
                 return;
             }
             container.innerHTML = db.sites.map(s => `
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm flex justify-between items-center">
                     <div>
                         <p class="font-bold text-sm">${s.name}</p>
-                        <p class="text-[10px] text-slate-400">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
+                        <p class="text-[10px] text-stone-500">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openEditSite('${s.id}')" class="w-8 h-8 rounded-lg bg-blue-900/50 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="deleteSite('${s.id}')" class="w-8 h-8 rounded-lg bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button onclick="openEditSite('${s.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteSite('${s.id}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`).join(''); 
         }
         function renderWorkers() { 
             const container = document.getElementById('workersList');
             if (!db.workers || db.workers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No workers registered yet.</p>`;
                 return;
             }
             container.innerHTML = db.workers.map(w => {
                 const hasValidFace = w.descriptor && Array.isArray(w.descriptor) && w.descriptor.length === 128;
-                const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-0.5 text-[9px] font-bold text-amber-400 bg-amber-900/30 border border-amber-800/50 px-1.5 py-0.5 rounded">⚠ No Face Data</span>`;
+                const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">⚠ No Face Data</span>`;
                 return `
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+                <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm flex justify-between items-center">
                     <div class="flex items-center gap-3">
-                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-slate-700"/>
+                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-stone-200"/>
                         <div>
                             <p class="font-bold text-sm">${w.name}</p>
-                            <p class="text-[10px] text-emerald-400">₹${w.wage}/day | Phone: ${w.phone}</p>
+                            <p class="text-[10px] text-emerald-600">₹${w.wage}/day | Phone: ${w.phone}</p>
                             ${faceBadge}
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openEditWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-blue-900/50 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="deleteWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button onclick="openEditWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`;
             }).join(''); 
@@ -2168,7 +2185,7 @@
 
             if (!visibleLogs || visibleLogs.length === 0) {
                 document.getElementById('logCountBadge').innerText = "0 logs";
-                return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No attendance logs yet.</p>`;
+                return container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No attendance logs yet.</p>`;
             }
 
             // Group logs by Date -> Site Name
@@ -2207,11 +2224,11 @@
 
             let html = '';
             for (const date in grouped) {
-                html += `<div class="mb-5"><h3 class="text-sm font-black text-blue-400 border-b border-blue-900/50 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
+                html += `<div class="mb-5"><h3 class="text-sm font-black text-[#1B2A4A] border-b border-stone-200 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
                 
                 for (const siteName in grouped[date]) {
-                    html += `<div class="bg-slate-900/80 rounded-xl p-3 mb-3 border border-slate-700/60 shadow-sm">`;
-                    html += `<h4 class="text-[11px] font-bold text-slate-300 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-blue-500"></i> ${siteName}</h4>`;
+                    html += `<div class="bg-stone-50 rounded-xl p-3 mb-3 border border-stone-200 shadow-sm">`;
+                    html += `<h4 class="text-[11px] font-bold text-stone-700 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-[#1B2A4A]"></i> ${siteName}</h4>`;
                     
                     // Sort logs chronologically to accurately calculate durations
                     const siteLogs = grouped[date][siteName].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
@@ -2227,30 +2244,30 @@
                         } else if (a.type === 'OUT') {
                             if (lastInObj[a.workerId]) {
                                 const diffHrs = (currentTime - lastInObj[a.workerId]) / (1000 * 60 * 60);
-                                durationStr = `<span class="bg-blue-900/50 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded text-[9px] font-bold">${diffHrs.toFixed(2)} hrs</span>`;
+                                durationStr = `<span class="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[9px] font-bold">${diffHrs.toFixed(2)} hrs</span>`;
                                 lastInObj[a.workerId] = null; // Reset after out punch
                             }
                         }
 
-                        const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-400"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-400"></i>';
-                        const typeColor = a.type === 'IN' ? 'text-emerald-400' : 'text-rose-400';
+                        const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-600"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-600"></i>';
+                        const typeColor = a.type === 'IN' ? 'text-emerald-600' : 'text-rose-600';
                         const editBtn = (currentUser && currentUser.role === 'admin')
-                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-slate-500 hover:text-blue-400 transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
+                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-stone-400 hover:text-[#1B2A4A] transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
                             : '';
                         let earnCell = '';
                         if (isAdmin) {
                             const earnKey = a.workerId + '|' + date;
                             const dayEarning = earningsByWorkerDate[earnKey];
                             const earnDisplay = (a.type === 'OUT' && dayEarning > 0)
-                                ? `<span class="text-emerald-400 font-bold">₹${dayEarning.toFixed(0)}</span>`
+                                ? `<span class="text-emerald-600 font-bold">₹${dayEarning.toFixed(0)}</span>`
                                 : '-';
                             earnCell = `<td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>`;
                         }
                         
-                        return `<tr class="border-b border-slate-800/60 last:border-0">
-                            <td class="py-1.5 pr-2 font-medium text-slate-200 whitespace-nowrap">${a.workerName}</td>
-                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-slate-950 rounded">${a.type}</span></td>
-                            <td class="py-1.5 pr-2 text-slate-400 whitespace-nowrap">${timeOnly}</td>
+                        return `<tr class="border-b border-stone-100 last:border-0">
+                            <td class="py-1.5 pr-2 font-medium text-stone-700 whitespace-nowrap">${a.workerName}</td>
+                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-stone-100 rounded">${a.type}</span></td>
+                            <td class="py-1.5 pr-2 text-stone-500 whitespace-nowrap">${timeOnly}</td>
                             <td class="py-1.5 pr-2 text-right whitespace-nowrap">${durationStr}</td>
                             ${earnCell}
                             <td class="py-1.5 text-right whitespace-nowrap">${editBtn}</td>
@@ -2259,7 +2276,7 @@
                     
                     html += `<table class="w-full text-xs border-collapse">
                         <thead>
-                            <tr class="text-[9px] uppercase tracking-wider text-slate-500 border-b border-slate-700/60">
+                            <tr class="text-[9px] uppercase tracking-wider text-stone-400 border-b border-stone-200">
                                 <th class="text-left font-semibold pb-1 pr-2">Worker</th>
                                 <th class="text-left font-semibold pb-1 pr-2">Type</th>
                                 <th class="text-left font-semibold pb-1 pr-2">Time</th>
@@ -2281,7 +2298,7 @@
 
         function renderSettlements() { 
             const container = document.getElementById('payrollCardsContainer');
-            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No workers registered for payroll.</p>`;
+            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No workers registered for payroll.</p>`;
             
             // Check for Custom Date Filters
             const fromVal = document.getElementById('payrollFrom')?.value;
@@ -2313,22 +2330,22 @@
                 const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
 
-                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
+                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-stone-200 last:border-0 text-stone-700">
                             <div class="col-span-1">${s.date}</div>
                             <div class="col-span-1 truncate" title="${s.siteName}">${s.siteName}</div>
                             <div class="col-span-1">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</div>
-                            <div class="col-span-1 text-right font-bold text-blue-400">${s.durationHrs.toFixed(2)} hr</div>
+                            <div class="col-span-1 text-right font-bold text-[#1B2A4A]">${s.durationHrs.toFixed(2)} hr</div>
                         </div>`).join('');
                 
                 // Handle a dangling IN punch that missed an OUT punch
                 if (summary.danglingIn) {
                     const currentIn = summary.danglingIn;
                     const date = currentIn.timestamp.split(',')[0].trim();
-                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-slate-700/50 last:border-0 text-slate-300">
+                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-stone-200 last:border-0 text-stone-700">
                         <div class="col-span-1">${date}</div>
                         <div class="col-span-1 truncate">${currentIn.siteName}</div>
-                        <div class="col-span-1 text-amber-400">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
-                        <div class="col-span-1 text-right text-amber-400">Missed OUT</div>
+                        <div class="col-span-1 text-amber-700">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
+                        <div class="col-span-1 text-right text-amber-700">Missed OUT</div>
                     </div>`;
                 }
                 
@@ -2347,54 +2364,54 @@
                 
                 // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
                 const markPaidBtn = (currentUser && currentUser.role === 'admin') ? (isCustomRange ? 
-                    `<button disabled class="py-2 bg-slate-700 opacity-50 cursor-not-allowed text-slate-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
+                    `<button disabled class="py-2 bg-stone-200 opacity-70 cursor-not-allowed text-stone-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
                     `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
 
                 const actionGridClass = (currentUser && currentUser.role === 'admin') ? 'grid grid-cols-2 gap-2' : 'flex flex-col';
                 const pdfBtnClass = (currentUser && currentUser.role === 'admin') ? '' : 'w-full';
 
                 return `
-                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden transition-all shadow-md">
-                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-slate-800 transition">
-                        <span class="font-bold text-sm text-white flex items-center gap-2">
-                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-slate-700" />
+                <div class="bg-stone-50 border border-stone-200 rounded-xl overflow-hidden transition-all shadow-sm">
+                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-stone-100 transition">
+                        <span class="font-bold text-sm text-stone-900 flex items-center gap-2">
+                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-stone-200" />
                             ${w.name}
                         </span>
                         <div class="flex items-center gap-3">
-                            <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} font-black text-sm">₹${net.toFixed(0)}</span>
-                            <i class="fa-solid fa-chevron-down text-slate-500"></i>
+                            <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} font-black text-sm">₹${net.toFixed(0)}</span>
+                            <i class="fa-solid fa-chevron-down text-stone-400"></i>
                         </div>
                     </button>
-                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-slate-950/60 border-t border-slate-700/50 space-y-3 text-xs">
+                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-white border-t border-stone-200 space-y-3 text-xs">
                         
-                        <div class="bg-slate-900 rounded-lg border border-slate-800 p-2">
-                            <h4 class="text-[10px] uppercase text-slate-500 font-bold mb-1.5 flex justify-between">
+                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-2">
+                            <h4 class="text-[10px] uppercase text-stone-400 font-bold mb-1.5 flex justify-between">
                                 <span>Detailed Work Sessions</span>
                                 <span>Total: ${totalHours.toFixed(2)} Hrs</span>
                             </h4>
-                            ${sessionRows || '<p class="text-[10px] text-slate-500 italic">No completed sessions.</p>'}
+                            ${sessionRows || '<p class="text-[10px] text-stone-400 italic">No completed sessions.</p>'}
                         </div>
 
                         <div class="space-y-1.5 px-1">
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Active Days:</span> <span class="font-semibold text-slate-200">${daysSet.size} days</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
-                            ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Late/Early Deductions:</span> <span class="font-medium text-rose-400">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
-                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-400">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-400">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
+                            <div class="flex justify-between items-center"><span class="text-stone-500">Active Days:</span> <span class="font-semibold text-stone-700">${daysSet.size} days</span></div>
+                            <div class="flex justify-between items-center"><span class="text-stone-500">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
+                            ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-stone-500">Late/Early Deductions:</span> <span class="font-medium text-rose-600">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
+                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-stone-500">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-700">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
-                            <div class="my-2 border-t border-slate-800/80"></div>
+                            <div class="my-2 border-t border-stone-200"></div>
                             
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Total Earned:</span> <span class="text-emerald-400 font-bold">₹${earned.toFixed(0)}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400">Advances Taken:</span> <span class="text-rose-400 font-bold">-₹${adv.toFixed(0)}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-stone-500">Total Earned:</span> <span class="text-emerald-600 font-bold">₹${earned.toFixed(0)}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-stone-500">Advances Taken:</span> <span class="text-rose-600 font-bold">-₹${adv.toFixed(0)}</span></div>
                             
-                            <div class="mt-2 pt-2 border-t border-slate-800/80 flex justify-between items-center">
-                                <span class="text-slate-300 font-bold uppercase tracking-wider">Net Settlement</span> 
-                                <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} text-base font-black">₹${net.toFixed(0)}</span>
+                            <div class="mt-2 pt-2 border-t border-stone-200 flex justify-between items-center">
+                                <span class="text-stone-700 font-bold uppercase tracking-wider">Net Settlement</span> 
+                                <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} text-base font-black">₹${net.toFixed(0)}</span>
                             </div>
                         </div>
                         
                         <div class="${actionGridClass} pt-2">
-                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-file-pdf text-rose-400"></i> Save PDF
+                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-file-pdf text-rose-600"></i> Save PDF
                             </button>
                             ${markPaidBtn}
                         </div>
@@ -2411,7 +2428,7 @@
                     if (orphanLogs > 0) msg += `, ${orphanLogs} not matched to a current worker`;
                     msg += `.)`;
                 }
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">${msg}</p>`;
+                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">${msg}</p>`;
             } else {
                 container.innerHTML = html;
             }
@@ -2740,23 +2757,23 @@
             document.getElementById('cashbookBalance').innerText = `₹${(totalCredit - totalDebit).toFixed(0)}`;
 
             if (entries.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">No cash book entries for this period.</p>`;
+                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No cash book entries for this period.</p>`;
                 return;
             }
 
             container.innerHTML = entries.map(c => {
                 const isCredit = c.type === 'credit';
                 const sign = isCredit ? '+' : '-';
-                const colorClass = isCredit ? 'text-emerald-400' : 'text-rose-400';
-                const icon = isCredit ? 'fa-arrow-down text-emerald-400' : 'fa-arrow-up text-rose-400';
-                const billLink = c.billPhoto ? `<a href="${c.billPhoto}" target="_blank" class="text-blue-400 hover:underline text-[10px]"><i class="fa-solid fa-receipt"></i> View Bill</a>` : '';
-                const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-slate-500 hover:text-rose-400 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
-                return `<div class="bg-slate-900 rounded-xl p-3 border border-slate-700/60 flex justify-between items-center">
+                const colorClass = isCredit ? 'text-emerald-600' : 'text-rose-600';
+                const icon = isCredit ? 'fa-arrow-down text-emerald-600' : 'fa-arrow-up text-rose-600';
+                const billLink = c.billPhoto ? `<a href="${c.billPhoto}" target="_blank" class="text-[#1B2A4A] hover:underline text-[10px]"><i class="fa-solid fa-receipt"></i> View Bill</a>` : '';
+                const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-stone-400 hover:text-rose-600 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
+                return `<div class="bg-white rounded-xl p-3 border border-stone-200 shadow-sm flex justify-between items-center">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
                         <div>
-                            <p class="text-sm font-medium text-slate-200">${c.description}</p>
-                            <p class="text-[10px] text-slate-500">${c.category} &bull; ${c.timestamp} ${billLink}</p>
+                            <p class="text-sm font-medium text-stone-700">${c.description}</p>
+                            <p class="text-[10px] text-stone-400">${c.category} &bull; ${c.timestamp} ${billLink}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2892,7 +2909,7 @@
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             const icon = document.getElementById('toastIcon');
-            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-triangle-exclamation text-rose-400';
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-600' : 'fa-solid fa-triangle-exclamation text-rose-600';
             toast.classList.remove('opacity-0', 'pointer-events-none');
             setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), durationMs);
         }
