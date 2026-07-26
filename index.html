@@ -815,15 +815,27 @@
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            // Wait for Cloud Data & AI Models with a strict 5-second timeout safeguard to prevent freezing
+            // Wait for Cloud Data & AI Models. Previously this had a hard 5-second
+            // cutoff that would silently give up and show the login screen anyway
+            // even if data hadn't arrived yet - on a slow connection, or during an
+            // Apps Script "cold start" (which can genuinely take several seconds),
+            // that meant login would fail with no explanation at all. This is now a
+            // much more generous safety net, and if it's genuinely still not ready
+            // we show a clear warning instead of pretending everything is fine.
+            let syncTimedOut = false;
             try {
-                const maxWaitTimer = new Promise(resolve => setTimeout(resolve, 5000));
+                const maxWaitTimer = new Promise(resolve => setTimeout(() => { syncTimedOut = true; resolve(); }, 15000));
                 await Promise.race([
                     Promise.all([fetchCloudData(), loadFaceAPIModels()]),
                     maxWaitTimer
                 ]);
             } catch (error) {
                 console.warn("Bootup partial failure or timeout", error);
+            }
+
+            if (syncTimedOut) {
+                console.warn("Startup sync did not finish within 15s - proceeding with whatever data is cached locally.");
+                showToast("Sync is taking longer than usual - some data may be out of date until it finishes.", "error", 6000);
             }
 
             // Hash any legacy plaintext passwords (e.g. the built-in default admin, or
@@ -1013,6 +1025,18 @@
                         cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Synced';
                         cloudStatus.className = 'text-emerald-600 font-semibold';
                     }
+                } else {
+                    // The request reached the server and got a response, but the
+                    // backend rejected or failed it (wrong/missing secret, script not
+                    // bound to a sheet, etc.) - this used to fail completely silently,
+                    // which looked identical to "everything is fine, just no data yet".
+                    console.warn("Backend rejected the request:", result);
+                    const cloudStatus = document.getElementById('cloudStatusText');
+                    if (cloudStatus) {
+                        cloudStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Backend Error: ${result.message || 'Unknown - check Apps Script deployment'}`;
+                        cloudStatus.className = 'text-rose-600 font-semibold';
+                    }
+                    showToast(`Backend sync failed: ${result.message || 'check Apps Script deployment'}`, "error", 6000);
                 }
             } catch (e) {
                 console.warn("Offline Mode Active", e);
@@ -1136,7 +1160,14 @@
                 } else { 
                     showToast("Logged In"); showDashboard(); 
                 }
-            } else showToast("Invalid Credentials or Sync Failed!", "error"); 
+            } else if (!u && db.users.length <= 1) {
+                // Only the built-in default admin exists locally - worker/other
+                // accounts almost certainly haven't synced from the backend yet,
+                // rather than this being a genuinely wrong username.
+                showToast("Account data hasn't finished syncing yet. Please wait a moment and try again.", "error", 6000);
+            } else {
+                showToast("Invalid Credentials!", "error");
+            }
         }
 
         function handleLogout() { currentUser=null; sessionStorage.removeItem('sitepunch_active_user'); showToast("Logged out"); showLandingPage(); }
@@ -2689,9 +2720,10 @@
             // on elements that aren't actually attached to the page - this was very
             // likely why some settlement PDFs came out blank or cut off partway through.
             // Positioning it off-screen keeps it invisible without affecting layout.
-            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.position = 'absolute';
             pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-99999px';
+            pdfDiv.style.left = '-9999px';
+            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
             // Build absolute inline CSS layout to guarantee PDF perfection
             pdfDiv.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
@@ -2758,7 +2790,7 @@
                 margin: 0,
                 filename: `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(pdfDiv).save().then(() => {
                 document.body.removeChild(pdfDiv);
@@ -2827,9 +2859,10 @@
             });
 
             const pdfDiv = document.createElement('div');
-            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.position = 'absolute';
             pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-99999px';
+            pdfDiv.style.left = '-9999px';
+            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
             pdfDiv.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
@@ -2868,7 +2901,7 @@
                 margin: 0,
                 filename: `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(pdfDiv).save().then(() => {
                 document.body.removeChild(pdfDiv);
@@ -3019,9 +3052,10 @@
             }).join('');
 
             const pdfDiv = document.createElement('div');
-            pdfDiv.style.position = 'fixed';
+            pdfDiv.style.position = 'absolute';
             pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-99999px';
+            pdfDiv.style.left = '-9999px';
+            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
             pdfDiv.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
@@ -3055,7 +3089,7 @@
                 margin: 0,
                 filename: `JithuCorp_CashBook_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(pdfDiv).save().then(() => {
                 document.body.removeChild(pdfDiv);
