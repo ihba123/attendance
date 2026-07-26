@@ -6,79 +6,126 @@
     <title>Jithu Corporation | SitePunch AI Attendance</title>
     
     <!-- PWA / INSTALL APP SUPPORT -->
-    <meta name="theme-color" content="#F7F5F0">
+    <meta name="theme-color" content="#FAFAFC">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="SitePunch AI">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI0Y3RjVGMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxQjJBNEEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI0ZBRkFGQyIsCiAgInRoZW1lX2NvbG9yIjogIiM2NzUwQTQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* ===== SitePunch light-mode design system =====
-           Ground/neutral: Tailwind "stone" (warm gray, not clinical slate/gray).
-           Structural signature: deep navy #1B2A4A (header, primary actions, focus).
-           Accent signature: amber/hi-vis gold #F0A202, used sparingly - the
-           viewfinder ring, small highlight touches - evoking site safety signage.
-           Display type: Space Grotesk (headings, brand, nav labels).
-           Body/data type: Inter (everything else - built for small-size legibility
-           and clean tabular figures, important for currency/time-heavy tables). */
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        h1, h2, h3, .font-display { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; }
+        /* ===== SitePunch: Material 3 (Android) design system =====
+           This uses Google's actual Material 3 "Baseline" color scheme - the
+           same Primary purple (#6750A4) shown throughout the official M3
+           design kit and Android sample apps - rather than a custom brand
+           palette, so the app reads as unmistakably Android/Material.
+           Neutral surfaces use Tailwind "zinc" (a true cool gray, matching
+           M3's neutral tonal palette, unlike a warm gray).
+           Typeface: Roboto everywhere - Android's actual system font. */
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Roboto', system-ui, sans-serif; font-weight: 700; }
 
-        .camera-overlay { border: 3px dashed #F0A202; border-radius: 50%; transition: border-color 0.3s; }
+        .camera-overlay { border: 3px dashed #D0BCFF; border-radius: 50%; transition: border-color 0.3s; }
         .camera-overlay.success { border-color: #22C55E; border-style: solid; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .scan-line {
-            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #F0A202, transparent);
+            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #D0BCFF, transparent);
             position: absolute; top: 0; animation: scan 2s infinite ease-in-out;
         }
         @keyframes scan { 0% { top: 10%; opacity: 0.2; } 50% { top: 85%; opacity: 1; } 100% { top: 10%; opacity: 0.2; } }
+
+        /* ===== Material motion system ===== */
+
+        /* Ripple: the signature Android touch-feedback. One delegated listener
+           (see the main JS block near the end of the page) spawns these on any
+           button/.ripple-host tap. */
+        .ripple-host { position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        .ripple-ink {
+            position: absolute; border-radius: 50%; transform: scale(0);
+            background: currentColor; opacity: 0.25; pointer-events: none;
+            animation: ripple-anim 0.55s ease-out forwards;
+        }
+        @keyframes ripple-anim { to { transform: scale(2.6); opacity: 0; } }
+
+        /* Press feedback: every tappable surface dips slightly, like Material's
+           state-layer press response. */
+        button, .tab-btn, .pressable { transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease; }
+        button:active, .tab-btn:active, .pressable:active { transform: scale(0.96); }
+
+        /* Elevation scale (Material dp-style shadows, tuned for a warm light UI) */
+        .elev-1 { box-shadow: 0 1px 2px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.08); }
+        .elev-2 { box-shadow: 0 2px 6px rgba(28,25,23,0.08), 0 1px 2px rgba(28,25,23,0.06); }
+        .elev-3 { box-shadow: 0 6px 16px rgba(28,25,23,0.12), 0 2px 4px rgba(28,25,23,0.06); }
+        .elev-4 { box-shadow: 0 10px 28px rgba(28,25,23,0.16), 0 3px 6px rgba(28,25,23,0.08); }
+
+        /* Bottom-sheet modals: since JS only toggles the `hidden` class, we key the
+           entrance animation to the modal's own display change - browsers replay a
+           CSS animation whenever an element goes from display:none to visible, so
+           this needs zero JS changes to animate every open/close. */
+        .sheet-backdrop { animation: backdrop-in 0.25s ease; }
+        .sheet-panel { animation: sheet-in 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheet-in { from { transform: translateY(100%); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+
+        /* List/card entrance: staggered fade-up as content renders */
+        .card-in { animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+        @keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Bottom nav active-state pill (Material 3: the pill sits behind the ICON
+           only, not the whole tab) */
+        .nav-pill { transition: background-color 0.25s ease, color 0.25s ease, width 0.25s ease; }
+
+        /* Snackbar (toast) slides up from the bottom, Material's native motion */
+        #toast.toast-show { animation: toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes toast-in { from { transform: translate(-50%, 16px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
 </head>
-<body class="bg-[#F7F5F0] text-stone-800 font-sans min-h-screen flex flex-col pb-10">
+<body class="bg-[#FAFAFC] text-zinc-800 font-sans min-h-screen flex flex-col pb-24">
 
     <!-- INITIAL FULLSCREEN LOADER: the one deliberate bold/dark moment in an
          otherwise light app - a branded splash, echoed later by the camera
          viewfinder (the other "moment of focus"). Everything else stays quiet. -->
-    <div id="initialLoader" class="fixed inset-0 z-[999] bg-[#1B2A4A] flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
+    <div id="initialLoader" class="fixed inset-0 z-[999] bg-[#6750A4] flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
         <div class="relative flex items-center justify-center w-32 h-32">
             <!-- Outer spinning rings -->
-            <div class="absolute inset-0 border-t-4 border-[#F0A202] border-solid rounded-full animate-spin"></div>
+            <div class="absolute inset-0 border-t-4 border-[#D0BCFF] border-solid rounded-full animate-spin"></div>
             <div class="absolute inset-3 border-r-4 border-emerald-400 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
             <div class="absolute inset-6 border-b-4 border-white/40 border-solid rounded-full animate-spin" style="animation-duration: 2s;"></div>
             <!-- Center Logo -->
-            <div class="w-14 h-14 rounded-2xl bg-[#F0A202] flex items-center justify-center text-[#1B2A4A] font-bold text-2xl shadow-lg shadow-black/30 z-10 animate-pulse">
+            <div class="w-14 h-14 rounded-2xl bg-[#D0BCFF] flex items-center justify-center text-[#6750A4] font-bold text-2xl shadow-lg shadow-black/30 z-10 animate-pulse">
                 <i class="fa-solid fa-building"></i>
             </div>
         </div>
         <div class="text-center space-y-2">
             <h1 class="text-2xl font-black text-white tracking-widest uppercase font-display">Jithu Corporation</h1>
-            <p id="loaderStatusText" class="text-xs font-semibold text-[#F0A202] flex items-center gap-2 justify-center tracking-wide">
+            <p id="loaderStatusText" class="text-xs font-semibold text-[#D0BCFF] flex items-center gap-2 justify-center tracking-wide">
                 <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
             </p>
         </div>
     </div>
 
-    <!-- HEADER / NAVBAR: the structural navy, carried through every screen -->
-    <header class="bg-[#1B2A4A] sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md">
+    <!-- TOP APP BAR: slim Material app bar. Navigation now lives in a real
+         bottom nav bar (see end of body) instead of a secondary strip here -
+         that's the single biggest signal of "Android app" vs "responsive website". -->
+    <header id="appBar" class="bg-[#6750A4] sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md transition-shadow duration-200">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-[#F0A202] flex items-center justify-center text-[#1B2A4A] font-bold text-xl shadow-md">
+            <div class="w-10 h-10 rounded-xl bg-[#D0BCFF] flex items-center justify-center text-[#6750A4] font-bold text-xl shadow-md">
                 <i class="fa-solid fa-building"></i>
             </div>
             <div>
                 <h1 class="font-extrabold text-base leading-tight text-white tracking-wide font-display">Jithu Corporation</h1>
                 <p class="text-[11px] text-white/60 flex items-center gap-1.5" id="headerSubText">
-                    <span id="cloudStatusText" class="text-[#F0A202] font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
+                    <span id="cloudStatusText" class="text-[#D0BCFF] font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
                     <span id="roleBadge" class="bg-white/10 text-white/80 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
                 </p>
             </div>
@@ -88,35 +135,16 @@
         </div>
     </header>
 
-    <!-- NAVIGATION TABS (ADMIN & WORKER DASHBOARD) -->
-    <nav id="mainNav" class="hidden bg-white/90 backdrop-blur-md border-b border-stone-200 sticky top-[61px] z-40 px-2 py-1.5 flex gap-1 justify-around text-xs font-semibold overflow-x-auto no-scrollbar">
-        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex-1 min-w-[70px] py-2 rounded-lg bg-[#1B2A4A] text-white flex flex-col items-center gap-1">
-            <i class="fa-solid fa-clock-rotate-left text-base"></i><span>Logs</span>
-        </button>
-        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
-            <i class="fa-solid fa-indian-rupee-sign text-base"></i><span>Payroll</span>
-        </button>
-        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
-            <i class="fa-solid fa-book text-base"></i><span>Cash Book</span>
-        </button>
-        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
-            <i class="fa-solid fa-map-location-dot text-base"></i><span>Sites</span>
-        </button>
-        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only flex-1 min-w-[70px] py-2 rounded-lg text-stone-500 hover:bg-stone-100 flex flex-col items-center gap-1">
-            <i class="fa-solid fa-users text-base"></i><span>Workers & Override</span>
-        </button>
-    </nav>
-
     <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
 
         <!-- INITIAL LANDING / LOGIN SCREEN -->
         <section id="view-landing" class="flex flex-col items-center justify-center min-h-[75vh] space-y-6">
-            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-stone-300/40 max-w-md w-full border border-stone-200">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-zinc-300/40 max-w-md w-full border border-zinc-200">
                 <div class="text-center mb-8">
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#1B2A4A] bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Worker Portal</span>
-                    <h2 class="text-3xl font-black text-stone-900 mt-3 tracking-tight font-display">Jithu Corporation</h2>
-                    <p class="text-stone-500 text-xs mt-1">Smart Face Recognition &amp; GPS Attendance</p>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#6750A4] bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Worker Portal</span>
+                    <h2 class="text-3xl font-black text-zinc-900 mt-3 tracking-tight font-display">Jithu Corporation</h2>
+                    <p class="text-zinc-500 text-xs mt-1">Smart Face Recognition &amp; GPS Attendance</p>
                 </div>
 
                 <!-- Record Attendance Button -->
@@ -127,66 +155,66 @@
                 </button>
 
                 <div class="relative flex py-6 items-center">
-                    <div class="flex-grow border-t border-stone-200"></div>
-                    <span class="flex-shrink-0 mx-4 text-stone-400 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
-                    <div class="flex-grow border-t border-stone-200"></div>
+                    <div class="flex-grow border-t border-zinc-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-zinc-400 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
+                    <div class="flex-grow border-t border-zinc-200"></div>
                 </div>
 
                 <!-- Login Form -->
-                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
                     <div class="relative">
-                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
-                        <input type="text" id="loginUserId" required placeholder="User ID (Mobile No or admin)" class="w-full bg-stone-50 border border-stone-300 rounded-xl pl-10 pr-4 py-3 text-sm text-stone-900 focus:border-[#1B2A4A] focus:outline-none transition">
+                        <input type="text" id="loginUserId" required placeholder=" " class="peer w-full bg-zinc-50 border border-zinc-300 rounded-xl px-4 pt-5 pb-2 text-sm text-zinc-900 focus:border-[#6750A4] focus:outline-none transition">
+                        <label for="loginUserId" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-[#6750A4] peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">User ID (Mobile No or admin)</label>
                     </div>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
-                        <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-stone-50 border border-stone-300 rounded-xl pl-10 pr-4 py-3 text-sm text-stone-900 focus:border-[#1B2A4A] focus:outline-none transition">
+                        <input type="password" id="loginPassword" required placeholder=" " class="peer w-full bg-zinc-50 border border-zinc-300 rounded-xl px-4 pt-5 pb-2 text-sm text-zinc-900 focus:border-[#6750A4] focus:outline-none transition">
+                        <label for="loginPassword" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-[#6750A4] peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">Password</label>
                     </div>
-                    <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Sign In</button>
-                    <p class="text-center text-[10px] text-stone-400 mt-2">Worker login: Mobile Number &amp; Password 1234</p>
+                    <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                    <p class="text-center text-[10px] text-zinc-400 mt-2">Worker login: Mobile Number &amp; Password 1234</p>
                 </form>
             </div>
         </section>
 
         <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
         <section id="view-punch" class="hidden space-y-4">
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm space-y-4">
 
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-stone-900 font-display">Face Station</h2>
-                        <p class="text-[11px] text-stone-500">Jithu Corporation Site Kiosk</p>
+                        <h2 class="text-lg font-bold text-zinc-900 font-display">Face Station</h2>
+                        <p class="text-[11px] text-zinc-500">Jithu Corporation Site Kiosk</p>
                     </div>
-                    <span id="currentTimeDisplay" class="text-xs font-mono text-[#1B2A4A] bg-stone-100 px-2 py-1 rounded-md border border-stone-200">--:--:--</span>
+                    <span id="currentTimeDisplay" class="text-xs font-mono text-[#6750A4] bg-zinc-100 px-2 py-1 rounded-md border border-zinc-200">--:--:--</span>
                 </div>
 
-                <select id="punchSiteSelect" onchange="onSiteChange()" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-sm text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
+                <select id="punchSiteSelect" onchange="onSiteChange()" class="w-full bg-zinc-50 border border-zinc-300 rounded-xl px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-[#6750A4]">
                     <option value="">-- Select Active Work Site --</option>
                 </select>
 
                 <!-- GPS Status -->
-                <div id="gpsStatusCard" class="bg-stone-50 rounded-xl p-3 border border-stone-200 flex items-center justify-between text-xs">
+                <div id="gpsStatusCard" class="bg-zinc-50 rounded-xl p-3 border border-zinc-200 flex items-center justify-between text-xs">
                     <div class="flex items-center gap-3">
-                        <div id="gpsIconBg" class="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
+                        <div id="gpsIconBg" class="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
                         <div>
-                            <p class="font-semibold text-stone-800" id="gpsStatusText">Checking GPS...</p>
-                            <p class="text-stone-500 text-[11px]" id="gpsDistanceText">Distance: --</p>
+                            <p class="font-semibold text-zinc-800" id="gpsStatusText">Checking GPS...</p>
+                            <p class="text-zinc-500 text-[11px]" id="gpsDistanceText">Distance: --</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 rounded-lg text-stone-600"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 rounded-lg text-zinc-600"><i class="fa-solid fa-rotate-right"></i></button>
                     </div>
                 </div>
 
                 <!-- AI Camera Viewfinder: deliberately kept dark, echoing the loader -
                      the "moment of focus" signature, with the amber viewfinder ring -->
-                <div id="cameraWrapper" class="relative bg-[#14181F] rounded-2xl overflow-hidden aspect-[4/3] border border-stone-300 flex flex-col items-center justify-center transition-all duration-300">
+                <div id="cameraWrapper" class="relative bg-[#14181F] rounded-2xl overflow-hidden aspect-[4/3] border border-zinc-300 flex flex-col items-center justify-center transition-all duration-300">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
                     
                     <div id="scanLine" class="hidden scan-line z-10"></div>
                     <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex flex-col items-center justify-center opacity-80 gap-1">
-                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-[#F0A202] font-bold bg-black/60 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
+                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-[#D0BCFF] font-bold bg-black/60 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
                         <span id="earDebug" class="hidden text-[9px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full"></span>
                     </div>
 
@@ -196,7 +224,7 @@
                         </button>
                     </div>
                 </div>
-                <p id="scanStatusLine" class="text-[11px] text-stone-500 text-center mt-2 min-h-[1.5em]"></p>
+                <p id="scanStatusLine" class="text-[11px] text-zinc-500 text-center mt-2 min-h-[1.5em]"></p>
 
                 <!-- SUCCESS: Welcome Screen (Hidden by default) -->
                 <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm transition-all duration-300">
@@ -205,8 +233,8 @@
                     </div>
                     <div class="text-center">
                         <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> AI Verified</span>
-                        <h3 class="font-black text-2xl text-stone-900 mt-2 font-display">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
-                        <p class="text-xs text-stone-500 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
+                        <h3 class="font-black text-2xl text-zinc-900 mt-2 font-display">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
+                        <p class="text-xs text-zinc-500 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
                     </div>
                     
                     <!-- Punch Buttons -->
@@ -219,17 +247,17 @@
                         </button>
                     </div>
                     
-                    <button onclick="resetCamera()" class="text-xs text-stone-500 hover:text-stone-900 underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
+                    <button onclick="resetCamera()" class="text-xs text-zinc-500 hover:text-zinc-900 underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
                 </div>
             </div>
         </section>
 
         <!-- TAB 2: LOGS -->
         <section id="view-logs" class="hidden space-y-4">
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm space-y-3">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-stone-900 font-display">Punch History</h2>
-                    <span id="logCountBadge" class="text-xs bg-stone-200 text-stone-700 px-2 py-0.5 rounded-full">0 logs</span>
+                    <h2 class="text-lg font-bold text-zinc-900 font-display">Punch History</h2>
+                    <span id="logCountBadge" class="text-xs bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full">0 logs</span>
                 </div>
                 <div id="logsContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 no-scrollbar"></div>
             </div>
@@ -237,46 +265,46 @@
 
         <!-- TAB 3: PAYROLL -->
         <section id="view-settlement" class="hidden space-y-4">
-            <div class="admin-only hidden bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-3">
+            <div class="admin-only hidden bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-3">
                 <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-md font-bold text-emerald-600 flex items-center justify-between gap-1.5 transition">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar"></i> Add Advance (₹)</span> 
                     <i class="fa-solid fa-chevron-down text-xs"></i>
                 </button>
-                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-stone-200">
+                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-zinc-200">
                     <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <select id="advWorkerSelect" required class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
-                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                        <select id="advWorkerSelect" required class="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
+                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
                         <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs shadow-md">Record</button>
                     </form>
                 </div>
             </div>
             
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-4">
                 <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-sliders"></i> Payroll Rules
                         </button>
-                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-[#1B2A4A] hover:bg-[#12203A] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
                         </button>
                     </div>
                 </div>
                 
                 <!-- DATE RANGE FILTERS -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
                     <div>
-                        <label class="block text-[10px] text-stone-500 font-bold mb-1 uppercase tracking-wider">From Date</label>
-                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-stone-50 border border-stone-300 rounded-lg px-2 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
+                        <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">From Date</label>
+                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-stone-500 font-bold mb-1 uppercase tracking-wider">To Date</label>
-                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-stone-50 border border-stone-300 rounded-lg px-2 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-[#1B2A4A]">
+                        <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">To Date</label>
+                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
                     </div>
                     <div class="flex items-end">
-                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition">
+                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-xs font-bold transition">
                             <i class="fa-solid fa-rotate-left"></i> Current Cycle
                         </button>
                     </div>
@@ -287,33 +315,57 @@
         </section>
 
         <!-- TAB: CASH BOOK (ADMIN) -->
-        <section id="view-cashbook" class="hidden space-y-4">
+        <section id="view-cashbook" class="hidden space-y-4 relative">
             <!-- Balance Summary -->
             <div class="grid grid-cols-3 gap-2">
                 <div class="bg-white rounded-2xl p-3 border border-emerald-200 text-center">
-                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Total Credits</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Total Credits</p>
                     <p id="cashbookTotalCredit" class="text-lg font-black text-emerald-600 mt-1">₹0</p>
                 </div>
                 <div class="bg-white rounded-2xl p-3 border border-rose-200 text-center">
-                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Total Debits</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Total Debits</p>
                     <p id="cashbookTotalDebit" class="text-lg font-black text-rose-600 mt-1">₹0</p>
                 </div>
                 <div class="bg-white rounded-2xl p-3 border border-blue-200 text-center">
-                    <p class="text-[10px] text-stone-500 uppercase tracking-wider">Balance</p>
-                    <p id="cashbookBalance" class="text-lg font-black text-[#1B2A4A] mt-1">₹0</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Balance</p>
+                    <p id="cashbookBalance" class="text-lg font-black text-[#6750A4] mt-1">₹0</p>
                 </div>
             </div>
 
-            <!-- Add Entry Form -->
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-3">
-                <h2 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-plus text-[#1B2A4A]"></i> Add Entry</h2>
+            <!-- Filter + Export -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-sm font-bold">Ledger</h2>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-zinc-200 rounded-xl px-2 py-2 text-xs">
+                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-zinc-200 rounded-xl px-2 py-2 text-xs">
+                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
+                </div>
+            </div>
+
+            <div id="cashbookContainer" class="space-y-2"></div>
+
+            <!-- FAB: opens the Add Entry sheet -->
+            <button onclick="openAddCashbookModal()" class="fixed right-5 bottom-[5.5rem] z-30 w-14 h-14 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white flex items-center justify-center elev-3 transition">
+                <i class="fa-solid fa-plus text-xl"></i>
+            </button>
+        </section>
+
+        <!-- ADD CASH BOOK ENTRY MODAL (bottom sheet) -->
+        <div id="addCashbookModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-3 max-h-[90vh] overflow-y-auto sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-zinc-900 font-display">Add Cash Book Entry</h3>
+                    <button type="button" onclick="closeAddCashbookModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
                 <form onsubmit="handleAddCashbookEntry(event)" class="space-y-2">
                     <div class="grid grid-cols-2 gap-2">
-                        <select id="cbType" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <select id="cbType" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="debit">Debit (Money Out)</option>
                             <option value="credit">Credit (Money In)</option>
                         </select>
-                        <select id="cbCategory" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <select id="cbCategory" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="Local Purchase">Local Purchase</option>
                             <option value="Material Purchase">Material Purchase</option>
                             <option value="Transport">Transport</option>
@@ -324,89 +376,119 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
-                    <label class="block text-xs text-stone-500">
+                    <label class="block text-xs text-zinc-500">
                         Bill / Receipt Photo (optional)
-                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none text-stone-500">
+                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-500">
                     </label>
-                    <button type="submit" class="w-full py-2.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
                 </form>
             </div>
-
-            <!-- Filter + Export -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h2 class="text-sm font-bold">Ledger</h2>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-stone-200 rounded-xl px-2 py-2 text-xs">
-                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-stone-200 rounded-xl px-2 py-2 text-xs">
-                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
-                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
-                </div>
-            </div>
-
-            <div id="cashbookContainer" class="space-y-2"></div>
-        </section>
+        </div>
 
         <!-- TAB 4: SITES (ADMIN) -->
-        <section id="view-sites" class="hidden space-y-4">
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
-                <h2 class="text-lg font-bold">Manage Sites</h2>
-                <form id="addSiteForm" onsubmit="handleAddSite(event)" class="space-y-3">
-                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                    </div>
-                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs rounded-xl transition"><i class="fa-solid fa-crosshairs text-[#1B2A4A]"></i> Auto-detect GPS</button>
-                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                    <button type="submit" class="w-full py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl transition">Save Site</button>
-                </form>
+        <section id="view-sites" class="hidden space-y-4 relative">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-zinc-900">Work Sites</h2>
+                <span class="text-xs text-zinc-500" id="sitesCountLabel"></span>
             </div>
             <div id="sitesList" class="space-y-2"></div>
+
+            <!-- FAB: opens the Add Site sheet -->
+            <button onclick="openAddSiteModal()" class="fixed right-5 bottom-[5.5rem] z-30 w-14 h-14 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white flex items-center justify-center elev-3 transition">
+                <i class="fa-solid fa-plus text-xl"></i>
+            </button>
         </section>
 
-        <!-- TAB 5: WORKERS & MANUAL OVERRIDE (ADMIN ONLY) -->
-        <section id="view-workers" class="hidden space-y-4">
-            
-            <!-- ADMIN MANUAL OVERRIDE CARD -->
-            <div id="adminOverrideCard" class="bg-amber-50 border border-amber-300 rounded-2xl p-4 space-y-3 shadow-sm">
-                <h3 class="text-sm font-bold text-amber-700 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
-                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select id="overrideSiteSelect" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
-                        <select id="overrideWorkerSelect" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
+        <!-- ADD SITE MODAL (bottom sheet) -->
+        <div id="addSiteModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-zinc-900 font-display">Add Work Site</h3>
+                    <button type="button" onclick="closeAddSiteModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <form id="addSiteForm" onsubmit="handleAddSite(event)" class="space-y-3">
+                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select id="overridePunchType" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
-                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-stone-50 border border-stone-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
-                    </div>
-                    <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-stone-900 font-bold rounded-xl text-xs shadow-md transition">Log Override Punch</button>
+                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 text-xs rounded-xl transition"><i class="fa-solid fa-crosshairs text-[#6750A4]"></i> Auto-detect GPS</button>
+                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <button type="submit" class="w-full py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl transition">Save Site</button>
                 </form>
             </div>
+        </div>
 
-            <!-- REGISTER WORKER WITH LIVE FACE CAPTURE -->
-            <div class="bg-white rounded-2xl p-4 border border-stone-200 shadow-lg space-y-4">
-                <h2 class="text-lg font-bold">Register Worker Profile</h2>
+        <!-- TAB 5: WORKERS & MANUAL OVERRIDE (ADMIN ONLY) -->
+        <section id="view-workers" class="hidden space-y-4 relative">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="openRegisterWorkerModal()" class="py-3 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs shadow-sm transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-user-plus text-lg"></i> Register Worker
+                </button>
+                <button onclick="openOverrideModal()" class="py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 font-bold text-xs shadow-sm transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-user-shield text-lg"></i> Manual Override
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-zinc-900">Workers</h2>
+                <span class="text-xs text-zinc-500" id="workersCountLabel"></span>
+            </div>
+            <div id="workersList" class="space-y-2"></div>
+        </section>
+
+        <!-- MANUAL OVERRIDE MODAL (bottom sheet) -->
+        <div id="overrideModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-amber-300 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-3 sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-amber-700 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
+                    <button type="button" onclick="closeOverrideModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overrideSiteSelect" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
+                        <select id="overrideWorkerSelect" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overridePunchType" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
+                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-bold rounded-xl text-xs shadow-md transition">Log Override Punch</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- REGISTER WORKER MODAL (bottom sheet, with live face capture) -->
+        <div id="registerWorkerModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[92vh] overflow-y-auto sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-zinc-900 font-display">Register Worker Profile</h2>
+                    <button type="button" onclick="closeRegisterWorkerModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
                 <form id="addWorkerForm" onsubmit="handleAddWorker(event)" class="space-y-3">
-                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
-                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
 
                     <!-- LIVE CAMERA FACE CAPTURE FOR REGISTRATION -->
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1">Capture Reference Face Photo</label>
-                        <div class="bg-[#14181F] rounded-xl overflow-hidden border border-stone-300 aspect-video relative flex flex-col items-center justify-center">
+                        <label class="block text-xs font-semibold text-zinc-500 mb-1">Capture Reference Face Photo</label>
+                        <div class="bg-[#14181F] rounded-xl overflow-hidden border border-zinc-300 aspect-video relative flex flex-col items-center justify-center">
                             <video id="regWebcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                             <img id="regPhotoPreview" class="hidden w-full h-full object-cover" />
                             
                             <div class="absolute bottom-2 flex gap-2">
-                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
+                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
                                     <i class="fa-solid fa-camera mr-1"></i> Capture Live Face
                                 </button>
                                 <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
@@ -416,93 +498,122 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-2.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
                 </form>
             </div>
-            <div id="workersList" class="space-y-2"></div>
-        </section>
+        </div>
 
         <!-- TAB 6: PROFILE -->
         <section id="view-profile" class="hidden space-y-4">
-            <div id="myProfileCard" class="hidden bg-white rounded-2xl p-5 border border-stone-200 shadow-lg items-center gap-4">
-                <img id="myProfilePhoto" class="w-16 h-16 rounded-xl object-cover border border-stone-200" src="" />
+            <div id="myProfileCard" class="hidden bg-white rounded-2xl p-5 border border-zinc-200 shadow-lg items-center gap-4">
+                <img id="myProfilePhoto" class="w-16 h-16 rounded-xl object-cover border border-zinc-200" src="" />
                 <div>
-                    <p class="font-bold text-stone-900 text-base" id="myProfileName">-</p>
-                    <p class="text-xs text-stone-500" id="myProfilePhone">-</p>
+                    <p class="font-bold text-zinc-900 text-base" id="myProfileName">-</p>
+                    <p class="text-xs text-zinc-500" id="myProfilePhone">-</p>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl p-5 border border-stone-200 shadow-lg space-y-4">
-                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-[#1B2A4A]"></i> My Profile</h2>
+            <div class="bg-white rounded-2xl p-5 border border-zinc-200 shadow-lg space-y-4">
+                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-[#6750A4]"></i> My Profile</h2>
                 <form id="changePasswordForm" onsubmit="handleChangeOwnPassword(event)" class="space-y-3">
-                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
-                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
-                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm">
-                    <button type="submit" class="w-full py-2 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl text-xs shadow-md transition">Change Password</button>
+                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <button type="submit" class="w-full py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl text-xs shadow-md transition">Change Password</button>
                 </form>
             </div>
         </section>
 
     </main>
 
+    <!-- BOTTOM NAVIGATION: fixed to the viewport bottom, Material 3 style - the
+         active tab gets a pill-shaped highlight behind just the icon, with the
+         label always visible beneath. This is the single strongest visual cue
+         that reads as "native Android app" rather than "responsive website". -->
+    <nav id="mainNav" class="hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-zinc-200 elev-4 px-1 pt-2 pb-[calc(0.4rem+env(safe-area-inset-bottom))] flex justify-around text-[10px] font-semibold overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-[#6750A4]">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center bg-[#EADDFF] text-[#6750A4]"><i class="fa-solid fa-clock-rotate-left text-base"></i></span>
+            <span>Logs</span>
+        </button>
+        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-indian-rupee-sign text-base"></i></span>
+            <span>Payroll</span>
+        </button>
+        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-book text-base"></i></span>
+            <span>Cash Book</span>
+        </button>
+        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-map-location-dot text-base"></i></span>
+            <span>Sites</span>
+        </button>
+        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-users text-base"></i></span>
+            <span>Workers</span>
+        </button>
+    </nav>
+
     <!-- CUSTOM CONFIRM MODAL (NO UGLY ALERTS) -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-stone-950/60 z-[200] flex items-center justify-center p-4">
-        <div class="bg-white border border-rose-200 rounded-2xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl">
+    <div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[200] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-rose-200 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-2xl border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3 class="text-xl font-bold text-stone-900 font-display" id="confirmTitle">Are you sure?</h3>
-            <p class="text-sm text-stone-700" id="confirmDesc">This action cannot be undone.</p>
+            <h3 class="text-xl font-bold text-zinc-900 font-display" id="confirmTitle">Are you sure?</h3>
+            <p class="text-sm text-zinc-700" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3 pt-2">
-                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-sm font-semibold transition">Cancel</button>
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-sm font-semibold transition">Cancel</button>
                 <button id="confirmActionBtn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-900/50 transition">Delete</button>
             </div>
         </div>
     </div>
 
     <!-- EDIT SITE MODAL -->
-    <div id="editSiteModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
-        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4">
+    <div id="editSiteModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Site</h3>
-                <button type="button" onclick="closeEditSite()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Site</h3>
+                <button type="button" onclick="closeEditSite()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditSite(event)" class="space-y-3">
-                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
-                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </div>
-                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
-                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
     <!-- EDIT WORKER MODAL -->
-    <div id="editWorkerModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
-        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="editWorkerModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Worker</h3>
-                <button type="button" onclick="closeEditWorker()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Worker</h3>
+                <button type="button" onclick="closeEditWorker()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditWorker(event)" class="space-y-3">
-                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
-                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </div>
 
                 <!-- FACE RECAPTURE -->
                 <div>
-                    <label class="block text-xs font-semibold text-stone-500 mb-1">Face Photo / Biometrics</label>
-                    <div class="bg-[#14181F] rounded-xl overflow-hidden border border-stone-300 aspect-video relative flex flex-col items-center justify-center">
+                    <label class="block text-xs font-semibold text-zinc-500 mb-1">Face Photo / Biometrics</label>
+                    <div class="bg-[#14181F] rounded-xl overflow-hidden border border-zinc-300 aspect-video relative flex flex-col items-center justify-center">
                         <img id="editCurrentPhoto" class="w-full h-full object-cover" />
                         <video id="editWebcam" autoplay playsinline class="hidden w-full h-full object-cover scale-x-[-1]"></video>
                         <img id="editPhotoPreview" class="hidden w-full h-full object-cover" />
 
                         <div class="absolute bottom-2 flex gap-2">
-                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
+                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
                                 <i class="fa-solid fa-camera-rotate mr-1"></i> Recapture Face
                             </button>
-                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden px-3 py-1.5 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold text-xs rounded-lg shadow-md transition">
+                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
                                 <i class="fa-solid fa-camera mr-1"></i> Capture
                             </button>
                             <button type="button" id="editRetakeBtn" onclick="resetEditCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
@@ -510,96 +621,99 @@
                             </button>
                         </div>
                     </div>
-                    <p class="text-[10px] text-stone-400 mt-1">Only recapture if the worker's stored face no longer matches them well.</p>
+                    <p class="text-[10px] text-zinc-400 mt-1">Only recapture if the worker's stored face no longer matches them well.</p>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
     <!-- EDIT PUNCH TIME MODAL (admin only) -->
-    <div id="editPunchModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
-        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-sm p-6 space-y-4">
+    <div id="editPunchModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-stone-900 font-display">Edit Punch Time</h3>
-                <button type="button" onclick="closeEditPunchModal()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Punch Time</h3>
+                <button type="button" onclick="closeEditPunchModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-xs text-stone-500" id="editPunchSummary"></p>
+            <p class="text-xs text-zinc-500" id="editPunchSummary"></p>
             <form onsubmit="saveEditedPunchTime(event)" class="space-y-3">
-                <label class="block text-xs text-stone-500">Corrected Date &amp; Time
-                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#1B2A4A]">
+                <label class="block text-xs text-zinc-500">Corrected Date &amp; Time
+                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </label>
-                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
             </form>
         </div>
     </div>
 
     <!-- PAYROLL RULES MODAL (admin only) -->
-    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-stone-950/60 z-[150] flex items-center justify-center p-4">
-        <div class="bg-white border border-[#1B2A4A]/20 rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-stone-900 font-display"><i class="fa-solid fa-sliders text-[#1B2A4A]"></i> Payroll Rules</h3>
-                <button type="button" onclick="closePayrollRulesModal()" class="text-stone-400 hover:text-stone-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display"><i class="fa-solid fa-sliders text-[#6750A4]"></i> Payroll Rules</h3>
+                <button type="button" onclick="closePayrollRulesModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-[11px] text-stone-500 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
+            <p class="text-[11px] text-zinc-500 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
             <form onsubmit="savePayrollRules(event)" class="space-y-4 text-xs">
                 <div>
-                    <p class="font-bold text-stone-700 mb-2">Shift Timing</p>
+                    <p class="font-bold text-zinc-700 mb-2">Shift Timing</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
                     </div>
                 </div>
 
-                <div class="border-t border-stone-200 pt-3">
-                    <p class="font-bold text-stone-700 mb-2">Arrival Deductions</p>
+                <div class="border-t border-zinc-200 pt-3">
+                    <p class="font-bold text-zinc-700 mb-2">Arrival Deductions</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
                     </div>
-                    <p class="text-[10px] text-stone-400 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
+                    <p class="text-[10px] text-zinc-400 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
                 </div>
 
-                <div class="border-t border-stone-200 pt-3">
-                    <p class="font-bold text-stone-700 mb-2">Departure "Free Pass"</p>
-                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                    <p class="text-[10px] text-stone-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
+                <div class="border-t border-zinc-200 pt-3">
+                    <p class="font-bold text-zinc-700 mb-2">Departure "Free Pass"</p>
+                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                    <p class="text-[10px] text-zinc-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
                 </div>
 
-                <div class="border-t border-stone-200 pt-3">
-                    <p class="font-bold text-stone-700 mb-2">Overtime</p>
+                <div class="border-t border-zinc-200 pt-3">
+                    <p class="font-bold text-zinc-700 mb-2">Overtime</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-stone-50 border border-stone-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-[#1B2A4A] hover:bg-[#12203A] text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
             </form>
         </div>
     </div>
 
-    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white border border-amber-300 rounded-2xl w-full p-6 space-y-5">
+    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-zinc-950/60 z-50 flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-amber-300 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <h3 class="text-lg font-bold text-amber-700">Security: Set New Password</h3>
-            <p class="text-xs text-stone-700">You must change your default password to continue.</p>
+            <p class="text-xs text-zinc-700">You must change your default password to continue.</p>
             <form onsubmit="handleForcePasswordChange(event)" class="space-y-3">
-                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-stone-50 border-stone-200 rounded-xl px-3 py-2 text-sm">
-                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-stone-50 border-stone-200 rounded-xl px-3 py-2 text-sm">
-                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 font-bold text-stone-900 rounded-xl transition">Update & Proceed</button>
+                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-zinc-50 border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-zinc-50 border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 font-bold text-zinc-900 rounded-xl transition">Update & Proceed</button>
             </form>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-stone-900 border border-stone-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-600"></i><span id="toastMsg">Action completed!</span>
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[300] bg-zinc-900 border border-zinc-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i><span id="toastMsg">Action completed!</span>
     </div>
 
     <script>
@@ -930,7 +1044,7 @@
             document.getElementById('mainNav').classList.add('hidden');
             document.getElementById('roleBadge').innerText = 'Public Kiosk';
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
+                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 text-zinc-700 font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
             `;
             populateDropdowns(); startWebcam(); checkCurrentLocation();
         }
@@ -960,11 +1074,22 @@
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
             document.getElementById(`view-${t}`).classList.remove('hidden'); 
             
-            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-[#1B2A4A]', 'text-white'); el.classList.add('text-stone-500'); });
-            const btn = document.getElementById(`tab-${t}`); if(btn) { btn.classList.add('bg-[#1B2A4A]', 'text-white'); btn.classList.remove('text-stone-500'); }
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-[#6750A4]');
+                el.classList.add('text-zinc-500');
+                const pill = el.querySelector('.nav-pill');
+                if (pill) { pill.classList.remove('bg-[#EADDFF]', 'text-[#6750A4]'); }
+            });
+            const btn = document.getElementById(`tab-${t}`);
+            if (btn) {
+                btn.classList.add('text-[#6750A4]');
+                btn.classList.remove('text-zinc-500');
+                const pill = btn.querySelector('.nav-pill');
+                if (pill) { pill.classList.add('bg-[#EADDFF]', 'text-[#6750A4]'); }
+            }
 
             if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
-            if(t === 'workers' && currentUser?.role === 'admin') { startRegWebcam(); } else { stopRegWebcam(); }
+            if(t !== 'workers') { stopRegWebcam(); }
             if(t === 'profile') { renderMyProfileCard(); }
             if(t === 'cashbook') { setDefaultCashbookDateTime(); renderCashbook(); }
         }
@@ -1198,7 +1323,7 @@
             const el = document.getElementById('scanStatusLine');
             if (!el) return;
             el.innerText = msg;
-            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-stone-500');
+            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-zinc-500');
         }
 
         async function executePunchCapture(video) {
@@ -1316,6 +1441,24 @@
         }
         function stopRegWebcam() { if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; } }
 
+        function openRegisterWorkerModal() {
+            document.getElementById('registerWorkerModal').classList.remove('hidden');
+            resetRegCamera(); // Clear any stale capture from a previous session
+            startRegWebcam(); // Camera only turns on once this sheet is actually open
+        }
+        function closeRegisterWorkerModal() {
+            document.getElementById('registerWorkerModal').classList.add('hidden');
+            stopRegWebcam();
+        }
+
+        function openOverrideModal() {
+            document.getElementById('overrideModal').classList.remove('hidden');
+            setDefaultOverrideDateTime();
+        }
+        function closeOverrideModal() {
+            document.getElementById('overrideModal').classList.add('hidden');
+        }
+
         async function snapRegWorkerPhoto() {
             const video = document.getElementById('regWebcam');
             
@@ -1367,14 +1510,14 @@
             const statusText = document.getElementById('gpsStatusText');
             if (!navigator.geolocation) return statusText.innerText = "GPS Error";
             statusText.innerText = "Acquiring...";
-            statusText.className = "font-semibold text-stone-600";
+            statusText.className = "font-semibold text-zinc-600";
             
             navigator.geolocation.getCurrentPosition(
                 (pos) => { 
                     currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
                     if (!document.getElementById('punchSiteSelect').value) {
                         statusText.innerText = "GPS Found. Select Site.";
-                        statusText.className = "font-bold text-[#1B2A4A]";
+                        statusText.className = "font-bold text-[#6750A4]";
                     }
                     calculateGeoFence(); 
                 },
@@ -1556,7 +1699,8 @@
             // ----------------------------------------
 
             const record = { id: 'att_ovr_' + Date.now(), timestamp: chosenTimestamp, workerId: w.id, workerName: w.name, siteId: s.id, siteName: s.name, type: punchType, lat: s.lat, lng: s.lng, isOverride: true };
-            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); setDefaultOverrideDateTime(); renderLogs(); renderSettlements();
+            db.attendance.unshift(record); saveStorage(); postToGoogleSheet('punchAttendance', record); showToast("Manual override saved!"); e.target.reset(); renderLogs(); renderSettlements();
+            closeOverrideModal();
         }
 
         // Fills the override datetime picker with the current local moment, formatted
@@ -1568,10 +1712,18 @@
             el.value = dateToDatetimeLocalValue(new Date());
         }
 
+        function openAddSiteModal() {
+            document.getElementById('addSiteModal').classList.remove('hidden');
+        }
+        function closeAddSiteModal() {
+            document.getElementById('addSiteModal').classList.add('hidden');
+        }
+
         function handleAddSite(e) {
             e.preventDefault();
             const site = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
             db.sites.push(site); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
+            closeAddSiteModal();
         }
 
         function autoFillCurrentLocationForSite() {
@@ -1599,6 +1751,7 @@
 
             db.workers.push(w); db.users.push(newUser);
             saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
+            closeRegisterWorkerModal();
         }
 
         function handleAddAdvance(e) {
@@ -1882,15 +2035,17 @@
 
         function renderSites() { 
             const container = document.getElementById('sitesList');
+            const countLabel = document.getElementById('sitesCountLabel');
+            if (countLabel) countLabel.innerText = `${(db.sites || []).length} site${(db.sites || []).length === 1 ? '' : 's'}`;
             if (!db.sites || db.sites.length === 0) {
-                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No work sites added yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No work sites added yet. Tap + to add one.</p>`;
                 return;
             }
-            container.innerHTML = db.sites.map(s => `
-                <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm flex justify-between items-center">
+            container.innerHTML = db.sites.map((s, i) => `
+                <div class="bg-white p-3 rounded-xl border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div>
                         <p class="font-bold text-sm">${s.name}</p>
-                        <p class="text-[10px] text-stone-500">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
+                        <p class="text-[10px] text-zinc-500">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="openEditSite('${s.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
@@ -1900,17 +2055,19 @@
         }
         function renderWorkers() { 
             const container = document.getElementById('workersList');
+            const countLabel = document.getElementById('workersCountLabel');
+            if (countLabel) countLabel.innerText = `${(db.workers || []).length} worker${(db.workers || []).length === 1 ? '' : 's'}`;
             if (!db.workers || db.workers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No workers registered yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No workers registered yet. Tap "Register Worker" above.</p>`;
                 return;
             }
-            container.innerHTML = db.workers.map(w => {
+            container.innerHTML = db.workers.map((w, i) => {
                 const hasValidFace = w.descriptor && Array.isArray(w.descriptor) && w.descriptor.length === 128;
                 const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">⚠ No Face Data</span>`;
                 return `
-                <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm flex justify-between items-center">
+                <div class="bg-white p-3 rounded-xl border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-stone-200"/>
+                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-zinc-200"/>
                         <div>
                             <p class="font-bold text-sm">${w.name}</p>
                             <p class="text-[10px] text-emerald-600">₹${w.wage}/day | Phone: ${w.phone}</p>
@@ -2185,7 +2342,7 @@
 
             if (!visibleLogs || visibleLogs.length === 0) {
                 document.getElementById('logCountBadge').innerText = "0 logs";
-                return container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No attendance logs yet.</p>`;
+                return container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No attendance logs yet.</p>`;
             }
 
             // Group logs by Date -> Site Name
@@ -2224,11 +2381,11 @@
 
             let html = '';
             for (const date in grouped) {
-                html += `<div class="mb-5"><h3 class="text-sm font-black text-[#1B2A4A] border-b border-stone-200 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
+                html += `<div class="mb-5"><h3 class="text-sm font-black text-[#6750A4] border-b border-zinc-200 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
                 
                 for (const siteName in grouped[date]) {
-                    html += `<div class="bg-stone-50 rounded-xl p-3 mb-3 border border-stone-200 shadow-sm">`;
-                    html += `<h4 class="text-[11px] font-bold text-stone-700 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-[#1B2A4A]"></i> ${siteName}</h4>`;
+                    html += `<div class="bg-zinc-50 rounded-xl p-3 mb-3 border border-zinc-200 shadow-sm">`;
+                    html += `<h4 class="text-[11px] font-bold text-zinc-700 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-[#6750A4]"></i> ${siteName}</h4>`;
                     
                     // Sort logs chronologically to accurately calculate durations
                     const siteLogs = grouped[date][siteName].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
@@ -2252,7 +2409,7 @@
                         const typeIcon = a.type === 'IN' ? '<i class="fa-solid fa-right-to-bracket text-emerald-600"></i>' : '<i class="fa-solid fa-right-from-bracket text-rose-600"></i>';
                         const typeColor = a.type === 'IN' ? 'text-emerald-600' : 'text-rose-600';
                         const editBtn = (currentUser && currentUser.role === 'admin')
-                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-stone-400 hover:text-[#1B2A4A] transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
+                            ? `<button type="button" onclick="openEditPunchModal('${a.id}')" class="text-zinc-400 hover:text-[#6750A4] transition" title="Edit punch time"><i class="fa-solid fa-pen text-[10px]"></i></button>`
                             : '';
                         let earnCell = '';
                         if (isAdmin) {
@@ -2264,10 +2421,10 @@
                             earnCell = `<td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>`;
                         }
                         
-                        return `<tr class="border-b border-stone-100 last:border-0">
-                            <td class="py-1.5 pr-2 font-medium text-stone-700 whitespace-nowrap">${a.workerName}</td>
-                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-stone-100 rounded">${a.type}</span></td>
-                            <td class="py-1.5 pr-2 text-stone-500 whitespace-nowrap">${timeOnly}</td>
+                        return `<tr class="border-b border-zinc-100 last:border-0">
+                            <td class="py-1.5 pr-2 font-medium text-zinc-700 whitespace-nowrap">${a.workerName}</td>
+                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-zinc-100 rounded">${a.type}</span></td>
+                            <td class="py-1.5 pr-2 text-zinc-500 whitespace-nowrap">${timeOnly}</td>
                             <td class="py-1.5 pr-2 text-right whitespace-nowrap">${durationStr}</td>
                             ${earnCell}
                             <td class="py-1.5 text-right whitespace-nowrap">${editBtn}</td>
@@ -2276,7 +2433,7 @@
                     
                     html += `<table class="w-full text-xs border-collapse">
                         <thead>
-                            <tr class="text-[9px] uppercase tracking-wider text-stone-400 border-b border-stone-200">
+                            <tr class="text-[9px] uppercase tracking-wider text-zinc-400 border-b border-zinc-200">
                                 <th class="text-left font-semibold pb-1 pr-2">Worker</th>
                                 <th class="text-left font-semibold pb-1 pr-2">Type</th>
                                 <th class="text-left font-semibold pb-1 pr-2">Time</th>
@@ -2298,7 +2455,7 @@
 
         function renderSettlements() { 
             const container = document.getElementById('payrollCardsContainer');
-            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No workers registered for payroll.</p>`;
+            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No workers registered for payroll.</p>`;
             
             // Check for Custom Date Filters
             const fromVal = document.getElementById('payrollFrom')?.value;
@@ -2314,7 +2471,7 @@
             }
             const knownWorkerIds = new Set(db.workers.map(w => w.id));
             
-            let html = displayWorkers.map(w => {
+            let html = displayWorkers.map((w, i) => {
                 // Track the last time this worker was marked "Paid" (Only applies if NOT using custom dates)
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
                 const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
@@ -2330,18 +2487,18 @@
                 const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
 
-                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-stone-200 last:border-0 text-stone-700">
+                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-zinc-200 last:border-0 text-zinc-700">
                             <div class="col-span-1">${s.date}</div>
                             <div class="col-span-1 truncate" title="${s.siteName}">${s.siteName}</div>
                             <div class="col-span-1">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</div>
-                            <div class="col-span-1 text-right font-bold text-[#1B2A4A]">${s.durationHrs.toFixed(2)} hr</div>
+                            <div class="col-span-1 text-right font-bold text-[#6750A4]">${s.durationHrs.toFixed(2)} hr</div>
                         </div>`).join('');
                 
                 // Handle a dangling IN punch that missed an OUT punch
                 if (summary.danglingIn) {
                     const currentIn = summary.danglingIn;
                     const date = currentIn.timestamp.split(',')[0].trim();
-                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-stone-200 last:border-0 text-stone-700">
+                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-zinc-200 last:border-0 text-zinc-700">
                         <div class="col-span-1">${date}</div>
                         <div class="col-span-1 truncate">${currentIn.siteName}</div>
                         <div class="col-span-1 text-amber-700">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
@@ -2364,53 +2521,53 @@
                 
                 // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
                 const markPaidBtn = (currentUser && currentUser.role === 'admin') ? (isCustomRange ? 
-                    `<button disabled class="py-2 bg-stone-200 opacity-70 cursor-not-allowed text-stone-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
+                    `<button disabled class="py-2 bg-zinc-200 opacity-70 cursor-not-allowed text-zinc-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
                     `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
 
                 const actionGridClass = (currentUser && currentUser.role === 'admin') ? 'grid grid-cols-2 gap-2' : 'flex flex-col';
                 const pdfBtnClass = (currentUser && currentUser.role === 'admin') ? '' : 'w-full';
 
                 return `
-                <div class="bg-stone-50 border border-stone-200 rounded-xl overflow-hidden transition-all shadow-sm">
-                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-stone-100 transition">
-                        <span class="font-bold text-sm text-stone-900 flex items-center gap-2">
-                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-stone-200" />
+                <div class="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden transition-all shadow-sm card-in" style="animation-delay:${i * 40}ms">
+                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-zinc-100 transition">
+                        <span class="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-zinc-200" />
                             ${w.name}
                         </span>
                         <div class="flex items-center gap-3">
                             <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} font-black text-sm">₹${net.toFixed(0)}</span>
-                            <i class="fa-solid fa-chevron-down text-stone-400"></i>
+                            <i class="fa-solid fa-chevron-down text-zinc-400"></i>
                         </div>
                     </button>
-                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-white border-t border-stone-200 space-y-3 text-xs">
+                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-white border-t border-zinc-200 space-y-3 text-xs">
                         
-                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-2">
-                            <h4 class="text-[10px] uppercase text-stone-400 font-bold mb-1.5 flex justify-between">
+                        <div class="bg-zinc-50 rounded-lg border border-zinc-200 p-2">
+                            <h4 class="text-[10px] uppercase text-zinc-400 font-bold mb-1.5 flex justify-between">
                                 <span>Detailed Work Sessions</span>
                                 <span>Total: ${totalHours.toFixed(2)} Hrs</span>
                             </h4>
-                            ${sessionRows || '<p class="text-[10px] text-stone-400 italic">No completed sessions.</p>'}
+                            ${sessionRows || '<p class="text-[10px] text-zinc-400 italic">No completed sessions.</p>'}
                         </div>
 
                         <div class="space-y-1.5 px-1">
-                            <div class="flex justify-between items-center"><span class="text-stone-500">Active Days:</span> <span class="font-semibold text-stone-700">${daysSet.size} days</span></div>
-                            <div class="flex justify-between items-center"><span class="text-stone-500">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
-                            ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-stone-500">Late/Early Deductions:</span> <span class="font-medium text-rose-600">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
-                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-stone-500">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-700">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
+                            <div class="flex justify-between items-center"><span class="text-zinc-500">Active Days:</span> <span class="font-semibold text-zinc-700">${daysSet.size} days</span></div>
+                            <div class="flex justify-between items-center"><span class="text-zinc-500">Base Wage (9 AM - 5 PM shift):</span> <span class="font-medium">₹${w.wage} / day</span></div>
+                            ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Late/Early Deductions:</span> <span class="font-medium text-rose-600">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
+                            ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-700">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
-                            <div class="my-2 border-t border-stone-200"></div>
+                            <div class="my-2 border-t border-zinc-200"></div>
                             
-                            <div class="flex justify-between items-center"><span class="text-stone-500">Total Earned:</span> <span class="text-emerald-600 font-bold">₹${earned.toFixed(0)}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-stone-500">Advances Taken:</span> <span class="text-rose-600 font-bold">-₹${adv.toFixed(0)}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-zinc-500">Total Earned:</span> <span class="text-emerald-600 font-bold">₹${earned.toFixed(0)}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-zinc-500">Advances Taken:</span> <span class="text-rose-600 font-bold">-₹${adv.toFixed(0)}</span></div>
                             
-                            <div class="mt-2 pt-2 border-t border-stone-200 flex justify-between items-center">
-                                <span class="text-stone-700 font-bold uppercase tracking-wider">Net Settlement</span> 
+                            <div class="mt-2 pt-2 border-t border-zinc-200 flex justify-between items-center">
+                                <span class="text-zinc-700 font-bold uppercase tracking-wider">Net Settlement</span> 
                                 <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} text-base font-black">₹${net.toFixed(0)}</span>
                             </div>
                         </div>
                         
                         <div class="${actionGridClass} pt-2">
-                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-file-pdf text-rose-600"></i> Save PDF
                             </button>
                             ${markPaidBtn}
@@ -2428,7 +2585,7 @@
                     if (orphanLogs > 0) msg += `, ${orphanLogs} not matched to a current worker`;
                     msg += `.)`;
                 }
-                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">${msg}</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">${msg}</p>`;
             } else {
                 container.innerHTML = html;
             }
@@ -2757,23 +2914,23 @@
             document.getElementById('cashbookBalance').innerText = `₹${(totalCredit - totalDebit).toFixed(0)}`;
 
             if (entries.length === 0) {
-                container.innerHTML = `<p class="text-xs text-stone-400 py-3 text-center">No cash book entries for this period.</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No cash book entries for this period.</p>`;
                 return;
             }
 
-            container.innerHTML = entries.map(c => {
+            container.innerHTML = entries.map((c, i) => {
                 const isCredit = c.type === 'credit';
                 const sign = isCredit ? '+' : '-';
                 const colorClass = isCredit ? 'text-emerald-600' : 'text-rose-600';
                 const icon = isCredit ? 'fa-arrow-down text-emerald-600' : 'fa-arrow-up text-rose-600';
-                const billLink = c.billPhoto ? `<a href="${c.billPhoto}" target="_blank" class="text-[#1B2A4A] hover:underline text-[10px]"><i class="fa-solid fa-receipt"></i> View Bill</a>` : '';
-                const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-stone-400 hover:text-rose-600 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
-                return `<div class="bg-white rounded-xl p-3 border border-stone-200 shadow-sm flex justify-between items-center">
+                const billLink = c.billPhoto ? `<a href="${c.billPhoto}" target="_blank" class="text-[#6750A4] hover:underline text-[10px]"><i class="fa-solid fa-receipt"></i> View Bill</a>` : '';
+                const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-zinc-400 hover:text-rose-600 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
+                return `<div class="bg-white rounded-xl p-3 border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
                         <div>
-                            <p class="text-sm font-medium text-stone-700">${c.description}</p>
-                            <p class="text-[10px] text-stone-400">${c.category} &bull; ${c.timestamp} ${billLink}</p>
+                            <p class="text-sm font-medium text-zinc-700">${c.description}</p>
+                            <p class="text-[10px] text-zinc-400">${c.category} &bull; ${c.timestamp} ${billLink}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2782,6 +2939,14 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        function openAddCashbookModal() {
+            document.getElementById('addCashbookModal').classList.remove('hidden');
+            setDefaultCashbookDateTime();
+        }
+        function closeAddCashbookModal() {
+            document.getElementById('addCashbookModal').classList.add('hidden');
         }
 
         async function handleAddCashbookEntry(e) {
@@ -2812,7 +2977,7 @@
             renderCashbook();
             showToast("Entry added to cash book");
             e.target.reset();
-            setDefaultCashbookDateTime();
+            closeAddCashbookModal();
         }
 
         function deleteCashbookEntry(id) {
@@ -2909,10 +3074,38 @@
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             const icon = document.getElementById('toastIcon');
-            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-600' : 'fa-solid fa-triangle-exclamation text-rose-600';
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-triangle-exclamation text-rose-400';
             toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.remove('toast-show'); void toast.offsetWidth; toast.classList.add('toast-show'); // restart animation each time
             setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), durationMs);
         }
+
+        // App bar gains elevation once content scrolls beneath it (Material's
+        // scroll-elevation behavior for top app bars).
+        window.addEventListener('scroll', () => {
+            const bar = document.getElementById('appBar');
+            if (!bar) return;
+            if (window.scrollY > 4) { bar.classList.add('elev-4'); bar.classList.remove('shadow-md'); }
+            else { bar.classList.remove('elev-4'); bar.classList.add('shadow-md'); }
+        }, { passive: true });
+
+        // ===== GLOBAL RIPPLE (Material touch feedback) =====
+        // One delegated listener handles every button in the app, including ones
+        // rendered dynamically later (tables, cards) - no per-element setup needed.
+        document.addEventListener('pointerdown', (e) => {
+            const host = e.target.closest('button, .ripple-host');
+            if (!host || host.disabled) return;
+            const rect = host.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ink = document.createElement('span');
+            ink.className = 'ripple-ink';
+            ink.style.width = ink.style.height = `${size}px`;
+            ink.style.left = `${e.clientX - rect.left - size / 2}px`;
+            ink.style.top = `${e.clientY - rect.top - size / 2}px`;
+            if (!host.classList.contains('ripple-host')) host.classList.add('ripple-host');
+            host.appendChild(ink);
+            ink.addEventListener('animationend', () => ink.remove());
+        });
 
         // START THE APP
         window.onload = function() {
