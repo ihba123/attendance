@@ -2676,6 +2676,45 @@
             });
         }
 
+        // Renders arbitrary (fully inline-styled) HTML to a PDF via html2pdf, inside
+        // a bare, isolated iframe. This matters because Tailwind's CDN build can use
+        // modern CSS color functions (oklch()) that html2canvas cannot parse - if
+        // html2canvas's internal style-cloning step encounters one anywhere in the
+        // inherited style chain (even from an ancestor far outside the actual PDF
+        // content), it can fail silently and produce a blank page. Our PDF templates
+        // are already 100% inline-styled with plain hex colors, so isolating them in
+        // a plain iframe (no Tailwind, no external stylesheet at all) sidesteps this
+        // entirely regardless of what Tailwind happens to be doing on the main page.
+        function renderHtmlToPdf(bodyHtml, filename) {
+            return new Promise((resolve, reject) => {
+                const frame = document.createElement('iframe');
+                frame.style.position = 'fixed';
+                frame.style.top = '0';
+                frame.style.left = '-99999px';
+                frame.style.width = '800px';
+                frame.style.height = '1200px';
+                frame.style.border = 'none';
+                document.body.appendChild(frame);
+
+                const cleanup = () => { if (frame.parentNode) frame.parentNode.removeChild(frame); };
+
+                frame.onload = () => {
+                    try {
+                        const target = frame.contentDocument.body;
+                        html2pdf().set({
+                            margin: 0,
+                            filename,
+                            image: { type: 'jpeg', quality: 1 },
+                            html2canvas: { scale: 2, width: 800, windowWidth: 800 },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        }).from(target).save().then(() => { cleanup(); resolve(); }).catch(err => { cleanup(); reject(err); });
+                    } catch (err) { cleanup(); reject(err); }
+                };
+
+                frame.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;">${bodyHtml}</body></html>`;
+            });
+        }
+
         function downloadSettlementPDF(workerId) {
           try {
             const w = db.workers.find(x => x.id === workerId);
@@ -2715,17 +2754,8 @@
             
             const dateRangeStr = isCustomRange ? `Period: ${fromVal || 'Start'} to ${toVal || 'End'}` : `Current Billing Cycle (Up to ${new Date().toLocaleDateString('en-IN')})`;
 
-            const pdfDiv = document.createElement('div');
-            // IMPORTANT: html2canvas (which html2pdf uses internally) renders unreliably
-            // on elements that aren't actually attached to the page - this was very
-            // likely why some settlement PDFs came out blank or cut off partway through.
-            // Positioning it off-screen keeps it invisible without affecting layout.
-            pdfDiv.style.position = 'absolute';
-            pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-9999px';
-            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
             // Build absolute inline CSS layout to guarantee PDF perfection
-            pdfDiv.innerHTML = `
+            const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Salary Settlement Statement</p>
@@ -2785,20 +2815,11 @@
                 </div>
             `;
 
-            document.body.appendChild(pdfDiv);
-            html2pdf().set({
-                margin: 0,
-                filename: `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save().then(() => {
-                document.body.removeChild(pdfDiv);
-            }).catch(err => {
-                document.body.removeChild(pdfDiv);
-                console.error("PDF render error", err);
-                showToast("PDF generation failed: " + (err.message || err), "error");
-            });
+            renderHtmlToPdf(pdfHtml, `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .catch(err => {
+                    console.error("PDF render error", err);
+                    showToast("PDF generation failed: " + (err.message || err), "error");
+                });
           } catch (err) {
             console.error("Settlement PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
@@ -2858,12 +2879,7 @@
                 </tr>`;
             });
 
-            const pdfDiv = document.createElement('div');
-            pdfDiv.style.position = 'absolute';
-            pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-9999px';
-            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
-            pdfDiv.innerHTML = `
+            const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Master Payroll Statement</p>
@@ -2896,20 +2912,11 @@
                 </div>
             `;
 
-            document.body.appendChild(pdfDiv);
-            html2pdf().set({
-                margin: 0,
-                filename: `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save().then(() => {
-                document.body.removeChild(pdfDiv);
-            }).catch(err => {
-                document.body.removeChild(pdfDiv);
-                console.error("PDF render error", err);
-                showToast("PDF generation failed: " + (err.message || err), "error");
-            });
+            renderHtmlToPdf(pdfHtml, `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .catch(err => {
+                    console.error("PDF render error", err);
+                    showToast("PDF generation failed: " + (err.message || err), "error");
+                });
           } catch (err) {
             console.error("Master Payroll PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
@@ -3051,12 +3058,7 @@
                 </tr>`;
             }).join('');
 
-            const pdfDiv = document.createElement('div');
-            pdfDiv.style.position = 'absolute';
-            pdfDiv.style.top = '0';
-            pdfDiv.style.left = '-9999px';
-            pdfDiv.style.width = '800px'; // fixed width so rendering doesn't depend on the phone's narrow viewport
-            pdfDiv.innerHTML = `
+            const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cash Book Statement</p>
@@ -3084,20 +3086,11 @@
                 </div>
             `;
 
-            document.body.appendChild(pdfDiv);
-            html2pdf().set({
-                margin: 0,
-                filename: `JithuCorp_CashBook_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, width: 800, windowWidth: 800 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(pdfDiv).save().then(() => {
-                document.body.removeChild(pdfDiv);
-            }).catch(err => {
-                document.body.removeChild(pdfDiv);
-                console.error("PDF render error", err);
-                showToast("PDF generation failed: " + (err.message || err), "error");
-            });
+            renderHtmlToPdf(pdfHtml, `JithuCorp_CashBook_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .catch(err => {
+                    console.error("PDF render error", err);
+                    showToast("PDF generation failed: " + (err.message || err), "error");
+                });
           } catch (err) {
             console.error("Cash Book PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
