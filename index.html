@@ -107,7 +107,7 @@
             </div>
         </div>
         <div class="text-center space-y-2">
-            <h1 class="text-2xl font-black text-white tracking-widest uppercase font-display">Jithu Corporation</h1>
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase font-display company-name-label">Jithu Corporation</h1>
             <p id="loaderStatusText" class="text-xs font-semibold text-[#D0BCFF] flex items-center gap-2 justify-center tracking-wide">
                 <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
             </p>
@@ -123,7 +123,7 @@
                 <i class="fa-solid fa-building"></i>
             </div>
             <div>
-                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide font-display">Jithu Corporation</h1>
+                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide font-display company-name-label">Jithu Corporation</h1>
                 <p class="text-[11px] text-white/60 flex items-center gap-1.5" id="headerSubText">
                     <span id="cloudStatusText" class="text-[#D0BCFF] font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
                     <span id="roleBadge" class="bg-white/10 text-white/80 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
@@ -143,7 +143,7 @@
             <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-zinc-300/40 max-w-md w-full border border-zinc-200">
                 <div class="text-center mb-8">
                     <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#6750A4] bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Worker Portal</span>
-                    <h2 class="text-3xl font-black text-zinc-900 mt-3 tracking-tight font-display">Jithu Corporation</h2>
+                    <h2 class="text-3xl font-black text-zinc-900 mt-3 tracking-tight font-display company-name-label">Jithu Corporation</h2>
                     <p class="text-zinc-500 text-xs mt-1">Smart Face Recognition &amp; GPS Attendance</p>
                 </div>
 
@@ -283,18 +283,13 @@
                 <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="openPayrollRulesModal()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-sliders"></i> Payroll Rules
-                        </button>
-                        <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden flex-1 sm:flex-none py-2 px-4 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
-                        </button>
-                    </div>
+                    <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden w-full sm:w-auto py-2 px-4 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
+                    </button>
                 </div>
                 
                 <!-- DATE RANGE FILTERS -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
                     <div>
                         <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">From Date</label>
                         <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
@@ -302,6 +297,11 @@
                     <div>
                         <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">To Date</label>
                         <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="setPayrollFilterToThisWeek()" class="w-full py-2 bg-[#EADDFF] hover:bg-[#DCC9F7] text-[#4F378B] rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-calendar-week"></i> This Week
+                        </button>
                     </div>
                     <div class="flex items-end">
                         <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-xs font-bold transition">
@@ -503,6 +503,69 @@
             </div>
         </div>
 
+        <!-- TAB: SETTINGS (ADMIN ONLY) -->
+        <section id="view-settings" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-4">
+                <h2 class="text-lg font-bold text-zinc-900 font-display"><i class="fa-solid fa-sliders text-[#6750A4]"></i> Settings</h2>
+                <p class="text-[11px] text-zinc-500 -mt-2">Payroll rule changes only apply to attendance from today onwards - past days keep using whichever rules were active back then.</p>
+                <form onsubmit="saveSettings(event)" class="space-y-4 text-xs">
+                    <div>
+                        <p class="font-bold text-zinc-700 mb-2">Company</p>
+                        <label class="block">Company Name<input type="text" id="setCompanyName" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Shown on all PDF statements (settlement, master payroll, cash book) and the app header.</p>
+                    </div>
+
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Payroll Week</p>
+                        <label class="block">Week Starts On
+                            <select id="setWeekStartDay" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2">
+                                <option value="0">Sunday</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                            </select>
+                        </label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Powers the "This Week" quick filter on the Payroll tab (default: Sunday-Saturday).</p>
+                    </div>
+
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Shift Timing</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Arrival Rule</p>
+                        <label class="block">Grace Until (on-time cutoff)<input type="time" id="ruleGraceUntil" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Punching in at or before this time = counted as arriving exactly at Shift Start, with no deduction, and grants afternoon "Free Pass" eligibility below. Punching in any later uses the exact time - no deduction unless it's actually past Shift Start, in which case pay is docked precisely for the time missed (no rounding).</p>
+                    </div>
+
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Departure "Free Pass"</p>
+                        <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Until cutoff above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
+                    </div>
+
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Overtime</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Settings (rules effective from today)</button>
+                </form>
+            </div>
+        </section>
+
         <!-- TAB 6: PROFILE -->
         <section id="view-profile" class="hidden space-y-4">
             <div id="myProfileCard" class="hidden bg-white rounded-2xl p-5 border border-zinc-200 shadow-lg items-center gap-4">
@@ -549,6 +612,10 @@
         <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
             <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-users text-base"></i></span>
             <span>Workers</span>
+        </button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-sliders text-base"></i></span>
+            <span>Settings</span>
         </button>
     </nav>
 
@@ -643,57 +710,6 @@
                     <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </label>
                 <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- PAYROLL RULES MODAL (admin only) -->
-    <div id="payrollRulesModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto sheet-panel">
-            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-zinc-900 font-display"><i class="fa-solid fa-sliders text-[#6750A4]"></i> Payroll Rules</h3>
-                <button type="button" onclick="closePayrollRulesModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <p class="text-[11px] text-zinc-500 -mt-2">Changes only apply to attendance from today onwards. Past days keep using whichever rules were active back then.</p>
-            <form onsubmit="savePayrollRules(event)" class="space-y-4 text-xs">
-                <div>
-                    <p class="font-bold text-zinc-700 mb-2">Shift Timing</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                    </div>
-                </div>
-
-                <div class="border-t border-zinc-200 pt-3">
-                    <p class="font-bold text-zinc-700 mb-2">Arrival Deductions</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace Period (min)<input type="number" min="0" id="ruleGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Window (min)<input type="number" min="0" id="ruleHalfDeductMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Half-Step Deduction (hrs)<input type="number" min="0" step="0.1" id="ruleHalfDeductHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Step Width (min)<input type="number" min="1" id="ruleStepMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block col-span-2">Deduction Per Step (hrs)<input type="number" min="0" step="0.1" id="ruleStepDeductHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                    </div>
-                    <p class="text-[10px] text-zinc-400 mt-1.5">Example with defaults (15 / 15 / 0.5 / 30 / 0.5): 9:00-9:15 = 0 hrs, 9:16-9:30 = 0.5 hrs, 9:31-10:00 = 1.0 hrs, 10:01-10:30 = 1.5 hrs, then +0.5 hrs every 30 min.</p>
-                </div>
-
-                <div class="border-t border-zinc-200 pt-3">
-                    <p class="font-bold text-zinc-700 mb-2">Departure "Free Pass"</p>
-                    <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                    <p class="text-[10px] text-zinc-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Period above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
-                </div>
-
-                <div class="border-t border-zinc-200 pt-3">
-                    <p class="font-bold text-zinc-700 mb-2">Overtime</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                        <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Rules (effective from today)</button>
             </form>
         </div>
     </div>
@@ -842,6 +858,7 @@
             // accounts loaded from a sheet saved before password hashing existed).
             // Doesn't block startup - runs in the background and re-syncs if needed.
             migrateLegacyPasswords().catch(err => console.warn("Password migration failed", err));
+            applyCompanyBranding();
 
             // Hide the initial loader smoothly
             const loader = document.getElementById('initialLoader');
@@ -1091,7 +1108,7 @@
         }
 
         function switchTab(t) { 
-            const ADMIN_ONLY_TABS = ['settlement', 'sites', 'workers', 'cashbook'];
+            const ADMIN_ONLY_TABS = ['settlement', 'sites', 'workers', 'cashbook', 'settings'];
             if (ADMIN_ONLY_TABS.includes(t) && (!currentUser || currentUser.role !== 'admin')) {
                 t = 'logs'; // Not an admin - redirect away from admin-only sections
             }
@@ -1116,6 +1133,7 @@
             if(t !== 'workers') { stopRegWebcam(); }
             if(t === 'profile') { renderMyProfileCard(); }
             if(t === 'cashbook') { setDefaultCashbookDateTime(); renderCashbook(); }
+            if(t === 'settings') { renderSettingsTab(); }
         }
 
         function renderMyProfileCard() {
@@ -1888,24 +1906,18 @@
             return h * 60 + m;
         }
 
-        function openPayrollRulesModal() {
+        function renderSettingsTab() {
             const rules = getEffectiveRules(Date.now());
+            document.getElementById('setCompanyName').value = rules.companyName || 'Jithu Corporation';
+            document.getElementById('setWeekStartDay').value = String(rules.weekStartDay ?? 0);
             document.getElementById('ruleShiftStart').value = minutesToTimeInput(rules.shiftStartMin);
             document.getElementById('ruleShiftEnd').value = minutesToTimeInput(rules.shiftEndMin);
-            document.getElementById('ruleGraceMin').value = rules.graceMinutes;
-            document.getElementById('ruleHalfDeductMin').value = rules.halfDeductionMinutes;
-            document.getElementById('ruleHalfDeductHrs').value = rules.halfStepDeductionHours;
-            document.getElementById('ruleStepMin').value = rules.stepMinutes;
-            document.getElementById('ruleStepDeductHrs').value = rules.stepDeductionHours;
+            document.getElementById('ruleGraceUntil').value = minutesToTimeInput(rules.graceUntilMin);
             document.getElementById('ruleFreePassStart').value = minutesToTimeInput(rules.freePassStartMin);
             document.getElementById('ruleOtGraceMin').value = rules.otGraceMinutes;
             document.getElementById('ruleOtBlockMin').value = rules.otBlockMinutes;
             document.getElementById('ruleOtBlockHrs').value = rules.otBlockHours;
             document.getElementById('ruleOtRate').value = rules.otRate;
-            document.getElementById('payrollRulesModal').classList.remove('hidden');
-        }
-        function closePayrollRulesModal() {
-            document.getElementById('payrollRulesModal').classList.add('hidden');
         }
 
         // Formats a JS Date as the "YYYY-MM-DDTHH:MM" string a <input type="datetime-local"> expects.
@@ -1944,16 +1956,14 @@
             closeEditPunchModal();
         }
 
-        function savePayrollRules(e) {
+        function saveSettings(e) {
             e.preventDefault();
             const newRules = {
+                companyName: document.getElementById('setCompanyName').value.trim() || 'Jithu Corporation',
+                weekStartDay: parseInt(document.getElementById('setWeekStartDay').value, 10),
                 shiftStartMin: timeInputToMinutes(document.getElementById('ruleShiftStart').value),
                 shiftEndMin: timeInputToMinutes(document.getElementById('ruleShiftEnd').value),
-                graceMinutes: parseFloat(document.getElementById('ruleGraceMin').value) || 0,
-                halfDeductionMinutes: parseFloat(document.getElementById('ruleHalfDeductMin').value) || 0,
-                halfStepDeductionHours: parseFloat(document.getElementById('ruleHalfDeductHrs').value) || 0,
-                stepMinutes: parseFloat(document.getElementById('ruleStepMin').value) || 30,
-                stepDeductionHours: parseFloat(document.getElementById('ruleStepDeductHrs').value) || 0,
+                graceUntilMin: timeInputToMinutes(document.getElementById('ruleGraceUntil').value),
                 freePassStartMin: timeInputToMinutes(document.getElementById('ruleFreePassStart').value),
                 otGraceMinutes: parseFloat(document.getElementById('ruleOtGraceMin').value) || 0,
                 otBlockMinutes: parseFloat(document.getElementById('ruleOtBlockMin').value) || 30,
@@ -1969,9 +1979,31 @@
             if (existingToday) existingToday.rules = newRules; // Edited again same day - just update it
             else db.payrollRulesHistory.push({ effectiveFrom: todayMs.getTime(), rules: newRules });
 
-            saveStorage(); syncConfigToCloud(); renderSettlements();
-            showToast("Payroll rules updated - effective from today");
-            closePayrollRulesModal();
+            saveStorage(); syncConfigToCloud(); renderSettlements(); applyCompanyBranding();
+            showToast("Settings saved - rule changes effective from today");
+        }
+
+        // Applies the configured company name to the app header and login screen,
+        // and to page <title>, so branding stays consistent everywhere.
+        function applyCompanyBranding() {
+            const name = getEffectiveRules(Date.now()).companyName || 'Jithu Corporation';
+            document.querySelectorAll('.company-name-label').forEach(el => el.innerText = name);
+            document.title = name;
+        }
+
+        // Computes the Sunday-Saturday (or whatever weekStartDay is configured)
+        // range for "this week", for the Payroll tab's quick filter.
+        function setPayrollFilterToThisWeek() {
+            const rules = getEffectiveRules(Date.now());
+            const startDay = rules.weekStartDay ?? 0;
+            const now = new Date();
+            const diff = (now.getDay() - startDay + 7) % 7;
+            const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+            const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
+            const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            document.getElementById('payrollFrom').value = fmt(weekStart);
+            document.getElementById('payrollTo').value = fmt(weekEnd);
+            renderSettlements();
         }
 
         async function startEditRecapture() {
@@ -2146,17 +2178,20 @@
         // ==================== PAYROLL RULES (admin-configurable, date-versioned) ====================
         // Standard shift: 9:00 AM - 5:00 PM (8 hours).
         //
-        // ARRIVAL (punch-IN) deductions:
-        //   - Before 9:00 AM: no bonus - effective start is snapped to 9:00 AM.
-        //   - 9:00-9:15 AM: grace period, 0 deduction. Also grants "Free Pass" eligibility (see below).
-        //   - 9:16-9:30 AM: 0.5 hr deducted (and Free Pass eligibility is lost).
-        //   - 9:31-10:00 AM: 1.0 hr. 10:01-10:30 AM: 1.5 hr. Then +0.5 hr for every
-        //     further 30-minute block late.
+        // ARRIVAL (punch-IN):
+        //   - At or before 8:30 AM: counted as arriving exactly at 9:00 AM - zero
+        //     deduction, and this also grants "Free Pass" eligibility for the
+        //     afternoon (see departure rules below).
+        //   - After 8:30 AM: the EXACT punch time is used. If that's still before
+        //     9:00 AM, there's no deduction (they're not late) but Free Pass
+        //     eligibility is lost. If it's after 9:00 AM, pay is docked exactly
+        //     proportional to the time missed (late minutes / 60 * hourly rate) -
+        //     no rounding or step-blocks, just precise linear math.
         //
         // DEPARTURE (punch-OUT) deductions:
         //   - Leaving before 3:00 PM: deduct the EXACT time short of 5:00 PM.
         //   - Leaving 3:00-5:00 PM: if the worker still has Free Pass eligibility
-        //     (i.e. arrived by 9:15 AM), snap to 5:00 PM with 0 deduction. Otherwise,
+        //     (arrived by 8:30 AM), snap to 5:00 PM with 0 deduction. Otherwise,
         //     same exact-time deduction as leaving early.
         //   - 5:00 PM or later: 0 deduction (see overtime below for anything past 5 PM).
         //
@@ -2166,19 +2201,18 @@
         //     30-minute blocks (e.g. 75 min past 5 PM = 1.5 hrs OT), paid at a flat
         //     rate per hour (not the worker's own wage).
         //
-        // All of the numbers above are defaults and can be changed by an admin via
-        // openPayrollRulesModal() below. Changes only apply to days ON OR AFTER the
-        // date they were saved - db.payrollRulesHistory keeps every past version so
-        // old days are always recalculated with whatever rules were active back then
-        // (exactly like wage history - see getEffectiveWage).
+        // All of the numbers above (plus company name and the payroll week's start
+        // day) are defaults and can be changed by an admin via the Settings tab.
+        // Changes only apply to days ON OR AFTER the date they were saved -
+        // db.payrollRulesHistory keeps every past version so old days are always
+        // recalculated with whatever rules were active back then (exactly like wage
+        // history - see getEffectiveWage).
         const DEFAULT_PAYROLL_RULES = {
+            companyName: 'Jithu Corporation',
+            weekStartDay: 0,             // 0 = Sunday (JS Date convention: 0=Sun..6=Sat) - payroll week is Sun-Sat
             shiftStartMin: 9 * 60,       // 9:00 AM, in minutes since midnight
             shiftEndMin: 17 * 60,        // 5:00 PM
-            graceMinutes: 15,            // 9:00-9:15: 0 deduction + Free Pass eligible
-            halfDeductionMinutes: 15,    // 9:16-9:30: flat half-step deduction
-            halfStepDeductionHours: 0.5, // ...worth this many hours
-            stepMinutes: 30,             // every 30 min after that...
-            stepDeductionHours: 0.5,     // ...adds this many more hours deducted
+            graceUntilMin: 8 * 60 + 30,  // 8:30 AM - arriving by this time = fully on-time + Free Pass eligible
             freePassStartMin: 15 * 60,   // 3:00 PM - start of the departure "Free Pass" window
             otGraceMinutes: 45,          // 5:00-5:45 PM: no overtime
             otBlockMinutes: 30,          // overtime rounds UP in blocks this many minutes wide
@@ -2229,18 +2263,14 @@
             const outMin = minutesOfDay(new Date(lastOutMs));
 
             // --- Arrival deduction ---
-            const lateMin = Math.max(0, inMin - rules.shiftStartMin);
-            const freePassEligible = lateMin <= rules.graceMinutes;
+            // At/before the grace cutoff (8:30 AM by default): fully on-time, and
+            // eligible for the afternoon Free Pass. After it: use the exact time -
+            // no deduction unless actually past shift start, and no more rounding to
+            // half-hour steps like the old system - just precise linear math.
+            const freePassEligible = inMin <= rules.graceUntilMin;
             let arrivalDeductionHours = 0;
-            if (lateMin > rules.graceMinutes) {
-                const pastGrace = lateMin - rules.graceMinutes;
-                if (pastGrace <= rules.halfDeductionMinutes) {
-                    arrivalDeductionHours = rules.halfStepDeductionHours;
-                } else {
-                    const pastHalf = pastGrace - rules.halfDeductionMinutes;
-                    const steps = Math.ceil(pastHalf / rules.stepMinutes);
-                    arrivalDeductionHours = rules.halfStepDeductionHours + steps * rules.stepDeductionHours;
-                }
+            if (inMin > rules.shiftStartMin) {
+                arrivalDeductionHours = (inMin - rules.shiftStartMin) / 60;
             }
 
             // --- Departure deduction ---
@@ -2757,7 +2787,7 @@
             // Build absolute inline CSS layout to guarantee PDF perfection
             const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
-                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Salary Settlement Statement</p>
                     <hr style="margin: 30px 0; border: 0; border-top: 2px solid #eee;">
                     
@@ -2881,7 +2911,7 @@
 
             const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
-                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Master Payroll Statement</p>
                     <p style="text-align: center; color: #888; font-size: 12px; margin-bottom: 30px;">Period: ${dateRangeStr}</p>
                     
@@ -3060,7 +3090,7 @@
 
             const pdfHtml = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
-                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">Jithu Corporation</h1>
+                    <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cash Book Statement</p>
                     <p style="text-align: center; color: #888; font-size: 12px;">${dateRangeStr}</p>
                     <hr style="margin: 20px 0; border: 0; border-top: 2px solid #eee;">
