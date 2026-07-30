@@ -1768,10 +1768,17 @@
             document.getElementById('addSiteModal').classList.add('hidden');
         }
 
-        function handleAddSite(e) {
+        async function handleAddSite(e) {
             e.preventDefault();
-            const site = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
-            db.sites.push(site); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
+            // Capture form values first, then refresh from the cloud before making the
+            // change. Every add/edit/delete pushes the FULL sites list back to the
+            // sheet (a full rebuild) - if our local copy were stale (e.g. this device
+            // hasn't synced in a while, or another admin added a site elsewhere
+            // moments ago), pushing it would silently overwrite/delete their entry.
+            // Refreshing right before we mutate closes that window.
+            const newSite = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
+            await fetchCloudData();
+            db.sites.push(newSite); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
             closeAddSiteModal();
         }
 
@@ -1797,6 +1804,12 @@
             
             const newUser = { username: phone, role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true };
             await setUserPassword(newUser, '1234');
+
+            // Refresh from the cloud before adding, for the same reason as
+            // handleAddSite above - every sync fully rebuilds the Workers/Users
+            // sheets, so a stale local list here could silently delete other
+            // workers registered elsewhere since this device last synced.
+            await fetchCloudData();
 
             db.workers.push(w); db.users.push(newUser);
             saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
@@ -1838,7 +1851,8 @@
 
         // --- EDIT & DELETE SITE LOGIC ---
         function deleteSite(id) {
-            openConfirmModal("Delete Site?", "This will permanently remove the site.", () => {
+            openConfirmModal("Delete Site?", "This will permanently remove the site.", async () => {
+                await fetchCloudData(); // refresh first - see handleAddSite for why
                 db.sites = db.sites.filter(s => s.id !== id);
                 saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site deleted");
             });
@@ -1855,22 +1869,31 @@
             document.getElementById('editSiteModal').classList.remove('hidden');
         }
         function closeEditSite() { document.getElementById('editSiteModal').classList.add('hidden'); editingSiteId = null; }
-        function saveEditSite(e) {
+        async function saveEditSite(e) {
             e.preventDefault();
-            const s = db.sites.find(x => x.id === editingSiteId);
+            const editedName = document.getElementById('editSiteName').value;
+            const editedLat = document.getElementById('editSiteLat').value;
+            const editedLng = document.getElementById('editSiteLng').value;
+            const editedRadius = document.getElementById('editSiteRadius').value;
+            const idToEdit = editingSiteId;
+            closeEditSite(); // Don't make the admin wait on the network for the modal to close
+            await fetchCloudData(); // refresh first - see handleAddSite for why
+            const s = db.sites.find(x => x.id === idToEdit);
             if(s) {
-                s.name = document.getElementById('editSiteName').value;
-                s.lat = document.getElementById('editSiteLat').value;
-                s.lng = document.getElementById('editSiteLng').value;
-                s.radius = document.getElementById('editSiteRadius').value;
+                s.name = editedName;
+                s.lat = editedLat;
+                s.lng = editedLng;
+                s.radius = editedRadius;
                 saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site updated");
+            } else {
+                showToast("Site no longer exists - it may have been deleted elsewhere", "error");
             }
-            closeEditSite();
         }
 
         // --- EDIT & DELETE WORKER LOGIC ---
         function deleteWorker(id) {
-            openConfirmModal("Delete Worker?", "This removes the worker and their login access.", () => {
+            openConfirmModal("Delete Worker?", "This removes the worker and their login access.", async () => {
+                await fetchCloudData(); // refresh first - see handleAddSite for why
                 db.workers = db.workers.filter(w => w.id !== id);
                 db.users = db.users.filter(u => u.workerId !== id);
                 saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker deleted");
@@ -1956,7 +1979,7 @@
             closeEditPunchModal();
         }
 
-        function saveSettings(e) {
+        async function saveSettings(e) {
             e.preventDefault();
             const newRules = {
                 companyName: document.getElementById('setCompanyName').value.trim() || 'Jithu Corporation',
@@ -1970,6 +1993,11 @@
                 otBlockHours: parseFloat(document.getElementById('ruleOtBlockHrs').value) || 0,
                 otRate: parseFloat(document.getElementById('ruleOtRate').value) || 0
             };
+
+            // Refresh from the cloud first - syncConfigToCloud() below pushes the
+            // full sites/workers/users bundle too, not just these rules, so we want
+            // that bundle to be as fresh as possible (see handleAddSite for why).
+            await fetchCloudData();
 
             // Versioned: takes effect from today onwards only. Past days keep using
             // whichever rules were active on that date (see getEffectiveRules).
@@ -2062,14 +2090,25 @@
             document.getElementById('editRetakeBtn').classList.add('hidden');
         }
 
-        function saveEditWorker(e) {
+        async function saveEditWorker(e) {
             e.preventDefault();
-            const w = db.workers.find(x => x.id === editingWorkerId);
+            // Capture everything from the form/state first, then refresh from the
+            // cloud (see handleAddSite for why), then re-locate the worker in that
+            // fresh data before applying the edit.
+            const idToEdit = editingWorkerId;
+            const newName = document.getElementById('editWorkerName').value;
             const newPhone = document.getElementById('editWorkerPhone').value;
+            const newWage = parseFloat(document.getElementById('editWorkerWage').value) || 0;
+            const capturedPhoto = editCapturedPhoto;
+            const capturedDescriptor = editCapturedDescriptor;
+
+            closeEditWorker(); // Don't make the admin wait on the network for the modal to close
+            await fetchCloudData();
+
+            const w = db.workers.find(x => x.id === idToEdit);
             if(w) {
-                w.name = document.getElementById('editWorkerName').value;
+                w.name = newName;
                 w.phone = newPhone;
-                const newWage = parseFloat(document.getElementById('editWorkerWage').value) || 0;
 
                 // Version the wage change: only takes effect from today onwards. Past
                 // days keep calculating with whatever wage was actually in effect then.
@@ -2083,17 +2122,18 @@
                 }
 
                 // Only overwrite biometrics/photo if the admin actually recaptured a new face
-                if (editCapturedPhoto && editCapturedDescriptor) {
-                    w.photo = editCapturedPhoto;
-                    w.descriptor = editCapturedDescriptor;
+                if (capturedPhoto && capturedDescriptor) {
+                    w.photo = capturedPhoto;
+                    w.descriptor = capturedDescriptor;
                 }
                 
-                const u = db.users.find(x => x.workerId === editingWorkerId);
+                const u = db.users.find(x => x.workerId === idToEdit);
                 if(u) { u.name = w.name; u.username = newPhone; }
                 
                 saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker updated");
+            } else {
+                showToast("Worker no longer exists - they may have been deleted elsewhere", "error");
             }
-            closeEditWorker();
         }
 
         function renderSites() { 
@@ -2722,7 +2762,7 @@
                 frame.style.top = '0';
                 frame.style.left = '-99999px';
                 frame.style.width = '800px';
-                frame.style.height = '1200px';
+                frame.style.height = '100px'; // temporary - resized below once real content height is known
                 frame.style.border = 'none';
                 document.body.appendChild(frame);
 
@@ -2731,11 +2771,20 @@
                 frame.onload = () => {
                     try {
                         const target = frame.contentDocument.body;
+                        // IMPORTANT: the iframe's height was a fixed guess before, which
+                        // clipped any statement taller than that (e.g. the Financial
+                        // Summary section on a longer settlement was silently cut off).
+                        // Measuring the actual rendered content and resizing the iframe
+                        // to match - before handing it to html2canvas - means nothing
+                        // ever gets clipped regardless of how long the statement is.
+                        const actualHeight = target.scrollHeight;
+                        frame.style.height = (actualHeight + 50) + 'px';
+
                         html2pdf().set({
                             margin: 0,
                             filename,
-                            image: { type: 'jpeg', quality: 1 },
-                            html2canvas: { scale: 2, width: 800, windowWidth: 800 },
+                            image: { type: 'jpeg', quality: 0.95 },
+                            html2canvas: { scale: 1.5, width: 800, windowWidth: 800, height: actualHeight, windowHeight: actualHeight },
                             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                         }).from(target).save().then(() => { cleanup(); resolve(); }).catch(err => { cleanup(); reject(err); });
                     } catch (err) { cleanup(); reject(err); }
@@ -2743,6 +2792,28 @@
 
                 frame.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;">${bodyHtml}</body></html>`;
             });
+        }
+
+        // Full-screen loading overlay shown for the whole duration of PDF
+        // generation - html2canvas rendering genuinely blocks the main thread for a
+        // few seconds on longer documents, which otherwise looks/feels like the app
+        // has frozen with no explanation.
+        function showPdfLoadingOverlay() {
+            let overlay = document.getElementById('pdfLoadingOverlay');
+            if (overlay) { overlay.classList.remove('hidden'); return; }
+            overlay = document.createElement('div');
+            overlay.id = 'pdfLoadingOverlay';
+            overlay.className = 'fixed inset-0 bg-white/90 z-[400] flex flex-col items-center justify-center gap-4';
+            overlay.innerHTML = `
+                <div class="w-12 h-12 border-4 border-zinc-200 border-t-[#6750A4] rounded-full animate-spin"></div>
+                <p class="text-sm font-semibold text-zinc-700">Generating PDF, please wait...</p>
+                <p class="text-xs text-zinc-400">This can take a few seconds for longer statements.</p>
+            `;
+            document.body.appendChild(overlay);
+        }
+        function hidePdfLoadingOverlay() {
+            const overlay = document.getElementById('pdfLoadingOverlay');
+            if (overlay) overlay.remove();
         }
 
         function downloadSettlementPDF(workerId) {
@@ -2845,12 +2916,16 @@
                 </div>
             `;
 
+            showPdfLoadingOverlay();
             renderHtmlToPdf(pdfHtml, `JithuCorp_Settlement_${w.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .then(() => hidePdfLoadingOverlay())
                 .catch(err => {
+                    hidePdfLoadingOverlay();
                     console.error("PDF render error", err);
                     showToast("PDF generation failed: " + (err.message || err), "error");
                 });
           } catch (err) {
+            hidePdfLoadingOverlay();
             console.error("Settlement PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
           }
@@ -2942,12 +3017,16 @@
                 </div>
             `;
 
+            showPdfLoadingOverlay();
             renderHtmlToPdf(pdfHtml, `JithuCorp_Master_Payroll_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .then(() => hidePdfLoadingOverlay())
                 .catch(err => {
+                    hidePdfLoadingOverlay();
                     console.error("PDF render error", err);
                     showToast("PDF generation failed: " + (err.message || err), "error");
                 });
           } catch (err) {
+            hidePdfLoadingOverlay();
             console.error("Master Payroll PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
           }
@@ -3116,12 +3195,16 @@
                 </div>
             `;
 
+            showPdfLoadingOverlay();
             renderHtmlToPdf(pdfHtml, `JithuCorp_CashBook_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.pdf`)
+                .then(() => hidePdfLoadingOverlay())
                 .catch(err => {
+                    hidePdfLoadingOverlay();
                     console.error("PDF render error", err);
                     showToast("PDF generation failed: " + (err.message || err), "error");
                 });
           } catch (err) {
+            hidePdfLoadingOverlay();
             console.error("Cash Book PDF error", err);
             showToast("Could not generate PDF: " + (err.message || err), "error");
           }
