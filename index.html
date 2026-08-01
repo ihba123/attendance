@@ -11,8 +11,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SitePunch AI">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMDAwMDAiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="manifest" href="./manifest.json">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -60,38 +60,38 @@
             inset: 0;
             z-index: -1;
             background: 
-                radial-gradient(ellipse at 20% 30%, rgba(120, 80, 200, 0.25) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 70%, rgba(60, 140, 220, 0.20) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(100, 60, 180, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 30%, rgba(120, 80, 200, 0.22) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(60, 140, 220, 0.18) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(100, 60, 180, 0.12) 0%, transparent 60%),
                 linear-gradient(180deg, #0a0a1a 0%, #000000 100%);
-            animation: meshShift 20s ease-in-out infinite alternate;
+            animation: meshPulse 8s ease-in-out infinite alternate;
         }
-        @keyframes meshShift {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(15deg); }
+        @keyframes meshPulse {
+            0% { opacity: 1; }
+            100% { opacity: 0.85; }
         }
 
         /* Liquid Glass Card */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(140%);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow), var(--glass-inset);
             border-radius: 24px;
         }
         .glass-strong {
             background: var(--glass-bg-strong);
-            backdrop-filter: blur(32px) saturate(200%);
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
             border: 1px solid var(--glass-border-strong);
             box-shadow: var(--glass-shadow), var(--glass-inset);
             border-radius: 24px;
         }
         .glass-thin {
             background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(16px) saturate(150%);
-            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
             border: 1px solid rgba(255, 255, 255, 0.10);
             border-radius: 20px;
         }
@@ -313,7 +313,7 @@
         /* Loader - liquid glass spinner */
         .liquid-loader {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(60, 140, 220, 0.15) 100%);
-            backdrop-filter: blur(40px);
+            backdrop-filter: blur(20px);
         }
         .spinner-ring {
             border: 3px solid transparent;
@@ -445,6 +445,14 @@
 
         /* Hide sections */
         .hidden { display: none !important; }
+
+        /* Loader failsafe */
+        #initialLoader {
+            animation: loaderForceHide 0.6s cubic-bezier(0.4,0,0.2,1) 5s forwards;
+        }
+        @keyframes loaderForceHide {
+            to { opacity: 0; pointer-events: none; visibility: hidden; display: none; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-28">
@@ -454,12 +462,13 @@
 
     <!-- INITIAL LOADER -->
     <div id="initialLoader" class="fixed inset-0 z-[999] liquid-loader flex flex-col items-center justify-center space-y-8 transition-opacity duration-700">
-        <div class="relative flex items-center justify-center w-36 h-36">
-            <div class="absolute inset-0 spinner-ring" style="animation-duration: 1.2s;"></div>
-            <div class="absolute inset-3 spinner-ring" style="animation-direction: reverse; animation-duration: 1.8s; border-top-color: rgba(52,211,153,0.7);"></div>
-            <div class="absolute inset-6 spinner-ring" style="animation-duration: 2.4s; border-top-color: rgba(255,255,255,0.3);"></div>
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/30 z-10">
-                <i class="fa-solid fa-building"></i>
+        <button onclick="forceSkipLoader()" class="absolute top-6 right-6 text-white/30 hover:text-white/60 text-xs font-medium transition pressable z-[1000]">
+            <i class="fa-solid fa-forward mr-1"></i> Skip
+        </button>
+        <div class="relative flex items-center justify-center w-28 h-28">
+            <div class="absolute inset-0 spinner-ring"></div>
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/30 z-10 overflow-hidden">
+                <img src="data:image/png;base64,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" alt="SitePunch" class="w-full h-full object-cover">
             </div>
         </div>
         <div class="text-center space-y-3">
@@ -473,8 +482,8 @@
     <!-- TOP APP BAR -->
     <header id="appBar" class="app-bar sticky top-0 z-50 px-5 py-3.5 flex items-center justify-between transition-all duration-200">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20">
-                <i class="fa-solid fa-building"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20 overflow-hidden">
+                <img src="data:image/png;base64,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" alt="SitePunch" class="w-full h-full object-cover">
             </div>
             <div>
                 <h1 class="font-bold text-[15px] leading-tight text-white tracking-tight company-name-label">Jithu Corporation</h1>
@@ -1184,57 +1193,39 @@
         // --- INIT ---
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
-            
+
             const saved = localStorage.getItem('sitepunch_db_v9');
             if (saved) { try { db = { ...INITIAL_DATA, ...JSON.parse(saved) }; } catch(e) {} }
-            
+
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            // Wait for Cloud Data & AI Models. Previously this had a hard 5-second
-            // cutoff that would silently give up and show the login screen anyway
-            // even if data hadn't arrived yet - on a slow connection, or during an
-            // Apps Script "cold start" (which can genuinely take several seconds),
-            // that meant login would fail with no explanation at all. This is now a
-            // much more generous safety net, and if it's genuinely still not ready
-            // we show a clear warning instead of pretending everything is fine.
+            // Hide loader IMMEDIATELY once local data is ready — don't wait for cloud.
+            applyCompanyBranding();
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 500);
+            }
+            if (currentUser) { showDashboard(); } else { showLandingPage(); }
+
+            // Background: Cloud sync (non-blocking)
             let syncTimedOut = false;
             try {
-                const maxWaitTimer = new Promise(resolve => setTimeout(() => { syncTimedOut = true; resolve(); }, 15000));
+                const maxWaitTimer = new Promise(resolve => setTimeout(() => { syncTimedOut = true; resolve(); }, 6000));
                 await Promise.race([
                     Promise.all([fetchCloudData(), loadFaceAPIModels()]),
                     maxWaitTimer
                 ]);
             } catch (error) {
-                console.warn("Bootup partial failure or timeout", error);
+                console.warn("Background sync timeout", error);
             }
-
             if (syncTimedOut) {
-                console.warn("Startup sync did not finish within 15s - proceeding with whatever data is cached locally.");
-                showToast("Sync is taking longer than usual - some data may be out of date until it finishes.", "error", 6000);
-            }
-
-            // Hash any legacy plaintext passwords (e.g. the built-in default admin, or
-            // accounts loaded from a sheet saved before password hashing existed).
-            // Doesn't block startup - runs in the background and re-syncs if needed.
-            migrateLegacyPasswords().catch(err => console.warn("Password migration failed", err));
-            applyCompanyBranding();
-
-            // Hide the initial loader smoothly
-            const loader = document.getElementById('initialLoader');
-            if (loader) {
-                loader.classList.add('opacity-0');
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                }, 500); // wait for CSS transition
-            }
-
-            // Route to correct screen based on session
-            if (currentUser) {
-                showDashboard();
+                showToast("Sync delayed — working from local cache.", "warning", 4000);
             } else {
-                showLandingPage();
+                showToast("Database synced!", "success", 2000);
             }
+            migrateLegacyPasswords().catch(err => console.warn("Password migration failed", err));
         }
 
         async function fetchCloudData() {
@@ -1242,7 +1233,11 @@
                 const cloudStatus = document.getElementById('cloudStatusText');
                 if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
 
-                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
+                const fetchPromise = fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
+                const response = await Promise.race([
+                    fetchPromise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Cloud fetch timeout")), 6000))
+                ]);
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data) {
@@ -1574,14 +1569,13 @@
         async function loadFaceAPIModels() {
             try {
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                // SWAPPED to tinyFaceDetector for extreme mobile speed
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); 
-                // NOTE: faceExpressionNet no longer loaded - liveness now uses blink detection
-                // (see getEyeAspectRatio/startContinuousScan), which relies only on the
-                // 68-point landmark model already loaded above. This saves a model download
-                // and avoids forcing workers to smile on camera.
+                const loadWithTimeout = (fn) => Promise.race([
+                    fn(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Model load timeout")), 4000))
+                ]);
+                await loadWithTimeout(() => faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL));
+                await loadWithTimeout(() => faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL));
+                await loadWithTimeout(() => faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL));
                 aiModelsLoaded = true;
             } catch (e) {
                 console.error("AI Models Error", e);
@@ -3620,6 +3614,16 @@
         });
 
         // START THE APP
+        
+        // EMERGENCY: No matter what happens, hide the loader after 3 seconds
+        setTimeout(() => {
+            const el = document.getElementById('initialLoader');
+            if (el && !el.classList.contains('hidden')) {
+                el.classList.add('opacity-0');
+                setTimeout(() => { el.classList.add('hidden'); el.style.display = 'none'; }, 500);
+            }
+        }, 3000);
+        
         window.onload = function() {
             loadStorage();
             
@@ -3631,6 +3635,14 @@
                 }
             }, 1000);
         };
+    </script>
+    <!-- SERVICE WORKER REGISTRATION -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.warn('SW failed:', err));
+        }
     </script>
 </body>
 </html>
