@@ -462,9 +462,7 @@
 
     <!-- INITIAL LOADER -->
     <div id="initialLoader" class="fixed inset-0 z-[999] liquid-loader flex flex-col items-center justify-center space-y-8 transition-opacity duration-700">
-        <button onclick="forceSkipLoader()" class="absolute top-6 right-6 text-white/30 hover:text-white/60 text-xs font-medium transition pressable z-[1000]">
-            <i class="fa-solid fa-forward mr-1"></i> Skip
-        </button>
+
         <div class="relative flex items-center justify-center w-28 h-28">
             <div class="absolute inset-0 spinner-ring"></div>
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/30 z-10 overflow-hidden">
@@ -511,7 +509,7 @@
                 </div>
 
                 <!-- Record Attendance Button -->
-                <button onclick="openPublicPunch()" class="pill-btn pill-success w-full py-4 flex flex-col items-center justify-center gap-2 mb-6 pressable">
+                <button type="button" onclick="openPublicPunch()" class="pill-btn pill-success w-full py-4 flex flex-col items-center justify-center gap-2 mb-6 pressable">
                     <i class="fa-solid fa-camera-retro text-xl"></i>
                     <span class="text-base">Record Attendance</span>
                     <span class="text-[11px] font-normal opacity-70">Public Face Kiosk</span>
@@ -559,7 +557,7 @@
                             <p class="text-white/40 text-[11px]" id="gpsDistanceText">Distance: --</p>
                         </div>
                     </div>
-                    <button onclick="checkCurrentLocation()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60 transition pressable">
+                    <button type="button" onclick="checkCurrentLocation()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60 transition pressable">
                         <i class="fa-solid fa-rotate-right text-xs"></i>
                     </button>
                 </div>
@@ -576,7 +574,7 @@
                     </div>
 
                     <div class="absolute bottom-4 flex gap-2 z-20">
-                        <button id="retakeBtn" onclick="resetCamera()" class="hidden pill-btn pill-glass text-xs px-5 py-2.5">
+                        <button type="button" id="retakeBtn" onclick="resetCamera()" class="hidden pill-btn pill-glass text-xs px-5 py-2.5">
                             <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Re-Scan
                         </button>
                     </div>
@@ -595,15 +593,15 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 w-full px-4 pt-2">
-                        <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="pill-btn pill-success disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
+                        <button type="button" id="punchInBtn" disabled onclick="submitPunch('IN')" class="pill-btn pill-success disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
                             <i class="fa-solid fa-right-to-bracket"></i> PUNCH IN
                         </button>
-                        <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="pill-btn pill-danger disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
+                        <button type="button" id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="pill-btn pill-danger disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
                             <i class="fa-solid fa-right-from-bracket"></i> PUNCH OUT
                         </button>
                     </div>
 
-                    <button onclick="resetCamera()" class="text-xs text-white/40 hover:text-white/70 underline mt-1 pressable"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
+                    <button type="button" onclick="resetCamera()" class="text-xs text-white/40 hover:text-white/70 underline mt-1 pressable"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
                 </div>
             </div>
         </section>
@@ -638,7 +636,7 @@
             <div class="glass p-5 space-y-5">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-lg font-bold text-white">Salary Settlement (₹)</h2>
-                    <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden pill-btn pill-primary text-xs py-2.5 px-4 flex items-center gap-2 pressable">
+                    <button type="button" onclick="downloadMasterPayrollPDF()" class="admin-only hidden pill-btn pill-primary text-xs py-2.5 px-4 flex items-center gap-2 pressable">
                         <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
                     </button>
                 </div>
@@ -656,10 +654,10 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="setPayrollFilterToThisWeek()" class="pill-btn pill-glass text-xs py-2.5 pressable">
+                        <button type="button" onclick="setPayrollFilterToThisWeek()" class="pill-btn pill-glass text-xs py-2.5 pressable">
                             <i class="fa-solid fa-calendar-week mr-1"></i> This Week
                         </button>
-                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="pill-btn pill-glass text-xs py-2.5 pressable">
+                        <button type="button" onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="pill-btn pill-glass text-xs py-2.5 pressable">
                             <i class="fa-solid fa-rotate-left mr-1"></i> Current Cycle
                         </button>
                     </div>
@@ -693,15 +691,15 @@
                 <div class="flex gap-2 w-full sm:w-auto">
                     <input type="date" id="cbFrom" onchange="renderCashbook()" class="glass-input py-2 text-xs flex-1 sm:flex-none">
                     <input type="date" id="cbTo" onchange="renderCashbook()" class="glass-input py-2 text-xs flex-1 sm:flex-none">
-                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 transition pressable"><i class="fa-solid fa-rotate-left text-xs"></i></button>
-                    <button onclick="downloadCashbookPDF()" class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 transition pressable"><i class="fa-solid fa-file-pdf text-xs"></i></button>
+                    <button type="button" onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 transition pressable"><i class="fa-solid fa-rotate-left text-xs"></i></button>
+                    <button type="button" onclick="downloadCashbookPDF()" class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 transition pressable"><i class="fa-solid fa-file-pdf text-xs"></i></button>
                 </div>
             </div>
 
             <div id="cashbookContainer" class="space-y-3"></div>
 
             <!-- FAB -->
-            <button onclick="openAddCashbookModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
+            <button type="button" onclick="openAddCashbookModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
                 <i class="fa-solid fa-plus text-lg"></i>
             </button>
         </section>
@@ -753,7 +751,7 @@
             </div>
             <div id="sitesList" class="space-y-3"></div>
 
-            <button onclick="openAddSiteModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
+            <button type="button" onclick="openAddSiteModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
                 <i class="fa-solid fa-plus text-lg"></i>
             </button>
         </section>
@@ -782,10 +780,10 @@
         <!-- TAB: WORKERS & MANUAL OVERRIDE -->
         <section id="view-workers" class="hidden space-y-5 relative">
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="openRegisterWorkerModal()" class="pill-btn pill-primary py-4 flex flex-col items-center gap-2 text-xs pressable">
+                <button type="button" onclick="openRegisterWorkerModal()" class="pill-btn pill-primary py-4 flex flex-col items-center gap-2 text-xs pressable">
                     <i class="fa-solid fa-user-plus text-lg"></i> Register Worker
                 </button>
-                <button onclick="openOverrideModal()" class="pill-btn pill-amber py-4 flex flex-col items-center gap-2 text-xs pressable">
+                <button type="button" onclick="openOverrideModal()" class="pill-btn pill-amber py-4 flex flex-col items-center gap-2 text-xs pressable">
                     <i class="fa-solid fa-user-shield text-lg"></i> Manual Override
                 </button>
             </div>
@@ -947,27 +945,27 @@
 
     <!-- BOTTOM NAVIGATION: Floating Glass Dock -->
     <nav id="mainNav" class="hidden nav-dock">
-        <button onclick="switchTab('logs')" id="tab-logs" class="active">
+        <button type="button" onclick="switchTab('logs')" id="tab-logs" class="active">
             <i class="fa-solid fa-clock-rotate-left"></i>
             <span>Logs</span>
         </button>
-        <button onclick="switchTab('settlement')" id="tab-settlement" class="admin-only hidden">
+        <button type="button" onclick="switchTab('settlement')" id="tab-settlement" class="admin-only hidden">
             <i class="fa-solid fa-indian-rupee-sign"></i>
             <span>Payroll</span>
         </button>
-        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="admin-only hidden">
+        <button type="button" onclick="switchTab('cashbook')" id="tab-cashbook" class="admin-only hidden">
             <i class="fa-solid fa-book"></i>
             <span>Cash Book</span>
         </button>
-        <button onclick="switchTab('sites')" id="tab-sites" class="admin-only hidden">
+        <button type="button" onclick="switchTab('sites')" id="tab-sites" class="admin-only hidden">
             <i class="fa-solid fa-map-location-dot"></i>
             <span>Sites</span>
         </button>
-        <button onclick="switchTab('workers')" id="tab-workers" class="admin-only hidden">
+        <button type="button" onclick="switchTab('workers')" id="tab-workers" class="admin-only hidden">
             <i class="fa-solid fa-users"></i>
             <span>Workers</span>
         </button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="admin-only hidden">
+        <button type="button" onclick="switchTab('settings')" id="tab-settings" class="admin-only hidden">
             <i class="fa-solid fa-sliders"></i>
             <span>Settings</span>
         </button>
@@ -983,8 +981,8 @@
             <h3 class="text-xl font-bold text-white" id="confirmTitle">Are you sure?</h3>
             <p class="text-sm text-white/50" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3 pt-2">
-                <button onclick="closeConfirmModal()" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition pressable border border-white/10">Cancel</button>
-                <button id="confirmActionBtn" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-500/25 transition pressable">Delete</button>
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition pressable border border-white/10">Cancel</button>
+                <button type="button" id="confirmActionBtn" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-500/25 transition pressable">Delete</button>
             </div>
         </div>
     </div>
@@ -1440,7 +1438,7 @@
             document.getElementById('mainNav').classList.add('hidden');
             document.getElementById('roleBadge').innerText = 'Public Kiosk';
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 text-zinc-700 font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
+                <button type="button" onclick="showLandingPage()" class="pill-btn pill-glass text-xs py-2 px-4 pressable"><i class="fa-solid fa-arrow-left mr-1"></i> Home</button>
             `;
             populateDropdowns(); startWebcam(); checkCurrentLocation();
         }
@@ -1450,8 +1448,8 @@
             document.getElementById('mainNav').classList.remove('hidden');
             document.getElementById('roleBadge').innerText = `${currentUser.role}: ${currentUser.name}`;
             document.getElementById('authHeaderAction').innerHTML = `
-                <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition"><i class="fa-solid fa-user"></i> Profile</button>
-                <button onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition">Logout</button>
+                <button type="button" onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition"><i class="fa-solid fa-user"></i> Profile</button>
+                <button type="button" onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition">Logout</button>
             `;
 
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
@@ -1720,7 +1718,7 @@
             const el = document.getElementById('scanStatusLine');
             if (!el) return;
             el.innerText = msg;
-            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-zinc-500');
+            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-white/50');
         }
 
         async function executePunchCapture(video) {
@@ -2499,8 +2497,8 @@
                         <p class="text-[10px] text-white/40">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openEditSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="deleteSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button type="button" onclick="openEditSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button type="button" onclick="deleteSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`).join(''); 
         }
@@ -2526,8 +2524,8 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openEditWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="deleteWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button type="button" onclick="openEditWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button type="button" onclick="deleteWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`;
             }).join(''); 
@@ -2970,15 +2968,15 @@
                 
                 // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
                 const markPaidBtn = (currentUser && currentUser.role === 'admin') ? (isCustomRange ? 
-                    `<button disabled class="py-2.5 rounded-xl bg-white/5 opacity-40 cursor-not-allowed text-white/30 text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
-                    `<button onclick="handleMarkPaid('${w.id}')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition pressable"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
+                    `<button type="button" disabled class="py-2.5 rounded-xl bg-white/5 opacity-40 cursor-not-allowed text-white/30 text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
+                    `<button type="button" onclick="handleMarkPaid('${w.id}')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition pressable"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
 
                 const actionGridClass = (currentUser && currentUser.role === 'admin') ? 'grid grid-cols-2 gap-2' : 'flex flex-col';
                 const pdfBtnClass = (currentUser && currentUser.role === 'admin') ? '' : 'w-full';
 
                 return `
                 <div class="glass overflow-hidden transition-all card-in" style="animation-delay:${i * 40}ms">
-                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-4 text-xs flex justify-between items-center hover:bg-white/5 transition pressable">
+                    <button type="button" onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-4 text-xs flex justify-between items-center hover:bg-white/5 transition pressable">
                         <span class="font-bold text-sm text-white flex items-center gap-3">
                             <img src="${w.photo || FALLBACK_AVATAR}" class="w-8 h-8 rounded-xl object-cover border border-white/10" />
                             ${w.name}
@@ -3004,19 +3002,19 @@
                             ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Late/Early Deductions:</span> <span class="font-medium text-rose-600">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
                             ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-700">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
-                            <div class="my-2 border-t border-zinc-200"></div>
+                            <div class="my-2 border-t border-white/10"></div>
                             
                             <div class="flex justify-between items-center"><span class="text-zinc-500">Total Earned:</span> <span class="text-emerald-600 font-bold">₹${earned.toFixed(0)}</span></div>
                             <div class="flex justify-between items-center"><span class="text-zinc-500">Advances Taken:</span> <span class="text-rose-600 font-bold">-₹${adv.toFixed(0)}</span></div>
                             
-                            <div class="mt-2 pt-2 border-t border-zinc-200 flex justify-between items-center">
+                            <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center">
                                 <span class="text-zinc-700 font-bold uppercase tracking-wider">Net Settlement</span> 
                                 <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} text-base font-black">₹${net.toFixed(0)}</span>
                             </div>
                         </div>
                         
                         <div class="${actionGridClass} pt-3">
-                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-xs font-bold transition flex items-center justify-center gap-1.5 pressable border border-white/10">
+                            <button type="button" onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-xs font-bold transition flex items-center justify-center gap-1.5 pressable border border-white/10">
                                 <i class="fa-solid fa-file-pdf text-rose-400"></i> Save PDF
                             </button>
                             ${markPaidBtn}
@@ -3442,7 +3440,7 @@
                 const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-zinc-400 hover:text-rose-600 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
                 return `<div class="bg-white rounded-xl p-3 border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
                         <div>
                             <p class="text-sm font-medium text-zinc-700">${c.description}</p>
                             <p class="text-[10px] text-zinc-400">${c.category} &bull; ${c.timestamp} ${billLink}</p>
