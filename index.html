@@ -734,6 +734,14 @@
 
     <script>
         // HARDCODED GOOGLE APPS SCRIPT URL
+        // Local, network-free fallback avatar (a simple gray person silhouette) used
+        // anywhere a worker has no photo yet. Previously this fell back to an
+        // external placeholder.com image - on a restricted/flaky site network where
+        // that service is unreachable, the browser (and PDF export, which waits for
+        // every image to finish loading before it can render) would hang waiting for
+        // it indefinitely. This data URI needs no network at all.
+        const FALLBACK_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2U0ZTRlNyIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzgiIHI9IjE4IiBmaWxsPSIjYTFhMWFhIi8+PHBhdGggZD0iTTUwIDYwYy0yMCAwLTM2IDEyLTM2IDI3djEzaDcyVjg3YzAtMTUtMTYtMjctMzYtMjd6IiBmaWxsPSIjYTFhMWFhIi8+PC9zdmc+";
+
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
 
         // SHARED API SECRET: sent with every request; Code.gs rejects anything that
@@ -1144,7 +1152,7 @@
             }
             const w = db.workers.find(x => x.id === currentUser.workerId);
             if (!w) { card.classList.add('hidden'); card.classList.remove('flex'); return; }
-            document.getElementById('myProfilePhoto').src = w.photo || 'https://via.placeholder.com/64?text=No+Photo';
+            document.getElementById('myProfilePhoto').src = w.photo || FALLBACK_AVATAR;
             document.getElementById('myProfileName').innerText = w.name;
             document.getElementById('myProfilePhone').innerText = w.phone;
             card.classList.remove('hidden'); card.classList.add('flex');
@@ -1907,7 +1915,7 @@
             document.getElementById('editWorkerName').value = w.name;
             document.getElementById('editWorkerPhone').value = w.phone;
             document.getElementById('editWorkerWage').value = w.wage;
-            document.getElementById('editCurrentPhoto').src = w.photo || 'https://via.placeholder.com/320x240?text=No+Photo';
+            document.getElementById('editCurrentPhoto').src = w.photo || FALLBACK_AVATAR;
             resetEditCamera(); // Ensure a clean camera state, not showing a stale capture
             document.getElementById('editWorkerModal').classList.remove('hidden');
         }
@@ -2170,7 +2178,7 @@
                 return `
                 <div class="bg-white p-3 rounded-xl border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-xl object-cover border border-zinc-200"/>
+                        <img src="${w.photo || FALLBACK_AVATAR}" class="w-10 h-10 rounded-xl object-cover border border-zinc-200"/>
                         <div>
                             <p class="font-bold text-sm">${w.name}</p>
                             <p class="text-[10px] text-emerald-600">₹${w.wage}/day | Phone: ${w.phone}</p>
@@ -2632,7 +2640,7 @@
                 <div class="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden transition-all shadow-sm card-in" style="animation-delay:${i * 40}ms">
                     <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-zinc-100 transition">
                         <span class="font-bold text-sm text-zinc-900 flex items-center gap-2">
-                            <img src="${w.photo || 'https://via.placeholder.com/40'}" class="w-7 h-7 rounded-full object-cover border border-zinc-200" />
+                            <img src="${w.photo || FALLBACK_AVATAR}" class="w-7 h-7 rounded-full object-cover border border-zinc-200" />
                             ${w.name}
                         </span>
                         <div class="flex items-center gap-3">
@@ -2766,7 +2774,17 @@
                 frame.style.border = 'none';
                 document.body.appendChild(frame);
 
+                let settled = false;
                 const cleanup = () => { if (frame.parentNode) frame.parentNode.removeChild(frame); };
+                // Safety net: if something (e.g. a stray external resource) ever hangs
+                // generation indefinitely again, fail gracefully after 25s instead of
+                // leaving the page stuck forever with no way out.
+                const safetyTimer = setTimeout(() => {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    reject(new Error("Timed out - this usually means a resource (like an image) couldn't load. Check your connection and try again."));
+                }, 25000);
 
                 frame.onload = () => {
                     try {
@@ -2786,7 +2804,13 @@
                             image: { type: 'jpeg', quality: 0.95 },
                             html2canvas: { scale: 1.5, width: 800, windowWidth: 800, height: actualHeight, windowHeight: actualHeight },
                             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                        }).from(target).save().then(() => { cleanup(); resolve(); }).catch(err => { cleanup(); reject(err); });
+                        }).from(target).save().then(() => {
+                            if (settled) return; settled = true; clearTimeout(safetyTimer);
+                            cleanup(); resolve();
+                        }).catch(err => {
+                            if (settled) return; settled = true; clearTimeout(safetyTimer);
+                            cleanup(); reject(err);
+                        });
                     } catch (err) { cleanup(); reject(err); }
                 };
 
