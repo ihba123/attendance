@@ -3,491 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jithu Corp Attendance</title>
-
-    <!-- PWA -->
-    <meta name="theme-color" content="#000000">
+    <title>Jithu Corporation | SitePunch AI Attendance</title>
+    
+    <!-- PWA / INSTALL APP SUPPORT -->
+    <meta name="theme-color" content="#FAFAFC">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Jithu Corp">
-    <link rel="apple-touch-icon" href="./icon-192.png">
-    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SitePunch AI">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNpdGVQdW5jaCBQcm8gQUkiLAogICJzaG9ydF9uYW1lIjogIlNpdGVQdW5jaCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI0ZBRkFGQyIsCiAgInRoZW1lX2NvbG9yIjogIiM2NzUwQTQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMDAwLzEwMDAzMDQucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzEwMDAvMTAwMDMwNC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+    
     <style>
-        /* ===== iOS LIQUID GLASS DESIGN SYSTEM ===== */
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-bg-strong: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --glass-border-strong: rgba(255, 255, 255, 0.30);
-            --glass-highlight: rgba(255, 255, 255, 0.25);
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-            --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.15);
-            --glass-inset: inset 0 1px 1px rgba(255, 255, 255, 0.15);
-            --accent: #A78BFA;
-            --accent-glow: rgba(167, 139, 250, 0.35);
-            --success: #34D399;
-            --danger: #F87171;
-            --warning: #FBBF24;
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.60);
-            --text-tertiary: rgba(255, 255, 255, 0.40);
-        }
+        /* ===== SitePunch: Material 3 (Android) design system =====
+           This uses Google's actual Material 3 "Baseline" color scheme - the
+           same Primary purple (#6750A4) shown throughout the official M3
+           design kit and Android sample apps - rather than a custom brand
+           palette, so the app reads as unmistakably Android/Material.
+           Neutral surfaces use Tailwind "zinc" (a true cool gray, matching
+           M3's neutral tonal palette, unlike a warm gray).
+           Typeface: Roboto everywhere - Android's actual system font. */
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Roboto', system-ui, sans-serif; font-weight: 700; }
 
-        * { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; 
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body { 
-            background: #000;
-            color: var(--text-primary);
-            overflow-x: hidden;
-        }
-
-        /* Animated gradient mesh background */
-        .mesh-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: 
-                radial-gradient(ellipse at 20% 30%, rgba(120, 80, 200, 0.22) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 70%, rgba(60, 140, 220, 0.18) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(100, 60, 180, 0.12) 0%, transparent 60%),
-                linear-gradient(180deg, #0a0a1a 0%, #000000 100%);
-            animation: meshPulse 8s ease-in-out infinite alternate;
-        }
-        @keyframes meshPulse {
-            0% { opacity: 1; }
-            100% { opacity: 0.85; }
-        }
-
-        /* Liquid Glass Card */
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(140%);
-            -webkit-backdrop-filter: blur(16px) saturate(140%);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--glass-shadow), var(--glass-inset);
-            border-radius: 24px;
-        }
-        .glass-strong {
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid var(--glass-border-strong);
-            box-shadow: var(--glass-shadow), var(--glass-inset);
-            border-radius: 24px;
-        }
-        .glass-thin {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(12px) saturate(120%);
-            -webkit-backdrop-filter: blur(12px) saturate(120%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            border-radius: 20px;
-        }
-
-        /* iOS-style pill buttons */
-        .pill-btn {
-            border-radius: 9999px;
-            padding: 14px 28px;
-            font-weight: 600;
-            font-size: 15px;
-            letter-spacing: -0.01em;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .pill-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-            border-radius: inherit;
-            pointer-events: none;
-        }
-        .pill-btn:active { transform: scale(0.96); }
-
-        .pill-primary {
-            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-            color: white;
-        }
-        .pill-success {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-            color: white;
-        }
-        .pill-danger {
-            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-            color: white;
-        }
-        .pill-amber {
-            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-            color: white;
-        }
-        .pill-glass {
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border-strong);
-            color: var(--text-primary);
-            box-shadow: var(--glass-shadow-sm);
-        }
-
-        /* iOS-style segmented control */
-        .segmented {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border-radius: 12px;
-            padding: 3px;
-            display: flex;
-            gap: 2px;
-        }
-        .segmented button {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.2s ease;
-            background: transparent;
-            border: none;
-        }
-        .segmented button.active {
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--text-primary);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        /* Form inputs - liquid glass style */
-        .glass-input {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 16px 18px;
-            color: var(--text-primary);
-            font-size: 15px;
-            width: 100%;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.10);
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .glass-input::placeholder { color: var(--text-tertiary); }
-
-        /* Bottom sheet - iOS style */
-        .sheet-backdrop {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-        }
-        .sheet-panel {
-            background: linear-gradient(180deg, rgba(30, 30, 45, 0.95) 0%, rgba(15, 15, 30, 0.98) 100%);
-            backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            border-bottom: none;
-            box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
-            animation: sheetSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes sheetSlide {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        /* Bottom nav - floating glass dock */
-        .nav-dock {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20, 20, 35, 0.75);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 28px;
-            padding: 8px 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-            display: flex;
-            gap: 4px;
-            z-index: 40;
-            max-width: calc(100% - 32px);
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-        .nav-dock::-webkit-scrollbar { display: none; }
-        .nav-dock button {
-            min-width: 56px;
-            padding: 8px 10px;
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            color: var(--text-tertiary);
-            font-size: 10px;
-            font-weight: 500;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            background: transparent;
-            border: none;
-            white-space: nowrap;
-        }
-        .nav-dock button.active {
-            color: white;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(124, 58, 237, 0.4) 100%);
-            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
-        }
-        .nav-dock button i { font-size: 18px; margin-bottom: 1px; }
-
-        /* Camera viewfinder - liquid glass ring */
-        .camera-ring {
-            border: 3px solid rgba(167, 139, 250, 0.4);
-            border-radius: 50%;
-            box-shadow: 
-                0 0 40px rgba(167, 139, 250, 0.2),
-                inset 0 0 40px rgba(167, 139, 250, 0.05);
-            transition: all 0.4s ease;
-        }
-        .camera-ring.success {
-            border-color: var(--success);
-            box-shadow: 
-                0 0 40px rgba(52, 211, 153, 0.3),
-                inset 0 0 40px rgba(52, 211, 153, 0.08);
-        }
-
-        /* Scan line - ethereal glow */
-        .scan-line {
-            width: 100%; height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.8), transparent);
-            position: absolute; top: 0;
-            animation: scan 2.5s infinite ease-in-out;
-            filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6));
-        }
-        @keyframes scan { 
-            0% { top: 10%; opacity: 0.1; } 
-            50% { top: 85%; opacity: 1; } 
-            100% { top: 10%; opacity: 0.1; } 
-        }
-
-        /* Glow effects */
-        .glow-purple { box-shadow: 0 0 30px var(--accent-glow); }
-        .glow-success { box-shadow: 0 0 30px rgba(52, 211, 153, 0.3); }
-        .glow-danger { box-shadow: 0 0 30px rgba(248, 113, 113, 0.3); }
-
-        /* Card entrance animations */
-        .card-in { 
-            animation: cardFloat 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards; 
-        }
-        @keyframes cardFloat { 
-            from { opacity: 0; transform: translateY(20px) scale(0.98); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-
-        /* Toast - glass notification */
-        #toast {
-            background: rgba(30, 30, 45, 0.9);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-        }
-        #toast.toast-show { animation: toastFloat 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes toastFloat { 
-            from { transform: translate(-50%, 20px); opacity: 0; } 
-            to { transform: translate(-50%, 0); opacity: 1; } 
-        }
-
-        /* Loader - liquid glass spinner */
-        .liquid-loader {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(60, 140, 220, 0.15) 100%);
-            backdrop-filter: blur(20px);
-        }
-        .spinner-ring {
-            border: 3px solid transparent;
-            border-top-color: rgba(167, 139, 250, 0.9);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* App bar - floating glass */
-        .app-bar {
-            background: rgba(10, 10, 20, 0.7);
-            backdrop-filter: blur(20px) saturate(150%);
-            -webkit-backdrop-filter: blur(20px) saturate(150%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        /* Scrollbar styling */
+        .camera-overlay { border: 3px dashed #D0BCFF; border-radius: 50%; transition: border-color 0.3s; }
+        .camera-overlay.success { border-color: #22C55E; border-style: solid; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .scan-line {
+            width: 100%; height: 4px; background: linear-gradient(90deg, transparent, #D0BCFF, transparent);
+            position: absolute; top: 0; animation: scan 2s infinite ease-in-out;
+        }
+        @keyframes scan { 0% { top: 10%; opacity: 0.2; } 50% { top: 85%; opacity: 1; } 100% { top: 10%; opacity: 0.2; } }
 
-        /* Status badges */
-        .badge {
-            padding: 4px 10px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-        }
-        .badge-glass {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--text-secondary);
-        }
-        .badge-success {
-            background: rgba(52, 211, 153, 0.15);
-            border: 1px solid rgba(52, 211, 153, 0.3);
-            color: var(--success);
-        }
-        .badge-danger {
-            background: rgba(248, 113, 113, 0.15);
-            border: 1px solid rgba(248, 113, 113, 0.3);
-            color: var(--danger);
-        }
-        .badge-purple {
-            background: rgba(167, 139, 250, 0.15);
-            border: 1px solid rgba(167, 139, 250, 0.3);
-            color: var(--accent);
-        }
+        /* ===== Material motion system ===== */
 
-        /* FAB - floating glass button */
-        .fab {
-            width: 56px; height: 56px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(124, 58, 237, 0.7) 100%);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
-                0 8px 32px rgba(139, 92, 246, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            transition: all 0.25s ease;
+        /* Ripple: the signature Android touch-feedback. One delegated listener
+           (see the main JS block near the end of the page) spawns these on any
+           button/.ripple-host tap. */
+        .ripple-host { position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        .ripple-ink {
+            position: absolute; border-radius: 50%; transform: scale(0);
+            background: currentColor; opacity: 0.25; pointer-events: none;
+            animation: ripple-anim 0.55s ease-out forwards;
         }
-        .fab:active { transform: scale(0.92); }
+        @keyframes ripple-anim { to { transform: scale(2.6); opacity: 0; } }
 
-        /* Divider - subtle glow line */
-        .glow-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-        }
+        /* Press feedback: every tappable surface dips slightly, like Material's
+           state-layer press response. */
+        button, .tab-btn, .pressable { transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease; }
+        button:active, .tab-btn:active, .pressable:active { transform: scale(0.96); }
 
-        /* Table styling for dark glass */
-        .glass-table th {
-            color: var(--text-tertiary);
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-weight: 600;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glass-table td {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 13px;
-        }
+        /* Elevation scale (Material dp-style shadows, tuned for a warm light UI) */
+        .elev-1 { box-shadow: 0 1px 2px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.08); }
+        .elev-2 { box-shadow: 0 2px 6px rgba(28,25,23,0.08), 0 1px 2px rgba(28,25,23,0.06); }
+        .elev-3 { box-shadow: 0 6px 16px rgba(28,25,23,0.12), 0 2px 4px rgba(28,25,23,0.06); }
+        .elev-4 { box-shadow: 0 10px 28px rgba(28,25,23,0.16), 0 3px 6px rgba(28,25,23,0.08); }
 
-        /* Select dropdown - glass style */
-        .glass-select {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 14px 18px;
-            color: var(--text-primary);
-            font-size: 15px;
-            width: 100%;
-            outline: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            background-size: 18px;
-            padding-right: 44px;
-        }
-        .glass-select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .glass-select option {
-            background: #1a1a2e;
-            color: white;
-        }
+        /* Bottom-sheet modals: since JS only toggles the `hidden` class, we key the
+           entrance animation to the modal's own display change - browsers replay a
+           CSS animation whenever an element goes from display:none to visible, so
+           this needs zero JS changes to animate every open/close. */
+        .sheet-backdrop { animation: backdrop-in 0.25s ease; }
+        .sheet-panel { animation: sheet-in 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheet-in { from { transform: translateY(100%); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Confirm modal - glass */
-        .confirm-panel {
-            background: linear-gradient(180deg, rgba(35, 35, 55, 0.98) 0%, rgba(20, 20, 40, 0.99) 100%);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-        }
+        /* List/card entrance: staggered fade-up as content renders */
+        .card-in { animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+        @keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Press feedback */
-        .pressable { transition: transform 0.12s ease, opacity 0.12s ease; }
-        .pressable:active { transform: scale(0.96); opacity: 0.8; }
+        /* Bottom nav active-state pill (Material 3: the pill sits behind the ICON
+           only, not the whole tab) */
+        .nav-pill { transition: background-color 0.25s ease, color 0.25s ease, width 0.25s ease; }
 
-        /* Hide sections */
-        .hidden { display: none !important; }
-
-        /* Loader failsafe */
-        #initialLoader {
-            animation: loaderForceHide 0.6s cubic-bezier(0.4,0,0.2,1) 5s forwards;
-        }
-        @keyframes loaderForceHide {
-            to { opacity: 0; pointer-events: none; visibility: hidden; display: none; }
-        }
+        /* Snackbar (toast) slides up from the bottom, Material's native motion */
+        #toast.toast-show { animation: toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes toast-in { from { transform: translate(-50%, 16px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-28">
+<body class="bg-[#FAFAFC] text-zinc-800 font-sans min-h-screen flex flex-col pb-24">
 
-    <!-- Animated mesh background -->
-    <div class="mesh-bg"></div>
-
-    <!-- INITIAL LOADER -->
-    <div id="initialLoader" class="fixed inset-0 z-[999] liquid-loader flex flex-col items-center justify-center space-y-8 transition-opacity duration-700">
-
-        <div class="relative flex items-center justify-center w-28 h-28">
-            <div class="absolute inset-0 spinner-ring"></div>
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/30 z-10 overflow-hidden">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAJ2ElEQVR4nO2dvY4UVxCFz1hONnBI4J13YFNinoDIlpDmIRAjmXBDLC3iIUZCMpGfgJiUfYcdBxsSbIgDT+Omt3v6/lfVrfOFMHPndvc5dar/7m5ghMvLp9+k50DCOR5vN9JzCEHlJCn2PtFoChUTouB9osEQohOg8Akga4TmP0zRk3O0NkOzH6PwSQytjFD9Ryh8kkNtI/xUc3CKn+RSW0NV3EXhkxrUSIPiCUDxk1rU0FZRA1D8pDalNVYkUih8IkGJlig7ASh+IkUJ7WUZgOIn0uRqMNkAFD/RQo4WkwxA8RNtpGoy2gAUP9FKijajDEDxE+3EarTqoxCEaCfYAKz+xAoxWg0yAMVPrBGq2dU7aRR/Hnd3X57kjrHdXt2XmItH1u4W/9xqIr2zJPQS4q05tnfOuoPVf545QUqIUcs8tHMuBRb/g+L/kbHYNIvMyjxbs2QCtkBnsCim8Twtzr81s67wXP17FU2v2xXDXAowAU4MAulVHHPJ0Ou2xvDIEd6qv2cxeNz2aQq4TYBWB//u7ssvuWNst1dfS8xlZtx7wKcRBtwZoNbBXhJ6CfHWHPs0jlsj/BAHPbc/pQ/uVJS1qrTEHHo3wrgNcmGAu7svTwrdkf0uOAnBr1F6fqX2mzZmDdCj+EtUMu2iX6LUvHtNg8EE3Rogt3oNArIk+iVKbEtvadCtAXIrVk/Cn5K7bT2lQZcGyKlSPQt/SgkjWDfBDwbwLH5Pwp+Ss+29mMC8AVJj2bPwp6TuC+stkXkDpFQhCn+ZHCNYNIFpA6SKn8JfJ2U/WTTB8Xi7MbksCsVfl+326mvsM0zb7dV9ifefW7OxVv1jxc+WJ52UfWctCUwZIEX8FH4+sfvRkgnMtEAUvxyxLZGldshEAsSIPzS2Xz3//E+JufXC+0/Pfl37TGxLZCEJ1BsgVvwhB4finyfEBEBcumo3geoWiOJvS+i+iWmJtLdDag1A8cvgzQRqDRAKxV+eGibQikoDhFZ/XumRJ9QEWlNAnQEofntYNoEqA1D8drFqAlUGIKQ1agzA6m8fiymgwgAUfz9YM4EKA4RA8dvB0uVR8aURNd4q3x8ufkv97s3u4aP0+DG/mTpeCYYUkDz+ogmgsfXJEWfI92uPH/ud3PksYaUVUt8CWRL/2ji1x0/9rLQJJBEzQEj1Z99vnxATSKaA+gQgpCYiBmD194XmFGACENc0NwCrv0+0pgATgLimqQFY/X2jMQWYAMQ1zQzA6k8AfSnABCCuUWMAVn8/aHpEookBpJ/4I/Zo1QapSABWf39oSQEVBiBEiuoGsNT+lHo5ZGmc2uOnflbypZhztGiDqi+Ou2aAc+3Pq+ef39Wb2XdeTv/B4RthH1LnE8r7T89ez/37Wvtbu4CqNEAj4U95ZAQHVBf+lKkRpA1QtQWy1P4QndRug6TfCdZS/QGBaiiMyPZOj6/01SBeBSKuoQGIa8TXBdKIh6tAN7uHF6lz6IlqCZBz+VMSb+sCaWDtPKDmiTBboBFe1wXyjKkWaH+4+Pvc/zPWy+BpP5tJgLWDEvoZch5v+9mMAQipAQ1AXFPFAFavABE5pK4EMQGIa2gA4hoagLiGBiCuMWOAkJsvPd2gkcLbfjZ1J7inHa8ZT/vZTAIQUgMagLiGBiCuoQFGeF0XyDOmToJbPKZ7s3v4WPONrdrjl/hNT49DmzFA6GO6pUyQO4bk+IG/ObsqRMv9rAG2QMQ1NABxDQ1AXEMDENdUOQkeXl5YeilmePlB60sx1tcFChlf20ms1CK5TIAJ1tcF4jIocdAAI6yvC0Txx2PGAN4e05XC2342cyMM6GvHa8bTfjaTAITUoJoB1paxkP7DCEQPkn8miQlAXEMDENeYOgn29JiuJJ72s2gCxJwHeFu1WIrW+1n6iYCqBmjxl75J35j+O8GEaEfcALwc6hfp9gdoYAC2QSSV2u0PoCABCJFEhQHYBvlDQ/sDNDKAlTbI+rpAPa0B1KL9AZQkALCeAq0e080VUci6QMrHf1HiM+fQUv0BY3eCW92BtL4uUOD4s+sCnb7/otxsdNMsAULaoO326uv+cHHdaEpEgP3h4nqt+rdqfwBFLRAhEjQ1QEgK3OwerpkCfbI/XFzf7B6uz32mZfUHmADEOc1PgtfWDAL+T4G1aqGVv/44VBn39z93VcZtgcbqDxi7CqSdWsKfjm/ZCNoQaYF4LuALrdUf4DlAMWpXf6nf6h0xAzAFfKC5+gMGEoAmsIuFCxnS7wQHPSRHE9gjVPyS1R9QkABWnhQl5ZEWP6DAAKEwBexgofUZUGEAtkL9YKX1GVBhAIAm6AFr4gcUGYAQCVQZYLu9ut8fLt6ufY4poI/Q6r8/XLzVUv0BZQYAgJvdwxuawBYx4r/ZPbxpMKVg1BkAoAksYVn8gFIDxEATyGHpcucSag0QmgKnz9IEjYkRv9bqDyg2AEATaKUX8QMGXogZTBCyE8cmsB7NGondt9rFDwCby8un36QnMeXV88/vpv8WuzMT+tOXEZ+dpdVz+gXfCFtcG2hK7P5cOl7vPz17HTpGC1S3QGNi2qHT59kSFaKU+DWyAQCNKQCUSwLgbGxnV/4pBl+Kn02ClHbSSuUHgOPxdqPaAEukPEuiaT1KC6TsL03P+IRwPN5uzLRAY1LeIeAS7OF4EP+AyQQYSE0C4D9D1JmVXVL3jVXxm22BxgxJQCOkkyP80/fMiR8YGQCwbQIgvQp5NkLOtlut+gPH4+0GOLVAgH0DAHkHxZMRcrfVuviBTg0A5Mdyz0YoIfzT902LH+jYAAO5VaonI5TYlh6q/phHBgD6NAGQV7HGl04tmaHUvHuq+gOD+IHODTBQqnppN0Pp+fVW9QcWDQD0bQKgXCWb3lSTMEStOfRY9QfG4gccGWCg1sFdustcqBJXG3vyO90Kf8C9AQZaHewSj1/UThcPwh9YNQDgxwSAr4M/xdu2T8UPGHgjrDbDwfckBk/busZsAgC+UmDM+CnTngTS63aFMlf9ASbAI8bisC4a6/NvwWICAH5TYA4rYrIyz5YsVX9gxQAATTDH3Ms4EmLTMg/NnBM/wBYoiTmRLb2hVugOdLWxvbOaAABTIIcSf/6JQk9jrfoDgQYAaAJiixDxAxHrAoUOSIg0MVo1uSoEIaWIMgBTgGgnVqPRCUATEK2kaDOpBaIJiDZSNZl8DkATEC3kaDHrJJgmINLkajD7KhBNQKQoob2i4uXNMtKCkkW36H0ApgGpTWmNFb8RRhOQWtTQVlWxsiUiJahZVKs+CsE0ILnU1lAzgTINSAytimfzCk0jkHO07hpEWxSagQCyrbKKHp1G8ImGc0TxCcxBQ/SJBsFPUTehJWgKW2gU+xz/Ahu30x5ouJw5AAAAAElFTkSuQmCC" alt="Jithu Corp" class="w-full h-full object-cover">
+    <!-- INITIAL FULLSCREEN LOADER: the one deliberate bold/dark moment in an
+         otherwise light app - a branded splash, echoed later by the camera
+         viewfinder (the other "moment of focus"). Everything else stays quiet. -->
+    <div id="initialLoader" class="fixed inset-0 z-[999] bg-[#6750A4] flex flex-col items-center justify-center space-y-8 transition-opacity duration-500">
+        <div class="relative flex items-center justify-center w-32 h-32">
+            <!-- Outer spinning rings -->
+            <div class="absolute inset-0 border-t-4 border-[#D0BCFF] border-solid rounded-full animate-spin"></div>
+            <div class="absolute inset-3 border-r-4 border-emerald-400 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            <div class="absolute inset-6 border-b-4 border-white/40 border-solid rounded-full animate-spin" style="animation-duration: 2s;"></div>
+            <!-- Center Logo -->
+            <div class="w-14 h-14 rounded-2xl bg-[#D0BCFF] flex items-center justify-center text-[#6750A4] font-bold text-2xl shadow-lg shadow-black/30 z-10 animate-pulse">
+                <i class="fa-solid fa-building"></i>
             </div>
         </div>
-        <div class="text-center space-y-3">
-            <h1 class="text-2xl font-bold text-white tracking-tight company-name-label">Jithu Corporation</h1>
-            <p id="loaderStatusText" class="text-xs font-medium text-white/50 flex items-center gap-2 justify-center">
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase font-display company-name-label">Jithu Corporation</h1>
+            <p id="loaderStatusText" class="text-xs font-semibold text-[#D0BCFF] flex items-center gap-2 justify-center tracking-wide">
                 <i class="fa-solid fa-circle-notch animate-spin"></i> <span>Syncing Database & Initializing AI...</span>
             </p>
         </div>
     </div>
 
-    <!-- TOP APP BAR -->
-    <header id="appBar" class="app-bar sticky top-0 z-50 px-5 py-3.5 flex items-center justify-between transition-all duration-200">
+    <!-- TOP APP BAR: slim Material app bar. Navigation now lives in a real
+         bottom nav bar (see end of body) instead of a secondary strip here -
+         that's the single biggest signal of "Android app" vs "responsive website". -->
+    <header id="appBar" class="bg-[#6750A4] sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-md transition-shadow duration-200">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20 overflow-hidden">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAJ2ElEQVR4nO2dvY4UVxCFz1hONnBI4J13YFNinoDIlpDmIRAjmXBDLC3iIUZCMpGfgJiUfYcdBxsSbIgDT+Omt3v6/lfVrfOFMHPndvc5dar/7m5ghMvLp9+k50DCOR5vN9JzCEHlJCn2PtFoChUTouB9osEQohOg8Akga4TmP0zRk3O0NkOzH6PwSQytjFD9Ryh8kkNtI/xUc3CKn+RSW0NV3EXhkxrUSIPiCUDxk1rU0FZRA1D8pDalNVYkUih8IkGJlig7ASh+IkUJ7WUZgOIn0uRqMNkAFD/RQo4WkwxA8RNtpGoy2gAUP9FKijajDEDxE+3EarTqoxCEaCfYAKz+xAoxWg0yAMVPrBGq2dU7aRR/Hnd3X57kjrHdXt2XmItH1u4W/9xqIr2zJPQS4q05tnfOuoPVf545QUqIUcs8tHMuBRb/g+L/kbHYNIvMyjxbs2QCtkBnsCim8Twtzr81s67wXP17FU2v2xXDXAowAU4MAulVHHPJ0Ou2xvDIEd6qv2cxeNz2aQq4TYBWB//u7ssvuWNst1dfS8xlZtx7wKcRBtwZoNbBXhJ6CfHWHPs0jlsj/BAHPbc/pQ/uVJS1qrTEHHo3wrgNcmGAu7svTwrdkf0uOAnBr1F6fqX2mzZmDdCj+EtUMu2iX6LUvHtNg8EE3Rogt3oNArIk+iVKbEtvadCtAXIrVk/Cn5K7bT2lQZcGyKlSPQt/SgkjWDfBDwbwLH5Pwp+Ss+29mMC8AVJj2bPwp6TuC+stkXkDpFQhCn+ZHCNYNIFpA6SKn8JfJ2U/WTTB8Xi7MbksCsVfl+326mvsM0zb7dV9ifefW7OxVv1jxc+WJ52UfWctCUwZIEX8FH4+sfvRkgnMtEAUvxyxLZGldshEAsSIPzS2Xz3//E+JufXC+0/Pfl37TGxLZCEJ1BsgVvwhB4finyfEBEBcumo3geoWiOJvS+i+iWmJtLdDag1A8cvgzQRqDRAKxV+eGibQikoDhFZ/XumRJ9QEWlNAnQEofntYNoEqA1D8drFqAlUGIKQ1agzA6m8fiymgwgAUfz9YM4EKA4RA8dvB0uVR8aURNd4q3x8ufkv97s3u4aP0+DG/mTpeCYYUkDz+ogmgsfXJEWfI92uPH/ud3PksYaUVUt8CWRL/2ji1x0/9rLQJJBEzQEj1Z99vnxATSKaA+gQgpCYiBmD194XmFGACENc0NwCrv0+0pgATgLimqQFY/X2jMQWYAMQ1zQzA6k8AfSnABCCuUWMAVn8/aHpEookBpJ/4I/Zo1QapSABWf39oSQEVBiBEiuoGsNT+lHo5ZGmc2uOnflbypZhztGiDqi+Ou2aAc+3Pq+ef39Wb2XdeTv/B4RthH1LnE8r7T89ez/37Wvtbu4CqNEAj4U95ZAQHVBf+lKkRpA1QtQWy1P4QndRug6TfCdZS/QGBaiiMyPZOj6/01SBeBSKuoQGIa8TXBdKIh6tAN7uHF6lz6IlqCZBz+VMSb+sCaWDtPKDmiTBboBFe1wXyjKkWaH+4+Pvc/zPWy+BpP5tJgLWDEvoZch5v+9mMAQipAQ1AXFPFAFavABE5pK4EMQGIa2gA4hoagLiGBiCuMWOAkJsvPd2gkcLbfjZ1J7inHa8ZT/vZTAIQUgMagLiGBiCuoQFGeF0XyDOmToJbPKZ7s3v4WPONrdrjl/hNT49DmzFA6GO6pUyQO4bk+IG/ObsqRMv9rAG2QMQ1NABxDQ1AXEMDENdUOQkeXl5YeilmePlB60sx1tcFChlf20ms1CK5TIAJ1tcF4jIocdAAI6yvC0Txx2PGAN4e05XC2342cyMM6GvHa8bTfjaTAITUoJoB1paxkP7DCEQPkn8miQlAXEMDENeYOgn29JiuJJ72s2gCxJwHeFu1WIrW+1n6iYCqBmjxl75J35j+O8GEaEfcALwc6hfp9gdoYAC2QSSV2u0PoCABCJFEhQHYBvlDQ/sDNDKAlTbI+rpAPa0B1KL9AZQkALCeAq0e080VUci6QMrHf1HiM+fQUv0BY3eCW92BtL4uUOD4s+sCnb7/otxsdNMsAULaoO326uv+cHHdaEpEgP3h4nqt+rdqfwBFLRAhEjQ1QEgK3OwerpkCfbI/XFzf7B6uz32mZfUHmADEOc1PgtfWDAL+T4G1aqGVv/44VBn39z93VcZtgcbqDxi7CqSdWsKfjm/ZCNoQaYF4LuALrdUf4DlAMWpXf6nf6h0xAzAFfKC5+gMGEoAmsIuFCxnS7wQHPSRHE9gjVPyS1R9QkABWnhQl5ZEWP6DAAKEwBexgofUZUGEAtkL9YKX1GVBhAIAm6AFr4gcUGYAQCVQZYLu9ut8fLt6ufY4poI/Q6r8/XLzVUv0BZQYAgJvdwxuawBYx4r/ZPbxpMKVg1BkAoAksYVn8gFIDxEATyGHpcucSag0QmgKnz9IEjYkRv9bqDyg2AEATaKUX8QMGXogZTBCyE8cmsB7NGondt9rFDwCby8un36QnMeXV88/vpv8WuzMT+tOXEZ+dpdVz+gXfCFtcG2hK7P5cOl7vPz17HTpGC1S3QGNi2qHT59kSFaKU+DWyAQCNKQCUSwLgbGxnV/4pBl+Kn02ClHbSSuUHgOPxdqPaAEukPEuiaT1KC6TsL03P+IRwPN5uzLRAY1LeIeAS7OF4EP+AyQQYSE0C4D9D1JmVXVL3jVXxm22BxgxJQCOkkyP80/fMiR8YGQCwbQIgvQp5NkLOtlut+gPH4+0GOLVAgH0DAHkHxZMRcrfVuviBTg0A5Mdyz0YoIfzT902LH+jYAAO5VaonI5TYlh6q/phHBgD6NAGQV7HGl04tmaHUvHuq+gOD+IHODTBQqnppN0Pp+fVW9QcWDQD0bQKgXCWb3lSTMEStOfRY9QfG4gccGWCg1sFdustcqBJXG3vyO90Kf8C9AQZaHewSj1/UThcPwh9YNQDgxwSAr4M/xdu2T8UPGHgjrDbDwfckBk/busZsAgC+UmDM+CnTngTS63aFMlf9ASbAI8bisC4a6/NvwWICAH5TYA4rYrIyz5YsVX9gxQAATTDH3Ms4EmLTMg/NnBM/wBYoiTmRLb2hVugOdLWxvbOaAABTIIcSf/6JQk9jrfoDgQYAaAJiixDxAxHrAoUOSIg0MVo1uSoEIaWIMgBTgGgnVqPRCUATEK2kaDOpBaIJiDZSNZl8DkATEC3kaDHrJJgmINLkajD7KhBNQKQoob2i4uXNMtKCkkW36H0ApgGpTWmNFb8RRhOQWtTQVlWxsiUiJahZVKs+CsE0ILnU1lAzgTINSAytimfzCk0jkHO07hpEWxSagQCyrbKKHp1G8ImGc0TxCcxBQ/SJBsFPUTehJWgKW2gU+xz/Ahu30x5ouJw5AAAAAElFTkSuQmCC" alt="Jithu Corp" class="w-full h-full object-cover">
+            <div class="w-10 h-10 rounded-xl bg-[#D0BCFF] flex items-center justify-center text-[#6750A4] font-bold text-xl shadow-md">
+                <i class="fa-solid fa-building"></i>
             </div>
             <div>
-                <h1 class="font-bold text-[15px] leading-tight text-white tracking-tight company-name-label">Jithu Corporation</h1>
-                <p class="text-[11px] text-white/40 flex items-center gap-1.5" id="headerSubText">
-                    <span id="cloudStatusText" class="text-violet-300/80 font-medium"><i class="fa-solid fa-arrows-rotate animate-spin text-[10px]"></i> Syncing...</span>
-                    <span id="roleBadge" class="bg-white/10 text-white/60 px-2 py-0.5 rounded-full uppercase font-bold text-[9px] tracking-wider">Welcome</span>
+                <h1 class="font-extrabold text-base leading-tight text-white tracking-wide font-display company-name-label">Jithu Corporation</h1>
+                <p class="text-[11px] text-white/60 flex items-center gap-1.5" id="headerSubText">
+                    <span id="cloudStatusText" class="text-[#D0BCFF] font-semibold"><i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...</span>
+                    <span id="roleBadge" class="bg-white/10 text-white/80 px-1.5 py-0.2 rounded uppercase font-bold text-[10px]">Welcome</span>
                 </p>
             </div>
         </div>
@@ -497,175 +136,176 @@
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-2xl w-full mx-auto p-5 space-y-5">
+    <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
 
-        <!-- LANDING / LOGIN SCREEN -->
-        <section id="view-landing" class="flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-            <div class="glass-strong p-7 sm:p-9 max-w-md w-full">
+        <!-- INITIAL LANDING / LOGIN SCREEN -->
+        <section id="view-landing" class="flex flex-col items-center justify-center min-h-[75vh] space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-zinc-300/40 max-w-md w-full border border-zinc-200">
                 <div class="text-center mb-8">
-                    <span class="badge badge-purple">Worker Portal</span>
-                    <h2 class="text-3xl font-bold text-white mt-4 tracking-tight company-name-label">Jithu Corporation</h2>
-                    <p class="text-white/40 text-sm mt-2">Smart Face Recognition & GPS Attendance</p>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#6750A4] bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Worker Portal</span>
+                    <h2 class="text-3xl font-black text-zinc-900 mt-3 tracking-tight font-display company-name-label">Jithu Corporation</h2>
+                    <p class="text-zinc-500 text-xs mt-1">Smart Face Recognition &amp; GPS Attendance</p>
                 </div>
 
                 <!-- Record Attendance Button -->
-                <button type="button" onclick="openPublicPunch()" class="pill-btn pill-success w-full py-4 flex flex-col items-center justify-center gap-2 mb-6 pressable">
-                    <i class="fa-solid fa-camera-retro text-xl"></i>
-                    <span class="text-base">Record Attendance</span>
-                    <span class="text-[11px] font-normal opacity-70">Public Face Kiosk</span>
+                <button onclick="openPublicPunch()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex flex-col items-center justify-center gap-1.5 transition transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-camera-retro text-2xl"></i>
+                    <span class="text-lg">Record Attendance</span>
+                    <span class="text-[10px] font-normal opacity-80">(Public Face Kiosk)</span>
                 </button>
 
-                <div class="glow-divider my-6"></div>
+                <div class="relative flex py-6 items-center">
+                    <div class="flex-grow border-t border-zinc-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-zinc-400 text-xs font-semibold tracking-wider uppercase">Or Sign In To Dashboard</span>
+                    <div class="flex-grow border-t border-zinc-200"></div>
+                </div>
 
                 <!-- Login Form -->
-                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
                     <div class="relative">
-                        <input type="text" id="loginUserId" required placeholder=" " class="glass-input peer">
-                        <label for="loginUserId" class="absolute left-[18px] text-white/30 pointer-events-none transition-all duration-200 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-violet-300 peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">User ID (Mobile No or admin)</label>
+                        <input type="text" id="loginUserId" required placeholder=" " class="peer w-full bg-zinc-50 border border-zinc-300 rounded-xl px-4 pt-5 pb-2 text-sm text-zinc-900 focus:border-[#6750A4] focus:outline-none transition">
+                        <label for="loginUserId" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-[#6750A4] peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">User ID (Mobile No or admin)</label>
                     </div>
                     <div class="relative">
-                        <input type="password" id="loginPassword" required placeholder=" " class="glass-input peer">
-                        <label for="loginPassword" class="absolute left-[18px] text-white/30 pointer-events-none transition-all duration-200 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-violet-300 peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">Password</label>
+                        <input type="password" id="loginPassword" required placeholder=" " class="peer w-full bg-zinc-50 border border-zinc-300 rounded-xl px-4 pt-5 pb-2 text-sm text-zinc-900 focus:border-[#6750A4] focus:outline-none transition">
+                        <label for="loginPassword" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-[#6750A4] peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">Password</label>
                     </div>
-                    <button type="submit" class="pill-btn pill-primary w-full py-3.5 pressable">Sign In</button>
-                    <p class="text-center text-[11px] text-white/30 mt-3">Worker login: Mobile Number & Password 1234</p>
+                    <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                    <p class="text-center text-[10px] text-zinc-400 mt-2">Worker login: Mobile Number &amp; Password 1234</p>
                 </form>
             </div>
         </section>
 
-        <!-- PUBLIC KIOSK: ATTENDANCE PUNCH -->
-        <section id="view-punch" class="hidden space-y-5">
-            <div class="glass p-5 space-y-5">
+        <!-- PUBLIC KIOSK: ATTENDANCE PUNCH ONLY -->
+        <section id="view-punch" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm space-y-4">
+
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-white">Face Station</h2>
-                        <p class="text-[11px] text-white/40">Site Kiosk</p>
+                        <h2 class="text-lg font-bold text-zinc-900 font-display">Face Station</h2>
+                        <p class="text-[11px] text-zinc-500">Jithu Corporation Site Kiosk</p>
                     </div>
-                    <span id="currentTimeDisplay" class="text-xs font-mono text-violet-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">--:--:--</span>
+                    <span id="currentTimeDisplay" class="text-xs font-mono text-[#6750A4] bg-zinc-100 px-2 py-1 rounded-md border border-zinc-200">--:--:--</span>
                 </div>
 
-                <select id="punchSiteSelect" onchange="onSiteChange()" class="glass-select">
+                <select id="punchSiteSelect" onchange="onSiteChange()" class="w-full bg-zinc-50 border border-zinc-300 rounded-xl px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-[#6750A4]">
                     <option value="">-- Select Active Work Site --</option>
                 </select>
 
                 <!-- GPS Status -->
-                <div id="gpsStatusCard" class="glass-thin p-4 flex items-center justify-between">
+                <div id="gpsStatusCard" class="bg-zinc-50 rounded-xl p-3 border border-zinc-200 flex items-center justify-between text-xs">
                     <div class="flex items-center gap-3">
-                        <div id="gpsIconBg" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
+                        <div id="gpsIconBg" class="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500"><i class="fa-solid fa-location-crosshairs text-sm"></i></div>
                         <div>
-                            <p class="font-semibold text-sm text-white/90" id="gpsStatusText">Checking GPS...</p>
-                            <p class="text-white/40 text-[11px]" id="gpsDistanceText">Distance: --</p>
+                            <p class="font-semibold text-zinc-800" id="gpsStatusText">Checking GPS...</p>
+                            <p class="text-zinc-500 text-[11px]" id="gpsDistanceText">Distance: --</p>
                         </div>
                     </div>
-                    <button type="button" onclick="checkCurrentLocation()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60 transition pressable">
-                        <i class="fa-solid fa-rotate-right text-xs"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="checkCurrentLocation()" class="px-2.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 rounded-lg text-zinc-600"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
                 </div>
 
-                <!-- AI Camera Viewfinder -->
-                <div id="cameraWrapper" class="relative bg-black/60 rounded-3xl overflow-hidden aspect-[4/3] border border-white/10 flex flex-col items-center justify-center transition-all duration-300 shadow-2xl shadow-purple-500/10">
+                <!-- AI Camera Viewfinder: deliberately kept dark, echoing the loader -
+                     the "moment of focus" signature, with the amber viewfinder ring -->
+                <div id="cameraWrapper" class="relative bg-[#14181F] rounded-2xl overflow-hidden aspect-[4/3] border border-zinc-300 flex flex-col items-center justify-center transition-all duration-300">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <img id="capturedPreview" class="hidden w-full h-full object-cover" />
-
+                    
                     <div id="scanLine" class="hidden scan-line z-10"></div>
-                    <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-ring flex flex-col items-center justify-center opacity-80 gap-1">
-                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-violet-200 font-bold bg-black/50 px-3 py-1 rounded-full text-center backdrop-blur-sm">Auto-Scanning<br>Look Straight</span>
-                        <span id="earDebug" class="hidden text-[9px] text-white/50 bg-black/40 px-2 py-0.5 rounded-full"></span>
+                    <div id="faceFrame" class="absolute pointer-events-none w-48 h-56 camera-overlay flex flex-col items-center justify-center opacity-80 gap-1">
+                        <span id="livenessInstruction" class="hidden text-[10px] uppercase tracking-wider text-[#D0BCFF] font-bold bg-black/60 px-2.5 py-0.5 rounded-full text-center">Auto-Scanning<br>Look Straight</span>
+                        <span id="earDebug" class="hidden text-[9px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full"></span>
                     </div>
 
-                    <div class="absolute bottom-4 flex gap-2 z-20">
-                        <button type="button" id="retakeBtn" onclick="resetCamera()" class="hidden pill-btn pill-glass text-xs px-5 py-2.5">
-                            <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Re-Scan
+                    <div class="absolute bottom-3 flex gap-2 z-20">
+                        <button id="retakeBtn" onclick="resetCamera()" class="hidden bg-black/60 hover:bg-black/80 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-lg border border-white/20">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Re-Scan Face
                         </button>
                     </div>
                 </div>
-                <p id="scanStatusLine" class="text-[11px] text-white/40 text-center min-h-[1.5em]"></p>
+                <p id="scanStatusLine" class="text-[11px] text-zinc-500 text-center mt-2 min-h-[1.5em]"></p>
 
-                <!-- SUCCESS: Welcome Screen -->
-                <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-5 py-8 glass-strong border border-emerald-500/20 transition-all duration-300">
-                    <div class="w-24 h-24 rounded-full border-2 border-emerald-400/50 overflow-hidden shadow-lg shadow-emerald-500/20">
+                <!-- SUCCESS: Welcome Screen (Hidden by default) -->
+                <div id="welcomeScreen" class="hidden flex flex-col items-center justify-center space-y-4 py-6 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm transition-all duration-300">
+                    <div class="w-24 h-24 rounded-full border-4 border-emerald-500 overflow-hidden shadow-lg shadow-emerald-900/10">
                         <img id="welcomeWorkerPhoto" class="w-full h-full object-cover" />
                     </div>
                     <div class="text-center">
-                        <span class="badge badge-success"><i class="fa-solid fa-check-double mr-1"></i> AI Verified</span>
-                        <h3 class="font-bold text-2xl text-white mt-3">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
-                        <p class="text-xs text-white/50 mt-1.5" id="welcomeInstructionText">Please select your punch type below.</p>
+                        <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> AI Verified</span>
+                        <h3 class="font-black text-2xl text-zinc-900 mt-2 font-display">Welcome, <span id="welcomeWorkerName">--</span>!</h3>
+                        <p class="text-xs text-zinc-500 mt-1" id="welcomeInstructionText">Please select your punch type below.</p>
                     </div>
-
+                    
+                    <!-- Punch Buttons -->
                     <div class="grid grid-cols-2 gap-3 w-full px-4 pt-2">
-                        <button type="button" id="punchInBtn" disabled onclick="submitPunch('IN')" class="pill-btn pill-success disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
+                        <button id="punchInBtn" disabled onclick="submitPunch('IN')" class="py-3.5 rounded-xl bg-emerald-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-emerald-700">
                             <i class="fa-solid fa-right-to-bracket"></i> PUNCH IN
                         </button>
-                        <button type="button" id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="pill-btn pill-danger disabled:opacity-30 py-3.5 flex items-center justify-center gap-2 pressable">
+                        <button id="punchOutBtn" disabled onclick="submitPunch('OUT')" class="py-3.5 rounded-xl bg-rose-600 disabled:opacity-40 font-bold text-white shadow-lg flex items-center justify-center gap-2 transition hover:bg-rose-700">
                             <i class="fa-solid fa-right-from-bracket"></i> PUNCH OUT
                         </button>
                     </div>
-
-                    <button type="button" onclick="resetCamera()" class="text-xs text-white/40 hover:text-white/70 underline mt-1 pressable"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
+                    
+                    <button onclick="resetCamera()" class="text-xs text-zinc-500 hover:text-zinc-900 underline mt-2"><i class="fa-solid fa-arrow-rotate-left"></i> Cancel & Retake</button>
                 </div>
             </div>
         </section>
 
-        <!-- TAB: LOGS -->
-        <section id="view-logs" class="hidden space-y-5">
-            <div class="glass p-5 space-y-4">
+        <!-- TAB 2: LOGS -->
+        <section id="view-logs" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-white">Punch History</h2>
-                    <span id="logCountBadge" class="badge badge-glass">0 logs</span>
+                    <h2 class="text-lg font-bold text-zinc-900 font-display">Punch History</h2>
+                    <span id="logCountBadge" class="text-xs bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full">0 logs</span>
                 </div>
-                <div id="logsContainer" class="space-y-3 max-h-[500px] overflow-y-auto pr-1 no-scrollbar"></div>
+                <div id="logsContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 no-scrollbar"></div>
             </div>
         </section>
 
-        <!-- TAB: PAYROLL -->
-        <section id="view-settlement" class="hidden space-y-5">
-            <div class="admin-only hidden glass p-5 space-y-4">
-                <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-sm font-semibold text-emerald-400 flex items-center justify-between gap-1.5 pressable">
+        <!-- TAB 3: PAYROLL -->
+        <section id="view-settlement" class="hidden space-y-4">
+            <div class="admin-only hidden bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-3">
+                <button type="button" onclick="document.getElementById('advanceFormWrapper').classList.toggle('hidden')" class="w-full text-left text-md font-bold text-emerald-600 flex items-center justify-between gap-1.5 transition">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar"></i> Add Advance (₹)</span> 
-                    <i class="fa-solid fa-chevron-down text-xs text-white/30"></i>
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
                 </button>
-                <div id="advanceFormWrapper" class="hidden pt-4 mt-2 border-t border-white/10">
-                    <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <select id="advWorkerSelect" required class="glass-select text-sm py-3"></select>
-                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="glass-input text-sm py-3">
-                        <button type="submit" class="pill-btn pill-success text-sm py-3">Record</button>
+                <div id="advanceFormWrapper" class="hidden pt-3 mt-1 border-t border-zinc-200">
+                    <form id="advanceForm" onsubmit="handleAddAdvance(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <select id="advWorkerSelect" required class="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none"></select>
+                        <input type="number" min="0" step="any" id="advAmountInput" required placeholder="Amount (₹)" class="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                        <button type="submit" class="bg-emerald-600 font-bold py-2 px-3 rounded-xl text-xs shadow-md">Record</button>
                     </form>
                 </div>
             </div>
-
-            <div class="glass p-5 space-y-5">
+            
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-4">
+                <!-- HEADER & PDF BUTTON -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Salary Settlement (₹)</h2>
-                        <!-- View Toggle -->
-                        <div class="segmented mt-3 w-fit">
-                            <button type="button" id="payrollViewCurrent" onclick="setPayrollView('current')" class="active">Current Cycle</button>
-                            <button type="button" id="payrollViewSettled" onclick="setPayrollView('settled')">Settled Records</button>
-                        </div>
-                    </div>
-                    <button type="button" onclick="downloadMasterPayrollPDF()" class="admin-only hidden pill-btn pill-primary text-xs py-2.5 px-4 flex items-center gap-2 pressable">
+                    <h2 class="text-lg font-bold">Salary Settlement (₹)</h2>
+                    <button onclick="downloadMasterPayrollPDF()" class="admin-only hidden w-full sm:w-auto py-2 px-4 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-pdf"></i> Master Payroll PDF
                     </button>
                 </div>
-
+                
                 <!-- DATE RANGE FILTERS -->
-                <div class="glass-thin p-4 space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] text-white/40 font-semibold mb-1.5 uppercase tracking-wider">From Date</label>
-                            <input type="date" id="payrollFrom" onchange="renderSettlements()" class="glass-input py-2.5 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-white/40 font-semibold mb-1.5 uppercase tracking-wider">To Date</label>
-                            <input type="date" id="payrollTo" onchange="renderSettlements()" class="glass-input py-2.5 text-sm">
-                        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
+                    <div>
+                        <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">From Date</label>
+                        <input type="date" id="payrollFrom" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" onclick="setPayrollFilterToThisWeek()" class="pill-btn pill-glass text-xs py-2.5 pressable">
-                            <i class="fa-solid fa-calendar-week mr-1"></i> This Week
+                    <div>
+                        <label class="block text-[10px] text-zinc-500 font-bold mb-1 uppercase tracking-wider">To Date</label>
+                        <input type="date" id="payrollTo" onchange="renderSettlements()" class="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#6750A4]">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="setPayrollFilterToThisWeek()" class="w-full py-2 bg-[#EADDFF] hover:bg-[#DCC9F7] text-[#4F378B] rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-calendar-week"></i> This Week
                         </button>
-                        <button type="button" onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="pill-btn pill-glass text-xs py-2.5 pressable">
-                            <i class="fa-solid fa-rotate-left mr-1"></i> Current Cycle
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="document.getElementById('payrollFrom').value=''; document.getElementById('payrollTo').value=''; renderSettlements();" class="w-full py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-rotate-left"></i> Current Cycle
                         </button>
                     </div>
                 </div>
@@ -675,57 +315,57 @@
         </section>
 
         <!-- TAB: CASH BOOK (ADMIN) -->
-        <section id="view-cashbook" class="hidden space-y-5 relative">
+        <section id="view-cashbook" class="hidden space-y-4 relative">
             <!-- Balance Summary -->
-            <div class="grid grid-cols-3 gap-3">
-                <div class="glass p-4 text-center">
-                    <p class="text-[10px] text-white/40 uppercase tracking-wider font-semibold">Total Credits</p>
-                    <p id="cashbookTotalCredit" class="text-lg font-bold text-emerald-400 mt-1">₹0</p>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-white rounded-2xl p-3 border border-emerald-200 text-center">
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Total Credits</p>
+                    <p id="cashbookTotalCredit" class="text-lg font-black text-emerald-600 mt-1">₹0</p>
                 </div>
-                <div class="glass p-4 text-center">
-                    <p class="text-[10px] text-white/40 uppercase tracking-wider font-semibold">Total Debits</p>
-                    <p id="cashbookTotalDebit" class="text-lg font-bold text-rose-400 mt-1">₹0</p>
+                <div class="bg-white rounded-2xl p-3 border border-rose-200 text-center">
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Total Debits</p>
+                    <p id="cashbookTotalDebit" class="text-lg font-black text-rose-600 mt-1">₹0</p>
                 </div>
-                <div class="glass p-4 text-center">
-                    <p class="text-[10px] text-white/40 uppercase tracking-wider font-semibold">Balance</p>
-                    <p id="cashbookBalance" class="text-lg font-bold text-violet-300 mt-1">₹0</p>
+                <div class="bg-white rounded-2xl p-3 border border-blue-200 text-center">
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Balance</p>
+                    <p id="cashbookBalance" class="text-lg font-black text-[#6750A4] mt-1">₹0</p>
                 </div>
             </div>
 
             <!-- Filter + Export -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h2 class="text-sm font-bold text-white">Ledger</h2>
+                <h2 class="text-sm font-bold">Ledger</h2>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="glass-input py-2 text-xs flex-1 sm:flex-none">
-                    <input type="date" id="cbTo" onchange="renderCashbook()" class="glass-input py-2 text-xs flex-1 sm:flex-none">
-                    <button type="button" onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 transition pressable"><i class="fa-solid fa-rotate-left text-xs"></i></button>
-                    <button type="button" onclick="downloadCashbookPDF()" class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 transition pressable"><i class="fa-solid fa-file-pdf text-xs"></i></button>
+                    <input type="date" id="cbFrom" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-zinc-200 rounded-xl px-2 py-2 text-xs">
+                    <input type="date" id="cbTo" onchange="renderCashbook()" class="flex-1 sm:flex-none bg-white border border-zinc-200 rounded-xl px-2 py-2 text-xs">
+                    <button onclick="document.getElementById('cbFrom').value=''; document.getElementById('cbTo').value=''; renderCashbook();" class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button onclick="downloadCashbookPDF()" class="px-3 py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf"></i></button>
                 </div>
             </div>
 
-            <div id="cashbookContainer" class="space-y-3"></div>
+            <div id="cashbookContainer" class="space-y-2"></div>
 
-            <!-- FAB -->
-            <button type="button" onclick="openAddCashbookModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
-                <i class="fa-solid fa-plus text-lg"></i>
+            <!-- FAB: opens the Add Entry sheet -->
+            <button onclick="openAddCashbookModal()" class="fixed right-5 bottom-[5.5rem] z-30 w-14 h-14 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white flex items-center justify-center elev-3 transition">
+                <i class="fa-solid fa-plus text-xl"></i>
             </button>
         </section>
 
-        <!-- ADD CASH BOOK ENTRY MODAL -->
-        <div id="addCashbookModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-            <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+        <!-- ADD CASH BOOK ENTRY MODAL (bottom sheet) -->
+        <div id="addCashbookModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-3 max-h-[90vh] overflow-y-auto sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-white">Add Cash Book Entry</h3>
-                    <button type="button" onclick="closeAddCashbookModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                    <h3 class="text-lg font-bold text-zinc-900 font-display">Add Cash Book Entry</h3>
+                    <button type="button" onclick="closeAddCashbookModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <form onsubmit="handleAddCashbookEntry(event)" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <select id="cbType" required class="glass-select text-sm py-3">
+                <form onsubmit="handleAddCashbookEntry(event)" class="space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="cbType" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="debit">Debit (Money Out)</option>
                             <option value="credit">Credit (Money In)</option>
                         </select>
-                        <select id="cbCategory" required class="glass-select text-sm py-3">
+                        <select id="cbCategory" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                             <option value="Local Purchase">Local Purchase</option>
                             <option value="Material Purchase">Material Purchase</option>
                             <option value="Transport">Transport</option>
@@ -736,369 +376,363 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    <input type="text" id="cbDescription" required placeholder="Description" class="glass-input text-sm">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="glass-input text-sm">
-                        <input type="datetime-local" id="cbDateTime" required class="glass-input text-sm py-3">
+                    <input type="text" id="cbDescription" required placeholder="Description (e.g. Cement bags from ABC Hardware)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" min="0" step="any" id="cbAmount" required placeholder="Amount (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="datetime-local" id="cbDateTime" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
-                    <label class="block text-xs text-white/40">
+                    <label class="block text-xs text-zinc-500">
                         Bill / Receipt Photo (optional)
-                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="glass-input mt-2 text-xs py-3 text-white/50">
+                        <input type="file" id="cbBillPhoto" accept="image/*" capture="environment" class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-500">
                     </label>
-                    <button type="submit" class="pill-btn pill-primary w-full py-3 text-sm">Add Entry</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl text-xs shadow-md transition">Add Entry</button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB: SITES (ADMIN) -->
-        <section id="view-sites" class="hidden space-y-5 relative">
+        <!-- TAB 4: SITES (ADMIN) -->
+        <section id="view-sites" class="hidden space-y-4 relative">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold text-white">Work Sites</h2>
-                <span class="text-xs text-white/40" id="sitesCountLabel"></span>
+                <h2 class="text-lg font-bold text-zinc-900">Work Sites</h2>
+                <span class="text-xs text-zinc-500" id="sitesCountLabel"></span>
             </div>
-            <div id="sitesList" class="space-y-3"></div>
+            <div id="sitesList" class="space-y-2"></div>
 
-            <button type="button" onclick="openAddSiteModal()" class="fab fixed right-5 bottom-28 z-30 pressable">
-                <i class="fa-solid fa-plus text-lg"></i>
+            <!-- FAB: opens the Add Site sheet -->
+            <button onclick="openAddSiteModal()" class="fixed right-5 bottom-[5.5rem] z-30 w-14 h-14 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white flex items-center justify-center elev-3 transition">
+                <i class="fa-solid fa-plus text-xl"></i>
             </button>
         </section>
 
-        <!-- ADD SITE MODAL -->
-        <div id="addSiteModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-            <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4">
-                <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+        <!-- ADD SITE MODAL (bottom sheet) -->
+        <div id="addSiteModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-white">Add Work Site</h3>
-                    <button type="button" onclick="closeAddSiteModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                    <h3 class="text-lg font-bold text-zinc-900 font-display">Add Work Site</h3>
+                    <button type="button" onclick="closeAddSiteModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <form id="addSiteForm" onsubmit="handleAddSite(event)" class="space-y-3">
-                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="glass-input text-sm">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="glass-input text-sm">
-                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="glass-input text-sm">
+                    <input type="text" id="siteNameInput" required placeholder="Site Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" step="any" id="siteLatInput" required placeholder="Latitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" step="any" id="siteLngInput" required placeholder="Longitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
-                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="pill-btn pill-glass w-full py-2.5 text-xs pressable"><i class="fa-solid fa-crosshairs text-violet-300 mr-1"></i> Auto-detect GPS</button>
-                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="glass-input text-sm">
-                    <button type="submit" class="pill-btn pill-primary w-full py-3">Save Site</button>
+                    <button type="button" onclick="autoFillCurrentLocationForSite()" class="w-full py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 text-xs rounded-xl transition"><i class="fa-solid fa-crosshairs text-[#6750A4]"></i> Auto-detect GPS</button>
+                    <input type="number" id="siteRadiusInput" value="150" required placeholder="Radius (m)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <button type="submit" class="w-full py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl transition">Save Site</button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB: WORKERS & MANUAL OVERRIDE -->
-        <section id="view-workers" class="hidden space-y-5 relative">
-            <div class="grid grid-cols-2 gap-3">
-                <button type="button" onclick="openRegisterWorkerModal()" class="pill-btn pill-primary py-4 flex flex-col items-center gap-2 text-xs pressable">
+        <!-- TAB 5: WORKERS & MANUAL OVERRIDE (ADMIN ONLY) -->
+        <section id="view-workers" class="hidden space-y-4 relative">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="openRegisterWorkerModal()" class="py-3 rounded-2xl bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs shadow-sm transition flex flex-col items-center gap-1">
                     <i class="fa-solid fa-user-plus text-lg"></i> Register Worker
                 </button>
-                <button type="button" onclick="openOverrideModal()" class="pill-btn pill-amber py-4 flex flex-col items-center gap-2 text-xs pressable">
+                <button onclick="openOverrideModal()" class="py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 font-bold text-xs shadow-sm transition flex flex-col items-center gap-1">
                     <i class="fa-solid fa-user-shield text-lg"></i> Manual Override
                 </button>
             </div>
 
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold text-white">Workers</h2>
-                <span class="text-xs text-white/40" id="workersCountLabel"></span>
+                <h2 class="text-lg font-bold text-zinc-900">Workers</h2>
+                <span class="text-xs text-zinc-500" id="workersCountLabel"></span>
             </div>
-            <div id="workersList" class="space-y-3"></div>
+            <div id="workersList" class="space-y-2"></div>
         </section>
 
-        <!-- MANUAL OVERRIDE MODAL -->
-        <div id="overrideModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-            <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 border-amber-500/20">
-                <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+        <!-- MANUAL OVERRIDE MODAL (bottom sheet) -->
+        <div id="overrideModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-amber-300 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-3 sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
-                    <button type="button" onclick="closeOverrideModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                    <h3 class="text-sm font-bold text-amber-700 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Admin Manual Punch Override</h3>
+                    <button type="button" onclick="closeOverrideModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <select id="overrideSiteSelect" required class="glass-select text-sm py-3"><option value="">-- Choose Site --</option></select>
-                        <select id="overrideWorkerSelect" required class="glass-select text-sm py-3"><option value="">-- Choose Worker --</option></select>
+                <form id="adminOverrideForm" onsubmit="handleAdminOverridePunch(event)" class="space-y-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overrideSiteSelect" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Site --</option></select>
+                        <select id="overrideWorkerSelect" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="">-- Choose Worker --</option></select>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <select id="overridePunchType" required class="glass-select text-sm py-3"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
-                        <input type="datetime-local" id="overrideDateTime" required class="glass-input text-sm py-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="overridePunchType" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none"><option value="IN">PUNCH IN</option><option value="OUT">PUNCH OUT</option></select>
+                        <input type="datetime-local" id="overrideDateTime" required class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-2 py-2 text-xs focus:outline-none">
                     </div>
-                    <button type="submit" class="pill-btn pill-amber w-full py-3 text-sm">Log Override Punch</button>
+                    <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-bold rounded-xl text-xs shadow-md transition">Log Override Punch</button>
                 </form>
             </div>
         </div>
 
-        <!-- REGISTER WORKER MODAL -->
-        <div id="registerWorkerModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-            <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[92vh] overflow-y-auto">
-                <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+        <!-- REGISTER WORKER MODAL (bottom sheet, with live face capture) -->
+        <div id="registerWorkerModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+            <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[92vh] overflow-y-auto sheet-panel">
+                <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-white">Register Worker Profile</h2>
-                    <button type="button" onclick="closeRegisterWorkerModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                    <h2 class="text-lg font-bold text-zinc-900 font-display">Register Worker Profile</h2>
+                    <button type="button" onclick="closeRegisterWorkerModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <form id="addWorkerForm" onsubmit="handleAddWorker(event)" class="space-y-3">
-                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="glass-input text-sm">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="glass-input text-sm">
-                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="glass-input text-sm">
+                    <input type="text" id="workerNameInput" required placeholder="Full Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="tel" id="workerPhoneInput" required placeholder="Mobile No (User ID)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <input type="number" min="0" step="any" id="workerWageInput" required placeholder="Daily Wage (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:outline-none">
                     </div>
 
-                    <!-- LIVE CAMERA FACE CAPTURE -->
+                    <!-- LIVE CAMERA FACE CAPTURE FOR REGISTRATION -->
                     <div>
-                        <label class="block text-xs font-semibold text-white/50 mb-2">Capture Reference Face Photo</label>
-                        <div class="bg-black/50 rounded-2xl overflow-hidden border border-white/10 aspect-video relative flex flex-col items-center justify-center shadow-inner">
+                        <label class="block text-xs font-semibold text-zinc-500 mb-1">Capture Reference Face Photo</label>
+                        <div class="bg-[#14181F] rounded-xl overflow-hidden border border-zinc-300 aspect-video relative flex flex-col items-center justify-center">
                             <video id="regWebcam" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                             <img id="regPhotoPreview" class="hidden w-full h-full object-cover" />
-
-                            <div class="absolute bottom-3 flex gap-2">
-                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="pill-btn pill-primary text-xs px-4 py-2 pressable">
+                            
+                            <div class="absolute bottom-2 flex gap-2">
+                                <button type="button" id="regSnapBtn" onclick="snapRegWorkerPhoto()" class="px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
                                     <i class="fa-solid fa-camera mr-1"></i> Capture Live Face
                                 </button>
-                                <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden pill-btn pill-glass text-xs px-4 py-2 pressable">
+                                <button type="button" id="regRetakeBtn" onclick="resetRegCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Retake
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="pill-btn pill-primary w-full py-3">Register Profile & Account</button>
+                    <button type="submit" class="w-full py-2.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Register Profile & Account</button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB: SETTINGS -->
-        <section id="view-settings" class="hidden space-y-5">
-            <div class="glass p-5 space-y-5">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-violet-400"></i> Settings</h2>
-                <p class="text-[11px] text-white/40 -mt-2">Payroll rule changes only apply to attendance from today onwards.</p>
-                <form onsubmit="saveSettings(event)" class="space-y-5 text-xs">
+        <!-- TAB: SETTINGS (ADMIN ONLY) -->
+        <section id="view-settings" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-zinc-200 shadow-lg space-y-4">
+                <h2 class="text-lg font-bold text-zinc-900 font-display"><i class="fa-solid fa-sliders text-[#6750A4]"></i> Settings</h2>
+                <p class="text-[11px] text-zinc-500 -mt-2">Payroll rule changes only apply to attendance from today onwards - past days keep using whichever rules were active back then.</p>
+                <form onsubmit="saveSettings(event)" class="space-y-4 text-xs">
                     <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Company</p>
-                        <label class="block text-white/60">Company Name<input type="text" id="setCompanyName" required class="glass-input mt-2 text-sm"></label>
-                        <p class="text-[10px] text-white/30 mt-2">Shown on all PDF statements and the app header.</p>
+                        <p class="font-bold text-zinc-700 mb-2">Company</p>
+                        <label class="block">Company Name<input type="text" id="setCompanyName" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Shown on all PDF statements (settlement, master payroll, cash book) and the app header.</p>
                     </div>
 
-                    <div class="glow-divider"></div>
-
-                    <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Payroll Week</p>
-                        <label class="block text-white/60">Week Starts On
-                            <select id="setWeekStartDay" required class="glass-select mt-2 text-sm py-3">
-                                <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
-                                <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Payroll Week</p>
+                        <label class="block">Week Starts On
+                            <select id="setWeekStartDay" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2">
+                                <option value="0">Sunday</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
                             </select>
                         </label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Powers the "This Week" quick filter on the Payroll tab (default: Sunday-Saturday).</p>
                     </div>
 
-                    <div class="glow-divider"></div>
-
-                    <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Shift Timing</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="block text-white/60">Shift Start<input type="time" id="ruleShiftStart" required class="glass-input mt-2 text-sm py-3"></label>
-                            <label class="block text-white/60">Shift End<input type="time" id="ruleShiftEnd" required class="glass-input mt-2 text-sm py-3"></label>
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Shift Timing</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">Shift Start<input type="time" id="ruleShiftStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Shift End<input type="time" id="ruleShiftEnd" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
                         </div>
                     </div>
 
-                    <div class="glow-divider"></div>
-
-                    <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Arrival Rule</p>
-                        <label class="block text-white/60">Grace Until (on-time cutoff)<input type="time" id="ruleGraceUntil" required class="glass-input mt-2 text-sm py-3"></label>
-                        <p class="text-[10px] text-white/30 mt-2">Punching in at or before this time = counted as arriving exactly at Shift Start.</p>
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Arrival Rule</p>
+                        <label class="block">Grace Until (on-time cutoff)<input type="time" id="ruleGraceUntil" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Punching in at or before this time = counted as arriving exactly at Shift Start, with no deduction, and grants afternoon "Free Pass" eligibility below. Punching in any later uses the exact time - no deduction unless it's actually past Shift Start, in which case pay is docked precisely for the time missed (no rounding).</p>
                     </div>
 
-                    <div class="glow-divider"></div>
-
-                    <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Departure "Free Pass"</p>
-                        <label class="block text-white/60">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="glass-input mt-2 text-sm py-3"></label>
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Departure "Free Pass"</p>
+                        <label class="block">Free Pass Window Starts At<input type="time" id="ruleFreePassStart" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                        <p class="text-[10px] text-zinc-400 mt-1.5">Leaving in this window with 0 deduction requires arriving within the Grace Until cutoff above. Leaving any earlier always deducts the exact shortfall to Shift End.</p>
                     </div>
 
-                    <div class="glow-divider"></div>
-
-                    <div>
-                        <p class="font-semibold text-white/80 mb-3 text-sm">Overtime</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="block text-white/60">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="glass-input mt-2 text-sm py-3"></label>
-                            <label class="block text-white/60">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="glass-input mt-2 text-sm py-3"></label>
-                            <label class="block text-white/60">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="glass-input mt-2 text-sm py-3"></label>
-                            <label class="block text-white/60">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="glass-input mt-2 text-sm py-3"></label>
+                    <div class="border-t border-zinc-200 pt-3">
+                        <p class="font-bold text-zinc-700 mb-2">Overtime</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">Grace After Shift End (min)<input type="number" min="0" id="ruleOtGraceMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Rounding Block (min)<input type="number" min="1" id="ruleOtBlockMin" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Hours Per Block<input type="number" min="0" step="0.1" id="ruleOtBlockHrs" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
+                            <label class="block">Rate (₹/hr)<input type="number" min="0" step="1" id="ruleOtRate" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-2"></label>
                         </div>
                     </div>
 
-                    <button type="submit" class="pill-btn pill-primary w-full py-3.5 text-sm">Save Settings</button>
+                    <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Settings (rules effective from today)</button>
                 </form>
             </div>
         </section>
 
-        <!-- TAB: PROFILE -->
-        <section id="view-profile" class="hidden space-y-5">
-            <div id="myProfileCard" class="hidden glass p-5 items-center gap-4">
-                <img id="myProfilePhoto" class="w-16 h-16 rounded-2xl object-cover border border-white/10" src="" />
+        <!-- TAB 6: PROFILE -->
+        <section id="view-profile" class="hidden space-y-4">
+            <div id="myProfileCard" class="hidden bg-white rounded-2xl p-5 border border-zinc-200 shadow-lg items-center gap-4">
+                <img id="myProfilePhoto" class="w-16 h-16 rounded-xl object-cover border border-zinc-200" src="" />
                 <div>
-                    <p class="font-bold text-white text-base" id="myProfileName">-</p>
-                    <p class="text-xs text-white/40" id="myProfilePhone">-</p>
+                    <p class="font-bold text-zinc-900 text-base" id="myProfileName">-</p>
+                    <p class="text-xs text-zinc-500" id="myProfilePhone">-</p>
                 </div>
             </div>
-            <div class="glass p-5 space-y-5">
-                <h2 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-gear text-violet-400"></i> My Profile</h2>
+            <div class="bg-white rounded-2xl p-5 border border-zinc-200 shadow-lg space-y-4">
+                <h2 class="text-base font-bold"><i class="fa-solid fa-user-gear text-[#6750A4]"></i> My Profile</h2>
                 <form id="changePasswordForm" onsubmit="handleChangeOwnPassword(event)" class="space-y-3">
-                    <input type="password" id="currentPassInput" required placeholder="Current password" class="glass-input text-sm">
-                    <input type="password" id="userNewPassInput" required placeholder="New password" class="glass-input text-sm">
-                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="glass-input text-sm">
-                    <button type="submit" class="pill-btn pill-primary w-full py-3 text-sm">Change Password</button>
+                    <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                    <button type="submit" class="w-full py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl text-xs shadow-md transition">Change Password</button>
                 </form>
             </div>
         </section>
 
     </main>
 
-    <!-- BOTTOM NAVIGATION: Floating Glass Dock -->
-    <nav id="mainNav" class="hidden nav-dock">
-        <button type="button" onclick="switchTab('logs')" id="tab-logs" class="active">
-            <i class="fa-solid fa-clock-rotate-left"></i>
+    <!-- BOTTOM NAVIGATION: fixed to the viewport bottom, Material 3 style - the
+         active tab gets a pill-shaped highlight behind just the icon, with the
+         label always visible beneath. This is the single strongest visual cue
+         that reads as "native Android app" rather than "responsive website". -->
+    <nav id="mainNav" class="hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-zinc-200 elev-4 px-1 pt-2 pb-[calc(0.4rem+env(safe-area-inset-bottom))] flex justify-around text-[10px] font-semibold overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-[#6750A4]">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center bg-[#EADDFF] text-[#6750A4]"><i class="fa-solid fa-clock-rotate-left text-base"></i></span>
             <span>Logs</span>
         </button>
-        <button type="button" onclick="switchTab('settlement')" id="tab-settlement" class="admin-only hidden">
-            <i class="fa-solid fa-indian-rupee-sign"></i>
+        <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-indian-rupee-sign text-base"></i></span>
             <span>Payroll</span>
         </button>
-        <button type="button" onclick="switchTab('cashbook')" id="tab-cashbook" class="admin-only hidden">
-            <i class="fa-solid fa-book"></i>
+        <button onclick="switchTab('cashbook')" id="tab-cashbook" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-book text-base"></i></span>
             <span>Cash Book</span>
         </button>
-        <button type="button" onclick="switchTab('sites')" id="tab-sites" class="admin-only hidden">
-            <i class="fa-solid fa-map-location-dot"></i>
+        <button onclick="switchTab('sites')" id="tab-sites" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-map-location-dot text-base"></i></span>
             <span>Sites</span>
         </button>
-        <button type="button" onclick="switchTab('workers')" id="tab-workers" class="admin-only hidden">
-            <i class="fa-solid fa-users"></i>
+        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-users text-base"></i></span>
             <span>Workers</span>
         </button>
-        <button type="button" onclick="switchTab('settings')" id="tab-settings" class="admin-only hidden">
-            <i class="fa-solid fa-sliders"></i>
+        <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn admin-only ripple-host flex-1 min-w-[64px] max-w-[100px] py-1 rounded-2xl flex flex-col items-center gap-1 text-zinc-500">
+            <span class="nav-pill w-14 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-sliders text-base"></i></span>
             <span>Settings</span>
         </button>
     </nav>
 
-    <!-- CUSTOM CONFIRM MODAL -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 z-[200] flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="confirm-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 text-center">
-            <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
-            <div class="w-14 h-14 rounded-2xl bg-rose-500/15 text-rose-400 mx-auto flex items-center justify-center text-2xl border border-rose-500/20">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <h3 class="text-xl font-bold text-white" id="confirmTitle">Are you sure?</h3>
-            <p class="text-sm text-white/50" id="confirmDesc">This action cannot be undone.</p>
+    <!-- CUSTOM CONFIRM MODAL (NO UGLY ALERTS) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[200] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-rose-200 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 text-center shadow-2xl sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+            <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-2xl border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="text-xl font-bold text-zinc-900 font-display" id="confirmTitle">Are you sure?</h3>
+            <p class="text-sm text-zinc-700" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3 pt-2">
-                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition pressable border border-white/10">Cancel</button>
-                <button type="button" id="confirmActionBtn" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-500/25 transition pressable">Delete</button>
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-xl text-sm font-semibold transition">Cancel</button>
+                <button id="confirmActionBtn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-900/50 transition">Delete</button>
             </div>
         </div>
     </div>
 
     <!-- EDIT SITE MODAL -->
-    <div id="editSiteModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4">
-            <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+    <div id="editSiteModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Site</h3>
-                <button type="button" onclick="closeEditSite()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Site</h3>
+                <button type="button" onclick="closeEditSite()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditSite(event)" class="space-y-3">
-                <input type="text" id="editSiteName" required placeholder="Site Name" class="glass-input text-sm">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="glass-input text-sm">
-                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="glass-input text-sm">
+                <input type="text" id="editSiteName" required placeholder="Site Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="any" id="editSiteLat" required placeholder="Latitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                    <input type="number" step="any" id="editSiteLng" required placeholder="Longitude" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </div>
-                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="glass-input text-sm">
-                <button type="submit" class="pill-btn pill-primary w-full py-3">Save Changes</button>
+                <input type="number" id="editSiteRadius" required placeholder="Radius (m)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
     <!-- EDIT WORKER MODAL -->
-    <div id="editWorkerModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+    <div id="editWorkerModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Worker</h3>
-                <button type="button" onclick="closeEditWorker()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Worker</h3>
+                <button type="button" onclick="closeEditWorker()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form onsubmit="saveEditWorker(event)" class="space-y-3">
-                <input type="text" id="editWorkerName" required placeholder="Full Name" class="glass-input text-sm">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="glass-input text-sm">
-                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="glass-input text-sm">
+                <input type="text" id="editWorkerName" required placeholder="Full Name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="tel" id="editWorkerPhone" required placeholder="Mobile No (Login ID)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
+                    <input type="number" min="0" step="any" id="editWorkerWage" required placeholder="Daily Wage (₹)" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </div>
 
                 <!-- FACE RECAPTURE -->
                 <div>
-                    <label class="block text-xs font-semibold text-white/50 mb-2">Face Photo / Biometrics</label>
-                    <div class="bg-black/50 rounded-2xl overflow-hidden border border-white/10 aspect-video relative flex flex-col items-center justify-center shadow-inner">
+                    <label class="block text-xs font-semibold text-zinc-500 mb-1">Face Photo / Biometrics</label>
+                    <div class="bg-[#14181F] rounded-xl overflow-hidden border border-zinc-300 aspect-video relative flex flex-col items-center justify-center">
                         <img id="editCurrentPhoto" class="w-full h-full object-cover" />
                         <video id="editWebcam" autoplay playsinline class="hidden w-full h-full object-cover scale-x-[-1]"></video>
                         <img id="editPhotoPreview" class="hidden w-full h-full object-cover" />
 
-                        <div class="absolute bottom-3 flex gap-2">
-                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="pill-btn pill-primary text-xs px-3 py-2 pressable">
-                                <i class="fa-solid fa-camera-rotate mr-1"></i> Recapture
+                        <div class="absolute bottom-2 flex gap-2">
+                            <button type="button" id="editRecaptureBtn" onclick="startEditRecapture()" class="px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
+                                <i class="fa-solid fa-camera-rotate mr-1"></i> Recapture Face
                             </button>
-                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden pill-btn pill-primary text-xs px-3 py-2 pressable">
+                            <button type="button" id="editSnapBtn" onclick="snapEditWorkerPhoto()" class="hidden px-3 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold text-xs rounded-lg shadow-md transition">
                                 <i class="fa-solid fa-camera mr-1"></i> Capture
                             </button>
-                            <button type="button" id="editRetakeBtn" onclick="resetEditCamera()" class="hidden pill-btn pill-glass text-xs px-3 py-2 pressable">
+                            <button type="button" id="editRetakeBtn" onclick="resetEditCamera()" class="hidden px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white font-bold text-xs rounded-lg shadow-md transition border border-white/20">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Retake
                             </button>
                         </div>
                     </div>
-                    <p class="text-[10px] text-white/30 mt-2">Only recapture if the worker's stored face no longer matches them well.</p>
+                    <p class="text-[10px] text-zinc-400 mt-1">Only recapture if the worker's stored face no longer matches them well.</p>
                 </div>
 
-                <button type="submit" class="pill-btn pill-primary w-full py-3">Save Changes</button>
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Changes</button>
             </form>
         </div>
     </div>
 
-    <!-- EDIT PUNCH TIME MODAL -->
-    <div id="editPunchModal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4">
-            <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
+    <!-- EDIT PUNCH TIME MODAL (admin only) -->
+    <div id="editPunchModal" class="hidden fixed inset-0 bg-zinc-950/60 z-[150] flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-[#6750A4]/20 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-4 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Edit Punch Time</h3>
-                <button type="button" onclick="closeEditPunchModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition pressable"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-zinc-900 font-display">Edit Punch Time</h3>
+                <button type="button" onclick="closeEditPunchModal()" class="text-zinc-400 hover:text-zinc-900 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-xs text-white/40" id="editPunchSummary"></p>
+            <p class="text-xs text-zinc-500" id="editPunchSummary"></p>
             <form onsubmit="saveEditedPunchTime(event)" class="space-y-3">
-                <label class="block text-xs text-white/50">Corrected Date & Time
-                    <input type="datetime-local" id="editPunchDateTime" required class="glass-input mt-2 text-sm">
+                <label class="block text-xs text-zinc-500">Corrected Date &amp; Time
+                    <input type="datetime-local" id="editPunchDateTime" required class="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#6750A4]">
                 </label>
-                <button type="submit" class="pill-btn pill-primary w-full py-3">Save Corrected Time</button>
+                <button type="submit" class="w-full py-3 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold rounded-xl shadow-md transition">Save Corrected Time</button>
             </form>
         </div>
     </div>
 
-    <!-- FORCE PASSWORD CHANGE MODAL -->
-    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center sheet-backdrop">
-        <div class="sheet-panel rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 border-amber-500/20">
-            <div class="w-10 h-1 bg-white/20 rounded-full mx-auto sm:hidden mb-2"></div>
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-xl border border-amber-500/20 mx-auto">
-                <i class="fa-solid fa-lock"></i>
-            </div>
-            <h3 class="text-lg font-bold text-amber-400 text-center">Security: Set New Password</h3>
-            <p class="text-xs text-white/50 text-center">You must change your default password to continue.</p>
+    <div id="forcePasswordModal" class="hidden fixed inset-0 bg-zinc-950/60 z-50 flex items-end sm:items-center justify-center sheet-backdrop">
+        <div class="bg-white border border-amber-300 rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 space-y-5 sheet-panel">
+            <div class="w-10 h-1.5 bg-zinc-300 rounded-full mx-auto sm:hidden -mt-2 mb-1"></div>
+            <h3 class="text-lg font-bold text-amber-700">Security: Set New Password</h3>
+            <p class="text-xs text-zinc-700">You must change your default password to continue.</p>
             <form onsubmit="handleForcePasswordChange(event)" class="space-y-3">
-                <input type="password" id="newPasswordInput" required placeholder="New password" class="glass-input text-sm">
-                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="glass-input text-sm">
-                <button type="submit" class="pill-btn pill-amber w-full py-3">Update & Proceed</button>
+                <input type="password" id="newPasswordInput" required placeholder="New password" class="w-full bg-zinc-50 border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                <input type="password" id="confirmPasswordInput" required placeholder="Confirm password" class="w-full bg-zinc-50 border-zinc-200 rounded-xl px-3 py-2 text-sm">
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 font-bold text-zinc-900 rounded-xl transition">Update & Proceed</button>
             </form>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-28 left-1/2 -translate-x-1/2 z-[300] text-white text-xs font-semibold px-5 py-3 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2.5">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toastMsg">Action completed!</span>
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[300] bg-zinc-900 border border-zinc-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i><span id="toastMsg">Action completed!</span>
     </div>
 
-<script>
+    <script>
         // HARDCODED GOOGLE APPS SCRIPT URL
         // Local, network-free fallback avatar (a simple gray person silhouette) used
         // anywhere a worker has no photo yet. Previously this fell back to an
@@ -1180,8 +814,6 @@
 
         let db = JSON.parse(JSON.stringify(INITIAL_DATA));
         let currentUser = null;
-        let payrollViewMode = 'current';
-        let lastSyncStatus = 'syncing'; // 'syncing' | 'synced' | 'offline' | 'error' // 'current' | 'settled'
         let stream = null, regStream = null;
         let currentPos = null, isWithinGeoFence = false;
         
@@ -1198,64 +830,59 @@
         let editCapturedDescriptor = null;
 
         // --- INIT ---
-        function updateHeaderSyncStatus() {
-            const el = document.getElementById('cloudStatusText');
-            if (!el) return;
-            if (lastSyncStatus === 'synced') {
-                el.innerHTML = '<i class="fa-solid fa-check text-emerald-400 text-[10px]"></i> Synced';
-            } else if (lastSyncStatus === 'offline') {
-                el.innerHTML = '<i class="fa-solid fa-cloud-slash text-amber-400 text-[10px]"></i> Offline';
-            } else if (lastSyncStatus === 'error') {
-                el.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400 text-[10px]"></i> Error';
-            } else {
-                el.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin text-[10px]"></i> Syncing...';
-            }
-        }
-        
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
-
+            
             const saved = localStorage.getItem('sitepunch_db_v9');
             if (saved) { try { db = { ...INITIAL_DATA, ...JSON.parse(saved) }; } catch(e) {} }
-
+            
             const sessionUser = sessionStorage.getItem('sitepunch_active_user');
             if (sessionUser) currentUser = JSON.parse(sessionUser);
 
-            // Hide loader IMMEDIATELY once local data is ready — don't wait for cloud.
-            applyCompanyBranding();
-            const loader = document.getElementById('initialLoader');
-            if (loader) {
-                loader.classList.add('opacity-0');
-                setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 500);
-            }
-            if (currentUser) { showDashboard(); } else { showLandingPage(); }
-            updateHeaderSyncStatus(); // show "Syncing..." in header
-
-            // Background: Cloud sync (non-blocking)
-            let syncSuccess = false;
+            // Wait for Cloud Data & AI Models. Previously this had a hard 5-second
+            // cutoff that would silently give up and show the login screen anyway
+            // even if data hadn't arrived yet - on a slow connection, or during an
+            // Apps Script "cold start" (which can genuinely take several seconds),
+            // that meant login would fail with no explanation at all. This is now a
+            // much more generous safety net, and if it's genuinely still not ready
+            // we show a clear warning instead of pretending everything is fine.
             let syncTimedOut = false;
             try {
-                const maxWaitTimer = new Promise(resolve => setTimeout(() => { syncTimedOut = true; resolve(); }, 8000));
+                const maxWaitTimer = new Promise(resolve => setTimeout(() => { syncTimedOut = true; resolve(); }, 15000));
                 await Promise.race([
                     Promise.all([fetchCloudData(), loadFaceAPIModels()]),
                     maxWaitTimer
                 ]);
-                syncSuccess = !syncTimedOut;
             } catch (error) {
-                console.warn("Background sync failed", error);
+                console.warn("Bootup partial failure or timeout", error);
             }
 
-            // Update header and UI after sync completes (or fails)
-            updateHeaderSyncStatus();
-            if (syncSuccess) {
-                showToast("Database synced!", "success", 2000);
-            } else if (syncTimedOut) {
-                showToast("Sync delayed — working from local cache.", "warning", 4000);
-            } else {
-                showToast("Sync failed — working offline.", "error", 4000);
+            if (syncTimedOut) {
+                console.warn("Startup sync did not finish within 15s - proceeding with whatever data is cached locally.");
+                showToast("Sync is taking longer than usual - some data may be out of date until it finishes.", "error", 6000);
             }
-            renderAll(); // refresh UI with any new data
+
+            // Hash any legacy plaintext passwords (e.g. the built-in default admin, or
+            // accounts loaded from a sheet saved before password hashing existed).
+            // Doesn't block startup - runs in the background and re-syncs if needed.
             migrateLegacyPasswords().catch(err => console.warn("Password migration failed", err));
+            applyCompanyBranding();
+
+            // Hide the initial loader smoothly
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 500); // wait for CSS transition
+            }
+
+            // Route to correct screen based on session
+            if (currentUser) {
+                showDashboard();
+            } else {
+                showLandingPage();
+            }
         }
 
         async function fetchCloudData() {
@@ -1263,11 +890,7 @@
                 const cloudStatus = document.getElementById('cloudStatusText');
                 if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
 
-                const fetchPromise = fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
-                const response = await Promise.race([
-                    fetchPromise,
-                    new Promise((_, reject) => setTimeout(() => reject(new Error("Cloud fetch timeout")), 6000))
-                ]);
+                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data) {
@@ -1470,7 +1093,7 @@
             document.getElementById('mainNav').classList.add('hidden');
             document.getElementById('roleBadge').innerText = 'Public Kiosk';
             document.getElementById('authHeaderAction').innerHTML = `
-                <button type="button" onclick="showLandingPage()" class="pill-btn pill-glass text-xs py-2 px-4 pressable"><i class="fa-solid fa-arrow-left mr-1"></i> Home</button>
+                <button onclick="showLandingPage()" class="text-xs px-3 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 text-zinc-700 font-bold transition"><i class="fa-solid fa-arrow-left"></i> Home</button>
             `;
             populateDropdowns(); startWebcam(); checkCurrentLocation();
         }
@@ -1480,8 +1103,8 @@
             document.getElementById('mainNav').classList.remove('hidden');
             document.getElementById('roleBadge').innerText = `${currentUser.role}: ${currentUser.name}`;
             document.getElementById('authHeaderAction').innerHTML = `
-                <button type="button" onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition"><i class="fa-solid fa-user"></i> Profile</button>
-                <button type="button" onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition">Logout</button>
+                <button onclick="switchTab('profile')" class="text-xs px-2.5 py-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition"><i class="fa-solid fa-user"></i> Profile</button>
+                <button onclick="handleLogout()" class="text-xs px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition">Logout</button>
             `;
 
             document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
@@ -1500,12 +1123,18 @@
             document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden')); 
             document.getElementById(`view-${t}`).classList.remove('hidden'); 
             
-            document.querySelectorAll('#mainNav button').forEach(el => {
-                el.classList.remove('active');
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-[#6750A4]');
+                el.classList.add('text-zinc-500');
+                const pill = el.querySelector('.nav-pill');
+                if (pill) { pill.classList.remove('bg-[#EADDFF]', 'text-[#6750A4]'); }
             });
             const btn = document.getElementById(`tab-${t}`);
             if (btn) {
-                btn.classList.add('active');
+                btn.classList.add('text-[#6750A4]');
+                btn.classList.remove('text-zinc-500');
+                const pill = btn.querySelector('.nav-pill');
+                if (pill) { pill.classList.add('bg-[#EADDFF]', 'text-[#6750A4]'); }
             }
 
             if(t === 'punch') { startWebcam(); autoScanActive = true; checkCurrentLocation(); } else { stopWebcam(); autoScanActive = false; }
@@ -1599,13 +1228,14 @@
         async function loadFaceAPIModels() {
             try {
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                const loadWithTimeout = (fn) => Promise.race([
-                    fn(),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error("Model load timeout")), 4000))
-                ]);
-                await loadWithTimeout(() => faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL));
-                await loadWithTimeout(() => faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL));
-                await loadWithTimeout(() => faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL));
+                // SWAPPED to tinyFaceDetector for extreme mobile speed
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); 
+                // NOTE: faceExpressionNet no longer loaded - liveness now uses blink detection
+                // (see getEyeAspectRatio/startContinuousScan), which relies only on the
+                // 68-point landmark model already loaded above. This saves a model download
+                // and avoids forcing workers to smile on camera.
                 aiModelsLoaded = true;
             } catch (e) {
                 console.error("AI Models Error", e);
@@ -1750,7 +1380,7 @@
             const el = document.getElementById('scanStatusLine');
             if (!el) return;
             el.innerText = msg;
-            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-white/50');
+            el.className = 'text-[11px] text-center mt-2 min-h-[1.5em] ' + (isError ? 'text-rose-600' : 'text-zinc-500');
         }
 
         async function executePunchCapture(video) {
@@ -2523,14 +2153,14 @@
                 return;
             }
             container.innerHTML = db.sites.map((s, i) => `
-                <div class="glass p-4 flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
+                <div class="bg-white p-3 rounded-xl border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div>
-                        <p class="font-bold text-sm text-white">${s.name}</p>
-                        <p class="text-[10px] text-white/40">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
+                        <p class="font-bold text-sm">${s.name}</p>
+                        <p class="text-[10px] text-zinc-500">Lat: ${s.lat} | Lng: ${s.lng} | Radius: ${s.radius}m</p>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="openEditSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button type="button" onclick="deleteSite('${s.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button onclick="openEditSite('${s.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteSite('${s.id}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`).join(''); 
         }
@@ -2544,20 +2174,20 @@
             }
             container.innerHTML = db.workers.map((w, i) => {
                 const hasValidFace = w.descriptor && Array.isArray(w.descriptor) && w.descriptor.length === 128;
-                const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-1 text-[9px] font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">⚠ No Face Data</span>`;
+                const faceBadge = hasValidFace ? '' : `<span class="inline-block mt-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">⚠ No Face Data</span>`;
                 return `
-                <div class="glass p-4 flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
+                <div class="bg-white p-3 rounded-xl border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <img src="${w.photo || FALLBACK_AVATAR}" class="w-11 h-11 rounded-xl object-cover border border-white/10"/>
+                        <img src="${w.photo || FALLBACK_AVATAR}" class="w-10 h-10 rounded-xl object-cover border border-zinc-200"/>
                         <div>
-                            <p class="font-bold text-sm text-white">${w.name}</p>
-                            <p class="text-[10px] text-emerald-400/80">₹${w.wage}/day | Phone: ${w.phone}</p>
+                            <p class="font-bold text-sm">${w.name}</p>
+                            <p class="text-[10px] text-emerald-600">₹${w.wage}/day | Phone: ${w.phone}</p>
                             ${faceBadge}
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="openEditWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-500/20 text-violet-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button type="button" onclick="deleteWorker('${w.id}')" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-300 transition flex items-center justify-center pressable"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <button onclick="openEditWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteWorker('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>`;
             }).join(''); 
@@ -2821,7 +2451,7 @@
 
             if (!visibleLogs || visibleLogs.length === 0) {
                 document.getElementById('logCountBadge').innerText = "0 logs";
-                return container.innerHTML = `<p class="text-xs text-white/30 py-4 text-center">No attendance logs yet.</p>`;
+                return container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No attendance logs yet.</p>`;
             }
 
             // Group logs by Date -> Site Name
@@ -2860,11 +2490,11 @@
 
             let html = '';
             for (const date in grouped) {
-                html += `<div class="mb-5"><h3 class="text-sm font-bold text-violet-300 border-b border-white/10 pb-2 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day text-violet-400/60"></i> ${date}</h3>`;
+                html += `<div class="mb-5"><h3 class="text-sm font-black text-[#6750A4] border-b border-zinc-200 pb-1.5 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${date}</h3>`;
                 
                 for (const siteName in grouped[date]) {
-                    html += `<div class="glass-thin p-4 mb-3">`;
-                    html += `<h4 class="text-[11px] font-bold text-white/70 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-violet-400/60"></i> ${siteName}</h4>`;
+                    html += `<div class="bg-zinc-50 rounded-xl p-3 mb-3 border border-zinc-200 shadow-sm">`;
+                    html += `<h4 class="text-[11px] font-bold text-zinc-700 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fa-solid fa-map-location-dot text-[#6750A4]"></i> ${siteName}</h4>`;
                     
                     // Sort logs chronologically to accurately calculate durations
                     const siteLogs = grouped[date][siteName].sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
@@ -2900,25 +2530,25 @@
                             earnCell = `<td class="py-1.5 pr-2 text-right whitespace-nowrap">${earnDisplay}</td>`;
                         }
                         
-                        return `<tr>
-                            <td class="py-2 pr-2 font-medium text-white/90 whitespace-nowrap">${a.workerName}</td>
-                            <td class="py-2 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1.5 py-0.5 bg-white/5 rounded-md">${a.type}</span></td>
-                            <td class="py-2 pr-2 text-white/40 whitespace-nowrap">${timeOnly}</td>
-                            <td class="py-2 pr-2 text-right whitespace-nowrap">${durationStr}</td>
+                        return `<tr class="border-b border-zinc-100 last:border-0">
+                            <td class="py-1.5 pr-2 font-medium text-zinc-700 whitespace-nowrap">${a.workerName}</td>
+                            <td class="py-1.5 pr-2 whitespace-nowrap"><span class="w-4 inline-block text-center">${typeIcon}</span> <span class="${typeColor} font-bold text-[10px] px-1 bg-zinc-100 rounded">${a.type}</span></td>
+                            <td class="py-1.5 pr-2 text-zinc-500 whitespace-nowrap">${timeOnly}</td>
+                            <td class="py-1.5 pr-2 text-right whitespace-nowrap">${durationStr}</td>
                             ${earnCell}
-                            <td class="py-2 text-right whitespace-nowrap">${editBtn}</td>
+                            <td class="py-1.5 text-right whitespace-nowrap">${editBtn}</td>
                         </tr>`;
                     });
                     
-                    html += `<table class="w-full text-xs border-collapse glass-table">
+                    html += `<table class="w-full text-xs border-collapse">
                         <thead>
-                            <tr>
-                                <th class="text-left pb-2 pr-2">Worker</th>
-                                <th class="text-left pb-2 pr-2">Type</th>
-                                <th class="text-left pb-2 pr-2">Time</th>
-                                <th class="text-right pb-2 pr-2">Duration</th>
-                                ${isAdmin ? '<th class="text-right pb-2 pr-2">Earning</th>' : ''}
-                                <th class="text-right pb-2"></th>
+                            <tr class="text-[9px] uppercase tracking-wider text-zinc-400 border-b border-zinc-200">
+                                <th class="text-left font-semibold pb-1 pr-2">Worker</th>
+                                <th class="text-left font-semibold pb-1 pr-2">Type</th>
+                                <th class="text-left font-semibold pb-1 pr-2">Time</th>
+                                <th class="text-right font-semibold pb-1 pr-2">Duration</th>
+                                ${isAdmin ? '<th class="text-right font-semibold pb-1 pr-2">Earning</th>' : ''}
+                                <th class="text-right font-semibold pb-1"></th>
                             </tr>
                         </thead>
                         <tbody>${displayRows.reverse().join('')}</tbody>
@@ -2932,45 +2562,25 @@
             document.getElementById('logCountBadge').innerText = `${visibleLogs.length} logs`; 
         }
 
-        function formatDateTime(ms) {
-            if (!ms) return 'N/A';
-            const d = new Date(Number(ms));
-            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + 
-                   d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-        }
-        
-        function setPayrollView(mode) {
-            payrollViewMode = mode;
-            document.getElementById('payrollViewCurrent').classList.toggle('active', mode === 'current');
-            document.getElementById('payrollViewSettled').classList.toggle('active', mode === 'settled');
-            renderSettlements();
-        }
-        
-        function renderSettlements() {
+        function renderSettlements() { 
             const container = document.getElementById('payrollCardsContainer');
-            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-white/30 py-4 text-center">No workers registered for payroll.</p>`;
-
-            // SETTLED RECORDS VIEW
-            if (payrollViewMode === 'settled') {
-                return renderSettledRecords(container);
-            }
-
+            if (!db.workers || db.workers.length === 0) return container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No workers registered for payroll.</p>`;
+            
             // Check for Custom Date Filters
             const fromVal = document.getElementById('payrollFrom')?.value;
             const toVal = document.getElementById('payrollTo')?.value;
             const isCustomRange = (fromVal || toVal);
             const filterStartMs = getStartOfDayMs(fromVal);
             const filterEndMs = getEndOfDayMs(toVal);
-
+            
             // SECURITY: Restrict view to only the logged-in worker if they are not an Admin
             let displayWorkers = db.workers;
             if (currentUser && currentUser.role !== 'admin') {
                 displayWorkers = db.workers.filter(w => w.id === currentUser.workerId);
             }
             const knownWorkerIds = new Set(db.workers.map(w => w.id));
-
+            
             let html = displayWorkers.map((w, i) => {
-let html = displayWorkers.map((w, i) => {
                 // Track the last time this worker was marked "Paid" (Only applies if NOT using custom dates)
                 const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
                 const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
@@ -2986,22 +2596,22 @@ let html = displayWorkers.map((w, i) => {
                 const summary = summarizeWorkerAttendance(workerLogs, w);
                 const daysSet = summary.daysSet;
 
-                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1.5 border-b border-white/5 last:border-0 text-white/70">
+                let sessionRows = summary.sessions.map(s => `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-zinc-200 last:border-0 text-zinc-700">
                             <div class="col-span-1">${s.date}</div>
                             <div class="col-span-1 truncate" title="${s.siteName}">${s.siteName}</div>
                             <div class="col-span-1">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</div>
-                            <div class="col-span-1 text-right font-bold text-violet-300">${s.durationHrs.toFixed(2)} hr</div>
+                            <div class="col-span-1 text-right font-bold text-[#6750A4]">${s.durationHrs.toFixed(2)} hr</div>
                         </div>`).join('');
                 
                 // Handle a dangling IN punch that missed an OUT punch
                 if (summary.danglingIn) {
                     const currentIn = summary.danglingIn;
                     const date = currentIn.timestamp.split(',')[0].trim();
-                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1.5 border-b border-white/5 last:border-0 text-white/70">
+                    sessionRows += `<div class="grid grid-cols-4 gap-1 text-[10px] py-1 border-b border-zinc-200 last:border-0 text-zinc-700">
                         <div class="col-span-1">${date}</div>
                         <div class="col-span-1 truncate">${currentIn.siteName}</div>
-                        <div class="col-span-1 text-amber-400">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
-                        <div class="col-span-1 text-right text-amber-400">Missed OUT</div>
+                        <div class="col-span-1 text-amber-700">${currentIn.timestamp.split(',')[1].trim()} - ?</div>
+                        <div class="col-span-1 text-right text-amber-700">Missed OUT</div>
                     </div>`;
                 }
                 
@@ -3020,28 +2630,28 @@ let html = displayWorkers.map((w, i) => {
                 
                 // Disable Mark Paid button if viewing historical custom dates to prevent cycle confusion
                 const markPaidBtn = (currentUser && currentUser.role === 'admin') ? (isCustomRange ? 
-                    `<button type="button" disabled class="py-2.5 rounded-xl bg-white/5 opacity-40 cursor-not-allowed text-white/30 text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
-                    `<button type="button" onclick="handleMarkPaid('${w.id}')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition pressable"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
+                    `<button disabled class="py-2 bg-zinc-200 opacity-70 cursor-not-allowed text-zinc-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock"></i> Clear Dates to Pay</button>` : 
+                    `<button onclick="handleMarkPaid('${w.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`) : '';
 
                 const actionGridClass = (currentUser && currentUser.role === 'admin') ? 'grid grid-cols-2 gap-2' : 'flex flex-col';
                 const pdfBtnClass = (currentUser && currentUser.role === 'admin') ? '' : 'w-full';
 
                 return `
-                <div class="glass overflow-hidden transition-all card-in" style="animation-delay:${i * 40}ms">
-                    <button type="button" onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-4 text-xs flex justify-between items-center hover:bg-white/5 transition pressable">
-                        <span class="font-bold text-sm text-white flex items-center gap-3">
-                            <img src="${w.photo || FALLBACK_AVATAR}" class="w-8 h-8 rounded-xl object-cover border border-white/10" />
+                <div class="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden transition-all shadow-sm card-in" style="animation-delay:${i * 40}ms">
+                    <button onclick="document.getElementById('payroll_det_${w.id}').classList.toggle('hidden')" class="w-full p-3 text-xs flex justify-between items-center hover:bg-zinc-100 transition">
+                        <span class="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                            <img src="${w.photo || FALLBACK_AVATAR}" class="w-7 h-7 rounded-full object-cover border border-zinc-200" />
                             ${w.name}
                         </span>
                         <div class="flex items-center gap-3">
-                            <span class="${isPositive ? 'text-emerald-400' : 'text-rose-400'} font-bold text-sm">₹${net.toFixed(0)}</span>
-                            <i class="fa-solid fa-chevron-down text-white/30"></i>
+                            <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} font-black text-sm">₹${net.toFixed(0)}</span>
+                            <i class="fa-solid fa-chevron-down text-zinc-400"></i>
                         </div>
                     </button>
-                    <div id="payroll_det_${w.id}" class="hidden p-5 bg-black/20 border-t border-white/10 space-y-4 text-xs">
+                    <div id="payroll_det_${w.id}" class="hidden p-4 bg-white border-t border-zinc-200 space-y-3 text-xs">
                         
-                        <div class="glass-thin p-3">
-                            <h4 class="text-[10px] uppercase text-white/40 font-bold mb-2 flex justify-between">
+                        <div class="bg-zinc-50 rounded-lg border border-zinc-200 p-2">
+                            <h4 class="text-[10px] uppercase text-zinc-400 font-bold mb-1.5 flex justify-between">
                                 <span>Detailed Work Sessions</span>
                                 <span>Total: ${totalHours.toFixed(2)} Hrs</span>
                             </h4>
@@ -3054,20 +2664,20 @@ let html = displayWorkers.map((w, i) => {
                             ${summary.totalDeductionHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Late/Early Deductions:</span> <span class="font-medium text-rose-600">${summary.totalDeductionHours.toFixed(2)} hr</span></div>` : ''}
                             ${summary.totalOvertimeHours > 0 ? `<div class="flex justify-between items-center"><span class="text-zinc-500">Overtime (@ ₹${getEffectiveRules(Date.now()).otRate}/hr):</span> <span class="font-medium text-amber-700">${summary.totalOvertimeHours.toFixed(2)} hr = ₹${summary.totalOvertimePay.toFixed(0)}</span></div>` : ''}
                             
-                            <div class="my-2 border-t border-white/10"></div>
+                            <div class="my-2 border-t border-zinc-200"></div>
                             
                             <div class="flex justify-between items-center"><span class="text-zinc-500">Total Earned:</span> <span class="text-emerald-600 font-bold">₹${earned.toFixed(0)}</span></div>
                             <div class="flex justify-between items-center"><span class="text-zinc-500">Advances Taken:</span> <span class="text-rose-600 font-bold">-₹${adv.toFixed(0)}</span></div>
                             
-                            <div class="mt-2 pt-2 border-t border-white/10 flex justify-between items-center">
+                            <div class="mt-2 pt-2 border-t border-zinc-200 flex justify-between items-center">
                                 <span class="text-zinc-700 font-bold uppercase tracking-wider">Net Settlement</span> 
                                 <span class="${isPositive ? 'text-emerald-600' : 'text-rose-600'} text-base font-black">₹${net.toFixed(0)}</span>
                             </div>
                         </div>
                         
-                        <div class="${actionGridClass} pt-3">
-                            <button type="button" onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-xs font-bold transition flex items-center justify-center gap-1.5 pressable border border-white/10">
-                                <i class="fa-solid fa-file-pdf text-rose-400"></i> Save PDF
+                        <div class="${actionGridClass} pt-2">
+                            <button onclick="downloadSettlementPDF('${w.id}')" class="${pdfBtnClass} py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-file-pdf text-rose-600"></i> Save PDF
                             </button>
                             ${markPaidBtn}
                         </div>
@@ -3084,71 +2694,11 @@ let html = displayWorkers.map((w, i) => {
                     if (orphanLogs > 0) msg += `, ${orphanLogs} not matched to a current worker`;
                     msg += `.)`;
                 }
-                container.innerHTML = `<p class="text-xs text-white/30 py-4 text-center">${msg}</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">${msg}</p>`;
             } else {
                 container.innerHTML = html;
             }
         }
-        function renderSettledRecords(container) {
-            // Get all settlements, sorted newest first
-            let settlements = [...db.settlements].sort((a, b) => (Number(b.settlementMs) || 0) - (Number(a.settlementMs) || 0));
-
-            // Filter by worker if non-admin
-            if (currentUser && currentUser.role !== 'admin') {
-                settlements = settlements.filter(s => s.workerId === currentUser.workerId);
-            }
-
-            if (settlements.length === 0) {
-                return container.innerHTML = `<p class="text-xs text-white/30 py-4 text-center">No settled records found.</p>`;
-            }
-
-            // Group by worker for cleaner display
-            const workerMap = {};
-            for (const s of settlements) {
-                if (!workerMap[s.workerId]) workerMap[s.workerId] = [];
-                workerMap[s.workerId].push(s);
-            }
-
-            let html = '';
-            for (const workerId in workerMap) {
-                const worker = db.workers.find(w => w.id === workerId);
-                if (!worker) continue;
-                const workerSettlements = workerMap[workerId];
-
-                html += `
-                <div class="glass overflow-hidden card-in">
-                    <div class="p-4 flex items-center gap-3 border-b border-white/10">
-                        <img src="${worker.photo || FALLBACK_AVATAR}" class="w-10 h-10 rounded-xl object-cover border border-white/10" />
-                        <div>
-                            <p class="font-bold text-sm text-white">${worker.name}</p>
-                            <p class="text-[10px] text-white/40">${workerSettlements.length} settlement(s)</p>
-                        </div>
-                    </div>
-                    <div class="p-3 space-y-2">
-                        ${workerSettlements.map((s, idx) => `
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition pressable" onclick="downloadSettlementPDF('${worker.id}', '${s.settlementMs}')">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs border border-emerald-500/20">
-                                    <i class="fa-solid fa-check"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-white">₹${parseFloat(s.amount || 0).toFixed(0)}</p>
-                                    <p class="text-[10px] text-white/40">${s.dateRange || 'N/A'}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[10px] text-white/40">${formatDateTime(s.settlementMs)}</p>
-                                <i class="fa-solid fa-file-pdf text-rose-400 text-xs mt-1"></i>
-                            </div>
-                        </div>
-                        `).join('')}
-                    </div>
-                </div>`;
-            }
-
-            container.innerHTML = html;
-        }
-        
 
         function handleMarkPaid(workerId) {
             const w = db.workers.find(x => x.id === workerId);
@@ -3215,58 +2765,85 @@ let html = displayWorkers.map((w, i) => {
         // entirely regardless of what Tailwind happens to be doing on the main page.
         function renderHtmlToPdf(bodyHtml, filename) {
             return new Promise((resolve, reject) => {
-                // Render in an off-screen div (NOT hidden — html2canvas needs the
-                // element to be in the render tree). Using a div instead of an iframe
-                // so html2pdf's pagebreak measurements work correctly.
-                const wrapper = document.createElement('div');
-                wrapper.style.cssText = 'position:absolute;left:-20000px;top:0;width:210mm;';
-                document.body.appendChild(wrapper);
-
-                const inner = document.createElement('div');
-                inner.innerHTML = bodyHtml;
-                // Constrain to A4 content width (210mm page − 10mm margins each side)
-                inner.style.cssText = 'width:190mm;margin:0;padding:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#333;background:#fff;';
-                wrapper.appendChild(inner);
+                const frame = document.createElement('iframe');
+                frame.style.position = 'fixed';
+                frame.style.top = '0';
+                frame.style.left = '-99999px';
+                frame.style.width = '800px';
+                frame.style.height = '100px'; // temporary - resized below once real content height is known
+                frame.style.border = 'none';
+                document.body.appendChild(frame);
 
                 let settled = false;
-                const cleanup = () => { if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); };
+                const cleanup = () => { if (frame.parentNode) frame.parentNode.removeChild(frame); };
+                // Safety net: if something (e.g. a stray external resource) ever hangs
+                // generation indefinitely again, fail gracefully after 25s instead of
+                // leaving the page stuck forever with no way out.
                 const safetyTimer = setTimeout(() => {
                     if (settled) return;
-                    settled = true; cleanup();
-                    reject(new Error("PDF generation timed out. Try with fewer records or check your connection."));
-                }, 30000);
+                    settled = true;
+                    cleanup();
+                    reject(new Error("Timed out - this usually means a resource (like an image) couldn't load. Check your connection and try again."));
+                }, 25000);
 
-                // Allow browser to render fonts & images before capture
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        try {
-                            html2pdf().set({
-                                margin: [10, 10, 10, 10],
-                                filename: filename,
-                                image: { type: 'jpeg', quality: 0.92 },
-                                html2canvas: {
-                                    scale: 2,
-                                    useCORS: true,
-                                    logging: false
-                                },
-                                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                                // 'avoid-all' is removed — it recursively adds page-break-inside:avoid
-                                // to EVERY element, which pushes content down and creates blank pages.
-                                // We add page-break-inside:avoid manually to table rows only.
-                                pagebreak: { mode: ['css', 'legacy'] }
-                            }).from(inner).save().then(() => {
-                                if (settled) return;
-                                settled = true; clearTimeout(safetyTimer); cleanup(); resolve();
-                            }).catch(err => {
-                                if (settled) return;
-                                settled = true; clearTimeout(safetyTimer); cleanup(); reject(err);
-                            });
-                        } catch (err) {
-                            if (settled) return;
-                            settled = true; clearTimeout(safetyTimer); cleanup(); reject(err);
+                frame.onload = () => {
+                    const target = frame.contentDocument.body;
+                    // The 'load' event fires once the HTML is parsed, but that's not
+                    // a guarantee the browser has finished a full layout/reflow pass
+                    // yet - measuring scrollHeight immediately here could catch it
+                    // mid-layout and return a height that's too small, which is
+                    // exactly what caused inconsistent, premature cutoffs (different
+                    // statements got clipped at different, essentially random
+                    // points). Instead, poll the height across animation frames until
+                    // two consecutive reads agree (i.e. layout has genuinely
+                    // settled) before measuring for real.
+                    let lastHeight = -1;
+                    let stableCount = 0;
+                    let checks = 0;
+                    const maxChecks = 40; // generous upper bound, ~40 frames
+
+                    const waitForStableLayout = () => {
+                        const currentHeight = target.scrollHeight;
+                        stableCount = (currentHeight === lastHeight && currentHeight > 0) ? stableCount + 1 : 0;
+                        lastHeight = currentHeight;
+                        checks++;
+
+                        if (stableCount >= 2 || checks >= maxChecks) {
+                            renderNow(currentHeight);
+                        } else {
+                            requestAnimationFrame(waitForStableLayout);
                         }
-                    }, 400);
-                });
+                    };
+
+                    const renderNow = (actualHeight) => {
+                        try {
+                            // IMPORTANT: the iframe's height was a fixed guess before,
+                            // which clipped any statement taller than that (e.g. the
+                            // Financial Summary section on a longer settlement was
+                            // silently cut off). Resizing to the now-stable measured
+                            // height means nothing gets clipped regardless of length.
+                            frame.style.height = (actualHeight + 50) + 'px';
+
+                            html2pdf().set({
+                                margin: 0,
+                                filename,
+                                image: { type: 'jpeg', quality: 0.95 },
+                                html2canvas: { scale: 1.5, width: 800, windowWidth: 800, height: actualHeight, windowHeight: actualHeight },
+                                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                            }).from(target).save().then(() => {
+                                if (settled) return; settled = true; clearTimeout(safetyTimer);
+                                cleanup(); resolve();
+                            }).catch(err => {
+                                if (settled) return; settled = true; clearTimeout(safetyTimer);
+                                cleanup(); reject(err);
+                            });
+                        } catch (err) { cleanup(); reject(err); }
+                    };
+
+                    requestAnimationFrame(waitForStableLayout);
+                };
+
+                frame.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;">${bodyHtml}</body></html>`;
             });
         }
 
@@ -3292,12 +2869,12 @@ let html = displayWorkers.map((w, i) => {
             if (overlay) overlay.remove();
         }
 
-        function downloadSettlementPDF(workerId, specificSettlementMs) {
+        function downloadSettlementPDF(workerId) {
           try {
             const w = db.workers.find(x => x.id === workerId);
             if(!w) return showToast("Worker not found", "error");
 
-            showToast(specificSettlementMs ? "Regenerating Settlement PDF..." : "Generating Invoice...");
+            showToast("Generating Invoice...");
             
             // Respect Custom Date Filters for the PDF
             const fromVal = document.getElementById('payrollFrom')?.value;
@@ -3307,11 +2884,7 @@ let html = displayWorkers.map((w, i) => {
             const filterEndMs = getEndOfDayMs(toVal);
             
             const workerSettlements = db.settlements.filter(s => s.workerId === w.id);
-            let lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
-            // If a specific settlement is requested (from Settled Records view), use that date
-            if (specificSettlementMs) {
-                lastSettledMs = Number(specificSettlementMs);
-            }
+            const lastSettledMs = workerSettlements.length > 0 ? Math.max(0, ...workerSettlements.map(s => Number(s.settlementMs) || 0)) : 0;
             const actualStartMs = isCustomRange ? filterStartMs : lastSettledMs;
             const actualEndMs = isCustomRange ? filterEndMs : Infinity;
             
@@ -3320,7 +2893,7 @@ let html = displayWorkers.map((w, i) => {
             
             const summary = summarizeWorkerAttendance(workerLogs, w);
             const daysSet = summary.daysSet;
-            let sessionRows = summary.sessions.map(s => `<tr style="page-break-inside:avoid;"><td style="padding:8px;border-bottom:1px solid #ddd;">${s.date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${s.durationHrs.toFixed(2)} hr</td></tr>`).join('');
+            let sessionRows = summary.sessions.map(s => `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${s.date}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.siteName}</td><td style="padding:8px;border-bottom:1px solid #ddd;">${s.inLog.timestamp.split(',')[1].trim()} - ${s.outLog.timestamp.split(',')[1].trim()}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">${s.durationHrs.toFixed(2)} hr</td></tr>`).join('');
             
             if (summary.danglingIn) {
                 const currentIn = summary.danglingIn;
@@ -3337,7 +2910,7 @@ let html = displayWorkers.map((w, i) => {
 
             // Build absolute inline CSS layout to guarantee PDF perfection
             const pdfHtml = `
-                <div style="padding: 10mm 10mm 10mm 10mm; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Salary Settlement Statement</p>
                     <hr style="margin: 30px 0; border: 0; border-top: 2px solid #eee;">
@@ -3355,13 +2928,13 @@ let html = displayWorkers.map((w, i) => {
                     </div>
 
                     <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Detailed Work Sessions</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px; table-layout: fixed;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
                         <thead>
                             <tr style="background: #f8fafc; text-align: left;">
-                                <th style="width:18%; padding: 10px 8px; border-bottom: 2px solid #ddd; word-wrap: break-word;">Date</th>
-                                <th style="width:22%; padding: 10px 8px; border-bottom: 2px solid #ddd; word-wrap: break-word;">Site</th>
-                                <th style="width:40%; padding: 10px 8px; border-bottom: 2px solid #ddd; word-wrap: break-word;">Time (IN - OUT)</th>
-                                <th style="width:20%; padding: 10px 8px; border-bottom: 2px solid #ddd; text-align: right; word-wrap: break-word;">Hours</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Date</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Site</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd;">Time (IN - OUT)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #ddd; text-align: right;">Hours</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3370,14 +2943,14 @@ let html = displayWorkers.map((w, i) => {
                     </table>
 
                     <h4 style="border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-bottom: 15px;">Financial Summary</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 40px;">
-                        <tr style="page-break-inside:avoid;"><td style="width:60%; padding: 5px 0;">Total Hours Worked:</td><td style="text-align: right; font-weight: bold;">${totalHours.toFixed(2)} Hrs</td></tr>
-                        ${summary.totalDeductionHours > 0 ? `<tr style="page-break-inside:avoid;"><td style="padding: 5px 0;">Late/Early Deductions:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">${summary.totalDeductionHours.toFixed(2)} Hrs</td></tr>` : ''}
-                        ${summary.totalOvertimeHours > 0 ? `<tr style="page-break-inside:avoid;"><td style="padding: 5px 0;">Overtime (@ Rs ${getEffectiveRules(Date.now()).otRate}/hr):</td><td style="text-align: right; font-weight: bold; color: #d97706;">${summary.totalOvertimeHours.toFixed(2)} Hrs = ₹${summary.totalOvertimePay.toFixed(2)}</td></tr>` : ''}
-                        <tr style="page-break-inside:avoid;"><td style="padding: 5px 0;">Calculated Earnings:</td><td style="text-align: right; font-weight: bold; color: #16a34a;">₹${earned.toFixed(2)}</td></tr>
-                        <tr style="page-break-inside:avoid;"><td style="padding: 5px 0;">Less Advances Taken:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">-₹${adv.toFixed(2)}</td></tr>
+                    <table style="width: 100%; font-size: 14px; margin-bottom: 40px;">
+                        <tr><td style="padding: 5px 0;">Total Hours Worked:</td><td style="text-align: right; font-weight: bold;">${totalHours.toFixed(2)} Hrs</td></tr>
+                        ${summary.totalDeductionHours > 0 ? `<tr><td style="padding: 5px 0;">Late/Early Deductions:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">${summary.totalDeductionHours.toFixed(2)} Hrs</td></tr>` : ''}
+                        ${summary.totalOvertimeHours > 0 ? `<tr><td style="padding: 5px 0;">Overtime (@ Rs ${getEffectiveRules(Date.now()).otRate}/hr):</td><td style="text-align: right; font-weight: bold; color: #d97706;">${summary.totalOvertimeHours.toFixed(2)} Hrs = ₹${summary.totalOvertimePay.toFixed(2)}</td></tr>` : ''}
+                        <tr><td style="padding: 5px 0;">Calculated Earnings:</td><td style="text-align: right; font-weight: bold; color: #16a34a;">₹${earned.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 5px 0;">Less Advances Taken:</td><td style="text-align: right; font-weight: bold; color: #dc2626;">-₹${adv.toFixed(2)}</td></tr>
                         <tr><td colspan="2"><hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;"></td></tr>
-                        <tr style="page-break-inside:avoid;">
+                        <tr>
                             <td style="padding: 10px 0; font-size: 18px; font-weight: bold;">Net Settlement Amount:</td>
                             <td style="text-align: right; font-size: 20px; font-weight: bold; color: ${net >= 0 ? '#16a34a' : '#dc2626'};">₹${net.toFixed(2)}</td>
                         </tr>
@@ -3453,7 +3026,7 @@ let html = displayWorkers.map((w, i) => {
                 grandTotalNet += net;
                 grandTotalOvertimePay += summary.totalOvertimePay;
 
-                rows += `<tr style="page-break-inside:avoid;">
+                rows += `<tr>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;">${w.name}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${daysSet.size}</td>
                     <td style="padding:10px 8px;border-bottom:1px solid #ddd;text-align:center;">${totalHours.toFixed(2)}</td>
@@ -3465,21 +3038,21 @@ let html = displayWorkers.map((w, i) => {
             });
 
             const pdfHtml = `
-                <div style="padding: 10mm 10mm 10mm 10mm; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Master Payroll Statement</p>
                     <p style="text-align: center; color: #888; font-size: 12px; margin-bottom: 30px;">Period: ${dateRangeStr}</p>
                     
-                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; margin-bottom: 30px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
                         <thead>
                             <tr style="background: #f8fafc; text-align: left;">
-                                <th style="width:22%; padding: 10px 8px; border-bottom: 2px solid #333; word-wrap: break-word;">Worker Name</th>
-                                <th style="width:12%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: center; word-wrap: break-word;">Days Active</th>
-                                <th style="width:14%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: center; word-wrap: break-word;">Total Hours</th>
-                                <th style="width:12%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: center; word-wrap: break-word;">OT Hrs</th>
-                                <th style="width:14%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: right; word-wrap: break-word;">Total Earned</th>
-                                <th style="width:14%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: right; word-wrap: break-word;">Advances</th>
-                                <th style="width:12%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: right; word-wrap: break-word;">Net Pay</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Worker Name</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Days Active</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">Total Hours</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: center;">OT Hrs</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Total Earned</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Advances</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Net Pay</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3543,7 +3116,7 @@ let html = displayWorkers.map((w, i) => {
             document.getElementById('cashbookBalance').innerText = `₹${(totalCredit - totalDebit).toFixed(0)}`;
 
             if (entries.length === 0) {
-                container.innerHTML = `<p class="text-xs text-white/30 py-4 text-center">No cash book entries for this period.</p>`;
+                container.innerHTML = `<p class="text-xs text-zinc-400 py-3 text-center">No cash book entries for this period.</p>`;
                 return;
             }
 
@@ -3556,7 +3129,7 @@ let html = displayWorkers.map((w, i) => {
                 const deleteBtn = `<button type="button" onclick="deleteCashbookEntry('${c.id}')" class="text-zinc-400 hover:text-rose-600 transition" title="Delete entry"><i class="fa-solid fa-trash text-[10px]"></i></button>`;
                 return `<div class="bg-white rounded-xl p-3 border border-zinc-200 shadow-sm flex justify-between items-center card-in" style="animation-delay:${i * 40}ms">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center"><i class="fa-solid ${icon}"></i></div>
                         <div>
                             <p class="text-sm font-medium text-zinc-700">${c.description}</p>
                             <p class="text-[10px] text-zinc-400">${c.category} &bull; ${c.timestamp} ${billLink}</p>
@@ -3638,7 +3211,7 @@ let html = displayWorkers.map((w, i) => {
                 const amt = parseFloat(c.amount) || 0;
                 if (c.type === 'credit') { runningBalance += amt; totalCredit += amt; }
                 else { runningBalance -= amt; totalDebit += amt; }
-                return `<tr style="page-break-inside:avoid;">
+                return `<tr>
                     <td style="padding:8px;border-bottom:1px solid #ddd;">${c.timestamp}</td>
                     <td style="padding:8px;border-bottom:1px solid #ddd;">${c.category}</td>
                     <td style="padding:8px;border-bottom:1px solid #ddd;">${c.description}</td>
@@ -3648,19 +3221,19 @@ let html = displayWorkers.map((w, i) => {
             }).join('');
 
             const pdfHtml = `
-                <div style="padding: 10mm 10mm 10mm 10mm; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
                     <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 5px; font-size: 28px;">${getEffectiveRules(Date.now()).companyName}</h1>
                     <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cash Book Statement</p>
                     <p style="text-align: center; color: #888; font-size: 12px;">${dateRangeStr}</p>
                     <hr style="margin: 20px 0; border: 0; border-top: 2px solid #eee;">
-                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; margin-bottom: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
                         <thead>
                             <tr style="background: #f8fafc; text-align: left;">
-                                <th style="width:20%; padding: 10px 8px; border-bottom: 2px solid #333; word-wrap: break-word;">Date</th>
-                                <th style="width:18%; padding: 10px 8px; border-bottom: 2px solid #333; word-wrap: break-word;">Category</th>
-                                <th style="width:32%; padding: 10px 8px; border-bottom: 2px solid #333; word-wrap: break-word;">Description</th>
-                                <th style="width:15%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: right; word-wrap: break-word;">Amount</th>
-                                <th style="width:15%; padding: 10px 8px; border-bottom: 2px solid #333; text-align: right; word-wrap: break-word;">Balance</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Date</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Category</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333;">Description</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Amount</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #333; text-align: right;">Balance</th>
                             </tr>
                         </thead>
                         <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:20px;">No entries for this period.</td></tr>'}</tbody>
@@ -3728,16 +3301,6 @@ let html = displayWorkers.map((w, i) => {
         });
 
         // START THE APP
-        
-        // EMERGENCY: No matter what happens, hide the loader after 3 seconds
-        setTimeout(() => {
-            const el = document.getElementById('initialLoader');
-            if (el && !el.classList.contains('hidden')) {
-                el.classList.add('opacity-0');
-                setTimeout(() => { el.classList.add('hidden'); el.style.display = 'none'; }, 500);
-            }
-        }, 3000);
-        
         window.onload = function() {
             loadStorage();
             
@@ -3749,14 +3312,6 @@ let html = displayWorkers.map((w, i) => {
                 }
             }, 1000);
         };
-    </script>
-    <!-- SERVICE WORKER REGISTRATION -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registered:', reg.scope))
-                .catch(err => console.warn('SW failed:', err));
-        }
     </script>
 </body>
 </html>
