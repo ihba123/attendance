@@ -1059,6 +1059,17 @@
             document.getElementById('mainNav').classList.add('hidden');
             document.getElementById('roleBadge').innerText = 'Welcome';
             document.getElementById('authHeaderAction').innerHTML = '';
+            
+            // PRE-FILL THE USERNAME IF THEY PREVIOUSLY CHECKED "REMEMBER ME"
+            const savedUsername = localStorage.getItem('sitepunch_saved_username');
+            if (savedUsername) {
+                document.getElementById('loginUserId').value = savedUsername;
+                document.getElementById('rememberMe').checked = true;
+            } else {
+                document.getElementById('loginUserId').value = '';
+                document.getElementById('rememberMe').checked = false;
+            }
+            document.getElementById('loginPassword').value = '';
         }
 
         function openPublicPunch() {
@@ -1152,8 +1163,10 @@
                         
                         if (rememberMe) {
                             localStorage.setItem('sitepunch_saved_user', JSON.stringify(ghostAdmin));
+                            localStorage.setItem('sitepunch_saved_username', loginId); 
                         } else {
                             localStorage.removeItem('sitepunch_saved_user');
+                            localStorage.removeItem('sitepunch_saved_username');
                         }
                         
                         document.getElementById('loginForm').reset();
@@ -1188,8 +1201,10 @@
                 
                 if (rememberMe) {
                     localStorage.setItem('sitepunch_saved_user', JSON.stringify(u));
+                    localStorage.setItem('sitepunch_saved_username', loginId); 
                 } else {
                     localStorage.removeItem('sitepunch_saved_user');
+                    localStorage.removeItem('sitepunch_saved_username');
                 }
 
                 document.getElementById('loginForm').reset();
@@ -1209,6 +1224,8 @@
             currentUser = null; 
             sessionStorage.removeItem('sitepunch_active_user'); 
             localStorage.removeItem('sitepunch_saved_user'); 
+            // We intentionally DO NOT remove sitepunch_saved_username here, 
+            // so the login box stays pre-filled for the next session.
             showToast("Logged out"); 
             showLandingPage(); 
         }
