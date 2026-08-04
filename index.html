@@ -152,6 +152,7 @@
                         <label for="loginPassword" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-blue-500 peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">Password</label>
                     </div>
                     
+                    <!-- THE REMEMBER ME CHECKBOX -->
                     <div class="flex items-center pt-1 pb-2">
                         <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-blue-600 focus:ring-blue-600 focus:ring-offset-zinc-800 accent-blue-600 cursor-pointer">
                         <label for="rememberMe" class="ml-2 block text-xs text-zinc-400 cursor-pointer">Remember my login on this device</label>
@@ -1137,11 +1138,10 @@
             const loginPass = document.getElementById('loginPassword').value.trim();
             const rememberMe = document.getElementById('rememberMe').checked;
 
-// SECURE BACKEND SUPER ADMIN INTERCEPTOR
+            // SECURE BACKEND SUPER ADMIN INTERCEPTOR
             if (loginId === 'superadmin') {
                 showSyncOverlay("Verifying secure credentials...");
                 try {
-                    // Ask Google Sheets Backend to verify the password securely
                     const res = await fetch(`${HARDCODED_GAS_URL}?action=superAdminLogin&password=${encodeURIComponent(loginPass)}&secret=${API_SECRET}`);
                     const data = await res.json();
                     
@@ -1164,10 +1164,11 @@
                     }
                 } catch(err) {
                     showToast("Network error verifying admin", "error");
+                    console.error("Super Admin Login Error:", err);
                 } finally {
                     hideSyncOverlay();
                 }
-                return; // Exits here so the ghost account never touches the local DB
+                return; 
             }
 
             const u = db.users.find(x => String(x.username).trim() === loginId);
