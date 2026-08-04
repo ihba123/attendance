@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jithu Corporation | SitePunch AI Attendance</title>
     
- <!-- PWA / INSTALL APP SUPPORT -->
+    <!-- PWA / INSTALL APP SUPPORT -->
     <meta name="theme-color" content="#18181B">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SitePunch AI">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1000/1000304.png" type="image/png">
     <link rel="manifest" href="./manifest.json">
-
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -800,6 +800,28 @@
         let editCapturedPhoto = null;
         let editCapturedDescriptor = null;
 
+        // Overlay logic for safe blocking
+        function showSyncOverlay(msg = "Syncing data, please wait...") {
+            let overlay = document.getElementById('syncOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'syncOverlay';
+                overlay.className = 'fixed inset-0 bg-zinc-950/80 z-[9999] flex flex-col items-center justify-center gap-4';
+                overlay.innerHTML = `
+                    <div class="w-12 h-12 border-4 border-zinc-700 border-t-blue-500 rounded-full animate-spin"></div>
+                    <p id="syncOverlayMsg" class="text-sm font-semibold text-zinc-200"></p>
+                `;
+                document.body.appendChild(overlay);
+            }
+            document.getElementById('syncOverlayMsg').innerText = msg;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideSyncOverlay() {
+            const overlay = document.getElementById('syncOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
         async function loadStorage() {
             db.gasUrl = HARDCODED_GAS_URL; 
             
@@ -1135,24 +1157,35 @@
             if (np !== document.getElementById('confirmPasswordInput').value) return showToast("Mismatch!", "error");
             if (np === '1234' || np === 'admin123') return showToast("Use a different password", "error");
             
-            await setUserPassword(currentUser, np);
-            currentUser.isDefaultPass = false;
-            const userTarget = db.users.find(u => u.username === currentUser.username);
-            if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; userTarget.isDefaultPass = false; delete userTarget.password; }
-            syncConfigToCloud(); saveStorage();
-            sessionStorage.setItem('sitepunch_active_user', JSON.stringify(currentUser));
-            document.getElementById('forcePasswordModal').classList.add('hidden');
-            showToast("Password Updated!"); showDashboard();
+            showSyncOverlay("Updating password...");
+            try {
+                await setUserPassword(currentUser, np);
+                currentUser.isDefaultPass = false;
+                const userTarget = db.users.find(u => u.username === currentUser.username);
+                if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; userTarget.isDefaultPass = false; delete userTarget.password; }
+                syncConfigToCloud(); saveStorage();
+                sessionStorage.setItem('sitepunch_active_user', JSON.stringify(currentUser));
+                document.getElementById('forcePasswordModal').classList.add('hidden');
+                showToast("Password Updated!"); showDashboard();
+            } finally {
+                hideSyncOverlay();
+            }
         }
 
         async function handleChangeOwnPassword(e) {
             e.preventDefault();
             const validCurrent = await verifyUserPassword(currentUser, document.getElementById('currentPassInput').value);
             if (!validCurrent) return showToast("Wrong current pass", "error");
-            await setUserPassword(currentUser, document.getElementById('userNewPassInput').value);
-            const userTarget = db.users.find(u => u.username === currentUser.username);
-            if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; delete userTarget.password; }
-            syncConfigToCloud(); saveStorage(); showToast("Password changed!"); e.target.reset();
+            
+            showSyncOverlay("Updating password...");
+            try {
+                await setUserPassword(currentUser, document.getElementById('userNewPassInput').value);
+                const userTarget = db.users.find(u => u.username === currentUser.username);
+                if (userTarget) { userTarget.passwordHash = currentUser.passwordHash; userTarget.salt = currentUser.salt; delete userTarget.password; }
+                syncConfigToCloud(); saveStorage(); showToast("Password changed!"); e.target.reset();
+            } finally {
+                hideSyncOverlay();
+            }
         }
 
         async function loadFaceAPIModels() {
@@ -1641,9 +1674,15 @@
         async function handleAddSite(e) {
             e.preventDefault();
             const newSite = { id: 'site_' + Date.now(), name: document.getElementById('siteNameInput').value, lat: document.getElementById('siteLatInput').value, lng: document.getElementById('siteLngInput').value, radius: document.getElementById('siteRadiusInput').value };
-            await fetchCloudData();
-            db.sites.push(newSite); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
-            closeAddSiteModal();
+            
+            showSyncOverlay("Saving new site...");
+            try {
+                await fetchCloudData();
+                db.sites.push(newSite); saveStorage(); syncConfigToCloud(); e.target.reset(); renderSites(); populateDropdowns(); showToast("Site added to sheet!");
+                closeAddSiteModal();
+            } finally {
+                hideSyncOverlay();
+            }
         }
 
         function autoFillCurrentLocationForSite() {
@@ -1669,11 +1708,15 @@
             const newUser = { username: phone, role: 'worker', name: w.name, workerId: w.id, isDefaultPass: true };
             await setUserPassword(newUser, '1234');
 
-            await fetchCloudData();
-
-            db.workers.push(w); db.users.push(newUser);
-            saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
-            closeRegisterWorkerModal();
+            showSyncOverlay("Registering new worker...");
+            try {
+                await fetchCloudData();
+                db.workers.push(w); db.users.push(newUser);
+                saveStorage(); syncConfigToCloud(); e.target.reset(); resetRegCamera(); renderWorkers(); populateDropdowns(); showToast("Worker registered!");
+                closeRegisterWorkerModal();
+            } finally {
+                hideSyncOverlay();
+            }
         }
 
         function handleAddAdvance(e) {
@@ -1709,9 +1752,14 @@
 
         function deleteSite(id) {
             openConfirmModal("Delete Site?", "This will permanently remove the site.", async () => {
-                await fetchCloudData(); 
-                db.sites = db.sites.filter(s => s.id !== id);
-                saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site deleted");
+                showSyncOverlay("Deleting site...");
+                try {
+                    await fetchCloudData(); 
+                    db.sites = db.sites.filter(s => s.id !== id);
+                    saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site deleted");
+                } finally {
+                    hideSyncOverlay();
+                }
             });
         }
         let editingSiteId = null;
@@ -1726,6 +1774,7 @@
             document.getElementById('editSiteModal').classList.remove('hidden');
         }
         function closeEditSite() { document.getElementById('editSiteModal').classList.add('hidden'); editingSiteId = null; }
+        
         async function saveEditSite(e) {
             e.preventDefault();
             const editedName = document.getElementById('editSiteName').value;
@@ -1734,25 +1783,36 @@
             const editedRadius = document.getElementById('editSiteRadius').value;
             const idToEdit = editingSiteId;
             closeEditSite(); 
-            await fetchCloudData(); 
-            const s = db.sites.find(x => x.id === idToEdit);
-            if(s) {
-                s.name = editedName;
-                s.lat = editedLat;
-                s.lng = editedLng;
-                s.radius = editedRadius;
-                saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site updated");
-            } else {
-                showToast("Site no longer exists - it may have been deleted elsewhere", "error");
+            
+            showSyncOverlay("Updating site...");
+            try {
+                await fetchCloudData(); 
+                const s = db.sites.find(x => x.id === idToEdit);
+                if(s) {
+                    s.name = editedName;
+                    s.lat = editedLat;
+                    s.lng = editedLng;
+                    s.radius = editedRadius;
+                    saveStorage(); syncConfigToCloud(); renderSites(); populateDropdowns(); showToast("Site updated");
+                } else {
+                    showToast("Site no longer exists - it may have been deleted elsewhere", "error");
+                }
+            } finally {
+                hideSyncOverlay();
             }
         }
 
         function deleteWorker(id) {
             openConfirmModal("Delete Worker?", "This removes the worker and their login access.", async () => {
-                await fetchCloudData(); 
-                db.workers = db.workers.filter(w => w.id !== id);
-                db.users = db.users.filter(u => u.workerId !== id);
-                saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker deleted");
+                showSyncOverlay("Deleting worker...");
+                try {
+                    await fetchCloudData(); 
+                    db.workers = db.workers.filter(w => w.id !== id);
+                    db.users = db.users.filter(u => u.workerId !== id);
+                    saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker deleted");
+                } finally {
+                    hideSyncOverlay();
+                }
             });
         }
         let editingWorkerId = null;
@@ -1847,16 +1907,21 @@
                 otRate: parseFloat(document.getElementById('ruleOtRate').value) || 0
             };
 
-            await fetchCloudData();
+            showSyncOverlay("Saving configuration...");
+            try {
+                await fetchCloudData();
 
-            const todayMs = new Date(); todayMs.setHours(0,0,0,0);
-            if (!db.payrollRulesHistory) db.payrollRulesHistory = [];
-            const existingToday = db.payrollRulesHistory.find(r => r.effectiveFrom === todayMs.getTime());
-            if (existingToday) existingToday.rules = newRules; 
-            else db.payrollRulesHistory.push({ effectiveFrom: todayMs.getTime(), rules: newRules });
+                const todayMs = new Date(); todayMs.setHours(0,0,0,0);
+                if (!db.payrollRulesHistory) db.payrollRulesHistory = [];
+                const existingToday = db.payrollRulesHistory.find(r => r.effectiveFrom === todayMs.getTime());
+                if (existingToday) existingToday.rules = newRules; 
+                else db.payrollRulesHistory.push({ effectiveFrom: todayMs.getTime(), rules: newRules });
 
-            saveStorage(); syncConfigToCloud(); renderSettlements(); applyCompanyBranding();
-            showToast("Settings saved - rule changes effective from today");
+                saveStorage(); syncConfigToCloud(); renderSettlements(); applyCompanyBranding();
+                showToast("Settings saved - rule changes effective from today");
+            } finally {
+                hideSyncOverlay();
+            }
         }
 
         function applyCompanyBranding() {
@@ -1944,33 +2009,38 @@
             const capturedDescriptor = editCapturedDescriptor;
 
             closeEditWorker(); 
-            await fetchCloudData();
+            
+            showSyncOverlay("Updating worker profile...");
+            try {
+                await fetchCloudData();
+                const w = db.workers.find(x => x.id === idToEdit);
+                if(w) {
+                    w.name = newName;
+                    w.phone = newPhone;
 
-            const w = db.workers.find(x => x.id === idToEdit);
-            if(w) {
-                w.name = newName;
-                w.phone = newPhone;
+                    if (newWage !== parseFloat(w.wage)) {
+                        const todayMs = new Date(); todayMs.setHours(0,0,0,0);
+                        if (!w.wageHistory) w.wageHistory = [{ effectiveFrom: 0, wage: parseFloat(w.wage) || 0 }];
+                        const existingToday = w.wageHistory.find(h => h.effectiveFrom === todayMs.getTime());
+                        if (existingToday) existingToday.wage = newWage; 
+                        else w.wageHistory.push({ effectiveFrom: todayMs.getTime(), wage: newWage });
+                        w.wage = newWage;
+                    }
 
-                if (newWage !== parseFloat(w.wage)) {
-                    const todayMs = new Date(); todayMs.setHours(0,0,0,0);
-                    if (!w.wageHistory) w.wageHistory = [{ effectiveFrom: 0, wage: parseFloat(w.wage) || 0 }];
-                    const existingToday = w.wageHistory.find(h => h.effectiveFrom === todayMs.getTime());
-                    if (existingToday) existingToday.wage = newWage; 
-                    else w.wageHistory.push({ effectiveFrom: todayMs.getTime(), wage: newWage });
-                    w.wage = newWage;
+                    if (capturedPhoto && capturedDescriptor) {
+                        w.photo = capturedPhoto;
+                        w.descriptor = capturedDescriptor;
+                    }
+                    
+                    const u = db.users.find(x => x.workerId === idToEdit);
+                    if(u) { u.name = w.name; u.username = newPhone; }
+                    
+                    saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker updated");
+                } else {
+                    showToast("Worker no longer exists - they may have been deleted elsewhere", "error");
                 }
-
-                if (capturedPhoto && capturedDescriptor) {
-                    w.photo = capturedPhoto;
-                    w.descriptor = capturedDescriptor;
-                }
-                
-                const u = db.users.find(x => x.workerId === idToEdit);
-                if(u) { u.name = w.name; u.username = newPhone; }
-                
-                saveStorage(); syncConfigToCloud(); renderWorkers(); renderSettlements(); populateDropdowns(); showToast("Worker updated");
-            } else {
-                showToast("Worker no longer exists - they may have been deleted elsewhere", "error");
+            } finally {
+                hideSyncOverlay();
             }
         }
 
@@ -3000,16 +3070,6 @@
         });
 
         window.onload = function() {
-            loadStorage();
-            
-            setInterval(() => {
-                const timeDisplay = document.getElementById('currentTimeDisplay');
-                if (timeDisplay) {
-                    timeDisplay.innerText = new Date().toLocaleTimeString('en-IN', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                }
-            }, 1000);
-        };
-       window.onload = function() {
             // REGISTER SERVICE WORKER FOR PWA
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js')
@@ -3026,6 +3086,6 @@
                 }
             }, 1000);
         };
-  </script>
+    </script>
 </body>
 </html>
