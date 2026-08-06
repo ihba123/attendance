@@ -152,13 +152,19 @@
                         <label for="loginPassword" class="absolute left-4 text-zinc-400 pointer-events-none transition-all duration-150 top-4 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-blue-500 peer-focus:font-semibold peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold">Password</label>
                     </div>
                     
-                    <!-- THE REMEMBER ME CHECKBOX -->
                     <div class="flex items-center pt-1 pb-2">
                         <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-blue-600 focus:ring-blue-600 focus:ring-offset-zinc-800 accent-blue-600 cursor-pointer">
                         <label for="rememberMe" class="ml-2 block text-xs text-zinc-400 cursor-pointer">Remember my login on this device</label>
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition">Sign In</button>
+                        
+                        <!-- Biometric Login Button (Visible if enrolled) -->
+                        <button type="button" onclick="loginWithBiometrics()" id="bioLoginBtn" class="hidden px-5 py-3 bg-zinc-900 hover:bg-zinc-700 text-blue-400 font-bold rounded-xl shadow-md transition border border-zinc-700" title="Login with Fingerprint">
+                            <i class="fa-solid fa-fingerprint text-xl"></i>
+                        </button>
+                    </div>
                     <p class="text-center text-[10px] text-zinc-400 mt-2">Worker login: Mobile Number &amp; Password 1234</p>
                 </form>
             </div>
@@ -572,13 +578,27 @@
                     <p class="text-xs text-zinc-400" id="myProfilePhone">-</p>
                 </div>
             </div>
+            
+            <!-- BIOMETRIC LOGIN SETUP -->
             <div class="bg-zinc-800 rounded-2xl p-5 border border-zinc-700 shadow-lg space-y-4">
-                <h2 class="text-base font-bold text-zinc-100"><i class="fa-solid fa-user-gear text-blue-400"></i> My Profile</h2>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-zinc-100"><i class="fa-solid fa-fingerprint text-blue-400"></i> Biometric Login</h2>
+                    <span id="bioStatusText" class="text-[10px] font-bold px-2 py-1 rounded bg-zinc-700 text-zinc-400">Not Setup</span>
+                </div>
+                <p class="text-xs text-zinc-400">Use your device's fingerprint or Face ID to sign in securely.</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="registerBiometrics()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition">Enable Biometrics</button>
+                    <button type="button" onclick="removeBiometrics()" class="py-2 px-3 bg-rose-900/30 hover:bg-rose-900/50 text-rose-400 font-bold rounded-xl text-xs transition border border-rose-900"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="bg-zinc-800 rounded-2xl p-5 border border-zinc-700 shadow-lg space-y-4">
+                <h2 class="text-base font-bold text-zinc-100"><i class="fa-solid fa-user-gear text-blue-400"></i> Change Password</h2>
                 <form id="changePasswordForm" onsubmit="handleChangeOwnPassword(event)" class="space-y-3">
                     <input type="password" id="currentPassInput" required placeholder="Current password" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100">
                     <input type="password" id="userNewPassInput" required placeholder="New password" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100">
                     <input type="password" id="userConfirmPassInput" required placeholder="Confirm new password" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100">
-                    <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition">Change Password</button>
+                    <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition">Update Password</button>
                 </form>
             </div>
         </section>
@@ -743,6 +763,102 @@
     <script>
         const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbz5ViO_XuAYnRubkR6eRjQqDSUpId2yGcWDQJ__OgkGdjrksdqgCsIf9na63SdqF352/exec"; 
         const API_SECRET = "p8hozwMSfdtWHpNsZQYiCy-2IhKXgYPP";
+
+        // ===== WEB AUTHENTICATION API (BIOMETRICS) HELPERS =====
+        function bufferToBase64(buf) {
+            const binString = Array.from(new Uint8Array(buf)).map((byte) => String.fromCharCode(byte)).join("");
+            return btoa(binString);
+        }
+        function base64ToBuffer(b64) {
+            const binString = atob(b64);
+            return Uint8Array.from(binString, (m) => m.codePointAt(0));
+        }
+
+        async function registerBiometrics() {
+            if (!window.PublicKeyCredential) {
+                return showToast("Biometrics not supported on this device/browser.", "error");
+            }
+            try {
+                const userId = Uint8Array.from(currentUser.username, c => c.charCodeAt(0));
+                const challenge = crypto.getRandomValues(new Uint8Array(32));
+                const pubKey = {
+                    challenge: challenge,
+                    rp: { name: "Jithu Corporation", id: window.location.hostname || "localhost" },
+                    user: { id: userId, name: currentUser.username, displayName: currentUser.name },
+                    pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                    timeout: 60000
+                };
+                
+                const cred = await navigator.credentials.create({ publicKey: pubKey });
+                if (cred) {
+                    const credIdBase64 = bufferToBase64(cred.rawId);
+                    localStorage.setItem('sitepunch_biometric_id', credIdBase64);
+                    localStorage.setItem('sitepunch_biometric_user', currentUser.username);
+                    showToast("Biometric login enabled!");
+                    renderMyProfileCard();
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Biometric registration canceled or failed.", "error");
+            }
+        }
+
+        async function loginWithBiometrics() {
+            const savedUser = localStorage.getItem('sitepunch_biometric_user');
+            const savedIdBase64 = localStorage.getItem('sitepunch_biometric_id');
+
+            if (!savedUser || !savedIdBase64) {
+                return showToast("No biometric profile found. Login normally first.", "error");
+            }
+
+            try {
+                const rawId = base64ToBuffer(savedIdBase64);
+                const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+                const pubKey = {
+                    challenge: challenge,
+                    allowCredentials: [{ type: 'public-key', id: rawId }],
+                    userVerification: "required",
+                    timeout: 60000
+                };
+
+                const assertion = await navigator.credentials.get({ publicKey: pubKey });
+                if (assertion) {
+                    // SECURE BYPASS FOR GHOST ADMIN
+                    if (savedUser === 'superadmin') {
+                        const ghostAdmin = { username: 'superadmin', role: 'admin', name: 'Super Admin', workerId: null, isDefaultPass: false };
+                        currentUser = ghostAdmin;
+                        sessionStorage.setItem('sitepunch_active_user', JSON.stringify(ghostAdmin));
+                        showToast("Biometric Login Successful!");
+                        showDashboard();
+                        return;
+                    }
+
+                    // NORMAL USER
+                    const u = db.users.find(x => x.username === savedUser);
+                    if (u) {
+                        currentUser = u;
+                        sessionStorage.setItem('sitepunch_active_user', JSON.stringify(u));
+                        showToast("Biometric Login Successful!");
+                        showDashboard();
+                    } else {
+                        showToast("User not found. Please sync or login manually.", "error");
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Biometric login failed.", "error");
+            }
+        }
+
+        function removeBiometrics() {
+            localStorage.removeItem('sitepunch_biometric_id');
+            localStorage.removeItem('sitepunch_biometric_user');
+            showToast("Biometrics removed from this device.");
+            renderMyProfileCard(); 
+        }
+        // =======================================================
 
         async function sha256Hex(str) {
             const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -1070,6 +1186,13 @@
                 document.getElementById('rememberMe').checked = false;
             }
             document.getElementById('loginPassword').value = '';
+
+            // SHOW FINGERPRINT BUTTON IF ENROLLED
+            if (localStorage.getItem('sitepunch_biometric_user')) {
+                document.getElementById('bioLoginBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('bioLoginBtn').classList.add('hidden');
+            }
         }
 
         function openPublicPunch() {
@@ -1133,14 +1256,25 @@
             const card = document.getElementById('myProfileCard');
             if (!currentUser || currentUser.role === 'admin' || !currentUser.workerId) {
                 card.classList.add('hidden'); card.classList.remove('flex');
-                return;
+            } else {
+                const w = db.workers.find(x => x.id === currentUser.workerId);
+                if (w) {
+                    document.getElementById('myProfilePhoto').src = w.photo || 'https://via.placeholder.com/64?text=No+Photo';
+                    document.getElementById('myProfileName').innerText = w.name;
+                    document.getElementById('myProfilePhone').innerText = w.phone;
+                    card.classList.remove('hidden'); card.classList.add('flex');
+                }
             }
-            const w = db.workers.find(x => x.id === currentUser.workerId);
-            if (!w) { card.classList.add('hidden'); card.classList.remove('flex'); return; }
-            document.getElementById('myProfilePhoto').src = w.photo || 'https://via.placeholder.com/64?text=No+Photo';
-            document.getElementById('myProfileName').innerText = w.name;
-            document.getElementById('myProfilePhone').innerText = w.phone;
-            card.classList.remove('hidden'); card.classList.add('flex');
+
+            // Update Biometrics Status UI
+            const bioText = document.getElementById('bioStatusText');
+            if (localStorage.getItem('sitepunch_biometric_user') === currentUser.username) {
+                bioText.innerText = "Enabled";
+                bioText.className = "text-[10px] font-bold px-2 py-1 rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800";
+            } else {
+                bioText.innerText = "Not Setup";
+                bioText.className = "text-[10px] font-bold px-2 py-1 rounded bg-zinc-700 text-zinc-400";
+            }
         }
 
         async function handleLogin(e) { 
