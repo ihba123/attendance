@@ -1439,7 +1439,7 @@
             document.getElementById('scanLine').classList.remove('hidden');
             autoScanActive = true;
 
-            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 });
+            const tinyOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.6 });
 
             const MIN_VALID_EAR = 0.12;       
             const BLINK_DROP_RATIO = 0.72;    
@@ -1582,7 +1582,7 @@
                 return;
             }
 
-            const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.60); 
+            const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.48); 
             const match = faceMatcher.findBestMatch(liveDescriptor);
             if (match.label !== 'unknown') {
                 detectedWorker = db.workers.find(w => w.id === match.label);
