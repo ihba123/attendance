@@ -1805,13 +1805,17 @@
             }
         }
 
-        function postToGoogleSheet(action, payload) {
+function postToGoogleSheet(action, payload) {
             try {
+                // Form-URL-Encoded requests handle large Base64 photo payloads securely
+                const formData = new URLSearchParams();
+                formData.append('data', JSON.stringify({ action: action, payload: payload, secret: API_SECRET }));
+
                 fetch(HARDCODED_GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: action, payload: payload, secret: API_SECRET })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
                 }).catch(e => console.error("Sheet send error", e));
             } catch(e) { console.error("Sheet payload error", e); }
         }
