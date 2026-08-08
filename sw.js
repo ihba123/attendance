@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sitepunch-v3';
+const CACHE_NAME = 'sitepunch-v4';
 
 // Strict local assets
 const LOCAL_ASSETS = [
@@ -19,10 +19,8 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
-            // 1. Cache local files strictly
             await cache.addAll(LOCAL_ASSETS).catch(err => console.warn('Local cache skipped:', err));
             
-            // 2. Cache external CDNs safely without breaking if CORS fails
             await Promise.allSettled(
                 EXTERNAL_ASSETS.map(url => 
                     fetch(url, { mode: 'no-cors' })
@@ -44,6 +42,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+
+    // --- NEW: BYPASS API CALLS ---
+    // Do NOT cache requests going to Google Apps Script (always fetch fresh data)
+    if (event.request.url.includes('script.google.com') || event.request.url.includes('script.googleusercontent.com')) {
+        return; 
+    }
+    // ------------------------------
+
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
