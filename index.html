@@ -1000,8 +1000,7 @@
                 const cloudStatus = document.getElementById('cloudStatusText');
                 if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
 
-                const response = await fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET));
-                const result = await response.json();
+const response = await fetch(HARDCODED_GAS_URL + "?action=getDb&secret=" + encodeURIComponent(API_SECRET) + "&t=" + Date.now(), { cache: "no-store" });
                 
                 if (result.status === 'success' && result.data) {
                     if (result.data.sites && result.data.sites.length > 0) {
