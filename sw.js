@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sitepunch-v4';
+const CACHE_NAME = 'sitepunch-v5';
 
 // Strict local assets
 const LOCAL_ASSETS = [
